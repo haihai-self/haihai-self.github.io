@@ -95,7 +95,8 @@
         <category>杂记</category>
       </categories>
       <tags>
-        <tag>tools git</tag>
+        <tag>tools</tag>
+        <tag>git</tag>
       </tags>
   </entry>
   <entry>
@@ -135,10 +136,18 @@
   </entry>
   <entry>
     <title>config</title>
-    <url>/2020/09/22/config/</url>
-    <content><![CDATA[<a id="more"></a>
-<p>在文件<code>generators/rocket-chip/api-config-chipsalliance/design/craft/src/config/Config.scala</code>中。</p>
-<p><img src="/picture/2010/image-20200915105005563.png" alt="image-20200915105005563">由图中可以看出View/Field/Parameter为抽象类，不能进行实例化，view的直接子类有TerminalView/ChainView/Parameter，其中TerminalView/ChainView为私有类，只能在config包内进行访问，没有子类，而Parameter的子类有Config/ChainParameters/EmptyParameters/PartialParameters/MapParameters。</p>
+    <url>/2020/09/22/chipyard/config/</url>
+    <content><![CDATA[<p>config是chipyard中的配置查找模块，实现了具体的查询逻辑</p>
+<a id="more"></a>
+
+<p>在文件</p>
+<blockquote>
+<p>generators/rocket-chip/api-config-chipsalliance/design/craft/src/config/Config.scala中。</p>
+</blockquote>
+<p><img src="/picture/2010/image-20200915105005563.png" alt="image-20200915105005563">由图中可以看出View/Field/Parameter为抽象类，不能进行实例化，view的直接子类有TerminalView/ChainView/Parameter，其中TerminalView/ChainView为私有类，只能在config包内进行访问，没有子类，而Parameter的子类有</p>
+<blockquote>
+<p>Config/ChainParameters/EmptyParameters/PartialParameters/MapParameters。</p>
+</blockquote>
 <p>以上的所有类中，暴露给外界的接口为Parameter的子类Config，其他的不是私有类就是抽象类，不能给外界继承。该package的主要目的是为了查找</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">BaseConfig</span> <span class="keyword">extends</span> <span class="title">Config</span>(<span class="params"></span></span></span><br><span class="line"><span class="class"><span class="params">  new <span class="type">WithDefaultMemPort</span>(</span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithDefaultMMIOPort</span>(<span class="params"></span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithDefaultSlavePort</span>(<span class="params"></span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithTimebase</span>(<span class="params"><span class="type">BigInt</span>(1000000</span>)) <span class="title">++</span> <span class="title">//</span> 1 <span class="title">MHz</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithDTS</span>(<span class="params">&quot;freechips,rocketchip-unknown&quot;, <span class="type">Nil</span></span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithNExtTopInterrupts</span>(<span class="params">2</span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">BaseSubsystemConfig</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="class">)</span></span><br></pre></td></tr></table></figure>
 

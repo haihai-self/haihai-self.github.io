@@ -20,23 +20,23 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="在文件generators&#x2F;rocket-chip&#x2F;api-config-chipsalliance&#x2F;design&#x2F;craft&#x2F;src&#x2F;config&#x2F;Config.scala中。 由图中可以看出View&#x2F;Field&#x2F;Parameter为抽象类，不能进行实例化，view的直接子类有TerminalView&#x2F;ChainView&#x2F;Parameter，其中TerminalView&#x2F;ChainView为私">
+  <meta name="description" content="config是chipyard中的配置查找模块，实现了具体的查询逻辑">
 <meta property="og:type" content="article">
 <meta property="og:title" content="config">
-<meta property="og:url" content="http://example.com/2020/09/22/config/index.html">
+<meta property="og:url" content="http://example.com/2020/09/22/chipyard/config/index.html">
 <meta property="og:site_name" content="haihai-blog">
-<meta property="og:description" content="在文件generators&#x2F;rocket-chip&#x2F;api-config-chipsalliance&#x2F;design&#x2F;craft&#x2F;src&#x2F;config&#x2F;Config.scala中。 由图中可以看出View&#x2F;Field&#x2F;Parameter为抽象类，不能进行实例化，view的直接子类有TerminalView&#x2F;ChainView&#x2F;Parameter，其中TerminalView&#x2F;ChainView为私">
+<meta property="og:description" content="config是chipyard中的配置查找模块，实现了具体的查询逻辑">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/picture/2010/image-20200915105005563.png">
 <meta property="og:image" content="http://example.com/picture/2010/image-20200915105005563.png">
 <meta property="article:published_time" content="2020-09-22T08:38:51.000Z">
-<meta property="article:modified_time" content="2020-09-22T08:44:37.193Z">
+<meta property="article:modified_time" content="2020-09-22T08:50:34.438Z">
 <meta property="article:author" content="海海不想起床">
 <meta property="article:tag" content="chipyard">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="http://example.com/picture/2010/image-20200915105005563.png">
 
-<link rel="canonical" href="http://example.com/2020/09/22/config/">
+<link rel="canonical" href="http://example.com/2020/09/22/chipyard/config/">
 
 
 <script id="page-configurations">
@@ -197,7 +197,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2020/09/22/config/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/09/22/chipyard/config/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -221,7 +221,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2020-09-22 16:38:51 / 修改时间：16:44:37" itemprop="dateCreated datePublished" datetime="2020-09-22T16:38:51+08:00">2020-09-22</time>
+              <time title="创建时间：2020-09-22 16:38:51 / 修改时间：16:50:34" itemprop="dateCreated datePublished" datetime="2020-09-22T16:38:51+08:00">2020-09-22</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -251,9 +251,17 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <a id="more"></a>
-<p>在文件<code>generators/rocket-chip/api-config-chipsalliance/design/craft/src/config/Config.scala</code>中。</p>
-<p><img src="/picture/2010/image-20200915105005563.png" alt="image-20200915105005563">由图中可以看出View/Field/Parameter为抽象类，不能进行实例化，view的直接子类有TerminalView/ChainView/Parameter，其中TerminalView/ChainView为私有类，只能在config包内进行访问，没有子类，而Parameter的子类有Config/ChainParameters/EmptyParameters/PartialParameters/MapParameters。</p>
+        <p>config是chipyard中的配置查找模块，实现了具体的查询逻辑</p>
+<a id="more"></a>
+
+<p>在文件</p>
+<blockquote>
+<p>generators/rocket-chip/api-config-chipsalliance/design/craft/src/config/Config.scala中。</p>
+</blockquote>
+<p><img src="/picture/2010/image-20200915105005563.png" alt="image-20200915105005563">由图中可以看出View/Field/Parameter为抽象类，不能进行实例化，view的直接子类有TerminalView/ChainView/Parameter，其中TerminalView/ChainView为私有类，只能在config包内进行访问，没有子类，而Parameter的子类有</p>
+<blockquote>
+<p>Config/ChainParameters/EmptyParameters/PartialParameters/MapParameters。</p>
+</blockquote>
 <p>以上的所有类中，暴露给外界的接口为Parameter的子类Config，其他的不是私有类就是抽象类，不能给外界继承。该package的主要目的是为了查找</p>
 <figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">BaseConfig</span> <span class="keyword">extends</span> <span class="title">Config</span>(<span class="params"></span></span></span><br><span class="line"><span class="class"><span class="params">  new <span class="type">WithDefaultMemPort</span>(</span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithDefaultMMIOPort</span>(<span class="params"></span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithDefaultSlavePort</span>(<span class="params"></span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithTimebase</span>(<span class="params"><span class="type">BigInt</span>(1000000</span>)) <span class="title">++</span> <span class="title">//</span> 1 <span class="title">MHz</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithDTS</span>(<span class="params">&quot;freechips,rocketchip-unknown&quot;, <span class="type">Nil</span></span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithNExtTopInterrupts</span>(<span class="params">2</span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">BaseSubsystemConfig</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="class">)</span></span><br></pre></td></tr></table></figure>
 
