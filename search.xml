@@ -715,10 +715,9 @@
 <p>大多数的时候服务的是case，case序列得到的其实就是一个偏函数</p>
 <p>自己定义一个偏函数</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">new</span> <span class="type">PartialFunction</span>[<span class="type">List</span>[<span class="type">Int</span>], <span class="type">Int</span>]&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">apply</span></span>(xs: <span class="type">List</span>[<span class="type">Int</span>]) = xs <span class="keyword">match</span>&#123;</span><br><span class="line">    <span class="keyword">case</span> x :: y :: _ =&gt; y</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">isDefinedAt</span></span>(xs: <span class="type">List</span>[<span class="type">Int</span>]) xs <span class="keyword">match</span>&#123;</span><br><span class="line">    <span class="keyword">case</span> x :: y :: _ =&gt; <span class="literal">true</span></span><br><span class="line">    <span class="keyword">case</span> _ =&gt; <span class="literal">false</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 </li>
 </ul>
-<h2 id="使用列表"><a href="#使用列表" class="headerlink" title="使用列表"></a>使用列表</h2>]]></content>
+]]></content>
       <categories>
         <category>scala</category>
       </categories>
