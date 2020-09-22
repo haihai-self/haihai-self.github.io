@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/hai-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/hai-16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="样例类也是scala使用频率很高的语法，通过case进行创建，进行响应的控制，而模式匹配正是通过样例类进行相应的匹配操作">
+<meta property="og:type" content="article">
+<meta property="og:title" content="scala样例类跟模式匹配">
+<meta property="og:url" content="http://example.com/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/10-scala%E6%A0%B7%E4%BE%8B%E7%B1%BB%E8%B7%9F%E6%A8%A1%E5%BC%8F%E5%8C%B9%E9%85%8D/index.html">
+<meta property="og:site_name" content="haihai-blog">
+<meta property="og:description" content="样例类也是scala使用频率很高的语法，通过case进行创建，进行响应的控制，而模式匹配正是通过样例类进行相应的匹配操作">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-09-22T13:00:37.000Z">
+<meta property="article:modified_time" content="2020-09-22T13:03:27.242Z">
+<meta property="article:author" content="海海不想起床">
+<meta property="article:tag" content="scala编程">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/10-scala%E6%A0%B7%E4%BE%8B%E7%B1%BB%E8%B7%9F%E6%A8%A1%E5%BC%8F%E5%8C%B9%E9%85%8D/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>scala样例类跟模式匹配 | haihai-blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">haihai-blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/10-scala%E6%A0%B7%E4%BE%8B%E7%B1%BB%E8%B7%9F%E6%A8%A1%E5%BC%8F%E5%8C%B9%E9%85%8D/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="海海不想起床">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="haihai-blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          scala样例类跟模式匹配
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2020-09-22 21:00:37 / 修改时间：21:03:27" itemprop="dateCreated datePublished" datetime="2020-09-22T21:00:37+08:00">2020-09-22</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/scala/" itemprop="url" rel="index"><span itemprop="name">scala</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>样例类也是scala使用频率很高的语法，通过case进行创建，进行响应的控制，而模式匹配正是通过样例类进行相应的匹配操作</p>
+<a id="more"></a>
+
+<ul>
+<li><p><strong>样例类</strong></p>
+<p>笼统来说，就是将想要匹配的类加上一个<code>case</code>关键字。</p>
+<p>首先他会将我们的方法加上一个工厂方法，可以通过<code>Var(“x”)</code>这样的类型来进行类创建而不是<code>new Var(“x”)</code>。</p>
+<p>其次是参数列表中的参数都可以隐式的加上一个<code>val</code>前缀，这样的话就可以当做字段来进行处理。</p>
+<p>再次编译器会帮我们自然的实现<code>toString, hashCode, equals</code>方法</p>
+<p>最后编译器还会帮我们做一个<code>copy</code>方法，该方法可以进行一些参数的修改</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">Var</span>(<span class="params">name: <span class="type">String</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">number</span>(<span class="params">num: <span class="type">Double</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">UpOp</span>(<span class="params">operator: <span class="type">String</span>, arg: <span class="type">Expr</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">BinOp</span>(<span class="params">operator: <span class="type">String</span>, left: <span class="type">Expr</span>, right: <span class="type">Expr</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"></span></span><br><span class="line"><span class="class"><span class="title">//使用实例</span></span></span><br><span class="line"><span class="class"><span class="title">val</span> <span class="title">v</span> </span>= <span class="type">Var</span>(<span class="string">&quot;x&quot;</span>)</span><br><span class="line"><span class="keyword">val</span> op = <span class="type">BinOp</span>(<span class="string">&quot;+&quot;</span>, number(<span class="number">1</span>), v)</span><br><span class="line">v.name</span><br><span class="line">println(op)</span><br><span class="line">op.copy(operator = <span class="string">&quot;-&quot;</span>)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>模式匹配</strong></p>
+<p>具体形式是<code>选择器 match &#123;可选分支&#125;</code>，其中可选分支包括至少一个<code>case</code>，每一个可选分支都包括一个模式以及一个或多个表达式，如果模式匹配了，这些表达式就会被求值。<code>=&gt;</code>将模式与表达式分开。</p>
+<p><code>match switch</code>的区别</p>
+<ul>
+<li><code>match</code>是一个表达式，总是会得到一个值</li>
+<li><code>scala</code>的分支不会贯穿到下一个<code>case</code>，若是匹配的话，会隐式的加上一个<code>break</code>进行退出</li>
+<li>若是啥都不匹配的话会抛出异常，所以最后需要加上一个通配<code>case</code></li>
+</ul>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">simplifyTop</span></span>(expr: <span class="type">Expr</span>): <span class="type">Expr</span> = expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="type">UnOp</span>(<span class="string">&quot;-&quot;</span>, <span class="type">UnOp</span>(<span class="string">&quot;-&quot;</span>, e)) =&gt; e  <span class="comment">//双重取负</span></span><br><span class="line">  <span class="keyword">case</span> <span class="type">BinOp</span>(<span class="string">&quot;+&quot;</span>, e, number(<span class="number">0</span>)) =&gt; e  <span class="comment">// + 0</span></span><br><span class="line">  <span class="keyword">case</span> <span class="type">BinOp</span>(<span class="string">&quot;*&quot;</span>, e, number(<span class="number">1</span>)) =&gt; <span class="number">1</span>  <span class="comment">// * 1</span></span><br><span class="line">  <span class="keyword">case</span> _ =&gt; exrp</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>模式种类</strong></p>
+<p>所有的模式匹配跟表达式类型十分的相似</p>
+<ul>
+<li><p><strong>通配模式</strong></p>
+<p><code>(_)</code>会匹配任何对象，用来忽略你并不关心的局部</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="type">BinOp</span>(_, _, _) =&gt; println(expr + <span class="string">&quot;is a binary operation&quot;</span>)  <span class="comment">//只关心是一个二源操作</span></span><br><span class="line">  <span class="keyword">case</span> _ =&gt; println(<span class="string">&quot;something else&quot;</span>)  <span class="comment">//覆盖值处理</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>常量模式</strong></p>
+<p>只匹配自己</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="number">5</span> =&gt; <span class="string">&quot;five&quot;</span></span><br><span class="line">  <span class="keyword">case</span> <span class="type">Nil</span> =&gt; <span class="string">&quot;the empty list&quot;</span>  <span class="comment">//只能匹配空列表</span></span><br><span class="line">  <span class="keyword">case</span> _ =&gt; <span class="string">&quot;something else&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>变量模式</strong></p>
+<p>变量模式可以匹配任何对象，这点跟通配模式相同，但是变量模式会将匹配的对象绑定到变量上，这样就可以使用这个变量进行下一步的处理</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="number">0</span> =&gt; <span class="string">&quot;zero&quot;</span></span><br><span class="line">  <span class="keyword">case</span> somethingElse =&gt; <span class="string">&quot;not zero&quot;</span> + somethingElse  <span class="comment">//这里将somethingElse用作一些处理，但是这还是局部变量</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>scala</code>中一般会将<strong>小写</strong>开头的字面量当做<strong>变量匹配</strong>，要是想要继续使用小写开头字面量当做常量的话可以使用<code>this.pi, obj.pi</code>等进行处理</p>
+</li>
+<li><p><strong>构造方法模式</strong></p>
+<p>最有用的模式，由一个名称加上一个圆括号以及圆括号中的模式组成。这个模式将首先检查被匹配的对象是否是以这个名称命名的样例实例，在检查这个对象的够着方法参数是否匹配这些额外给出模式。</p>
+<p>这样意味着可以进行深度匹配，不仅仅会检查顶层，还会进一步检查对象内容是否匹配这些额外的模式要求</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="type">BinOp</span>(<span class="string">&quot;+&quot;</span>, e, number(<span class="number">0</span>)) =&gt; println(<span class="string">&quot;a deep match&quot;</span>)  <span class="comment">//首先匹配BinOp，接着匹配参数列表，最后匹配number(0)，一共有三层模式匹配</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>序列模式</strong></p>
+<p>可以跟<code>Lsis, Array</code>这些序列进行模式匹配，可以用<code>_*</code>作为模式的最后一个元素，表示的是还可以匹配任意长度的元素。</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="type">List</span>(<span class="number">0</span>, _*) =&gt; println(<span class="string">&quot;this is a list with beginning 0&quot;</span>)</span><br><span class="line">  <span class="keyword">case</span> _ =&gt; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>元组模式</strong></p>
+<p>这里跟序列模式是一样的，只不过将<code>List</code>换成了圆括号</p>
+</li>
+<li><p><strong>带类型的模式</strong></p>
+<p>使用该模式来替代类型测试跟类型转换</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> s: <span class="type">String</span> =&gt; s.length</span><br><span class="line">  <span class="keyword">case</span> m:<span class="type">Map</span>[_, _] =&gt; m.size</span><br><span class="line">  <span class="keyword">case</span> _ =&gt; <span class="number">-1</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//不好的类型转换跟测试</span></span><br><span class="line"><span class="keyword">if</span>(x.isInstanceOf[<span class="type">String</span>])&#123;  <span class="comment">//类型判断</span></span><br><span class="line">  <span class="keyword">val</span> s = x.asInstanceOf[<span class="type">String</span>]  <span class="comment">//类型转换</span></span><br><span class="line">  s.length</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>擦除类型</p>
+<p>无法检查<code>Map中Int到Int</code>的映射，因为采用的都是一个叫做擦除式泛型，但是数组是例外</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> m: <span class="type">Map</span>[<span class="type">Int</span>, <span class="type">Int</span>] =&gt; <span class="literal">true</span>  <span class="comment">//error Map不支持具体类型检查</span></span><br><span class="line">  <span class="keyword">case</span> a: <span class="type">Array</span>[<span class="type">String</span>] =&gt; <span class="string">&quot;yes&quot;</span>  <span class="comment">//true 对Array做了特殊处理</span></span><br><span class="line">  <span class="keyword">case</span> _ =&gt;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>变量绑定</p>
+<p>除了独自存在的变量模式之外，我们还可以对任何其他模式添加变量，之后在对变量做一些其他的处理，通过<code>@</code>进行比那辆的绑定</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="type">UpOp</span>(<span class="string">&quot;abs&quot;</span>, e @ <span class="type">UpOp</span>(<span class="string">&quot;abs&quot;</span>, _)) =&gt; e  <span class="comment">//变量绑定</span></span><br><span class="line">  <span class="keyword">case</span> _ =&gt;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>模式守卫</strong></p>
+<p>模式守卫是任何的布尔表达式，如果纯在模式守卫，这个匹配需要在模式守卫为<code>true</code>的时候才会成功</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> m: <span class="type">Int</span> <span class="keyword">if</span> n&gt; <span class="number">0</span> =&gt; println(m)  <span class="comment">//打印大于０的数</span></span><br><span class="line">  <span class="keyword">case</span> _ =&gt; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>密封类</strong></p>
+<p>在做模式匹配的过程中，如果想要编译器帮你确保已经列出所有的类了，通常将会申明为密封类<code>sealed</code>，密封类中所有的子类都需要在密封类所在的文件当中，这样我们只需要关心我们已知的子类就可以了</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">sealed</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">Var</span>(<span class="params">name: <span class="type">String</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">number</span>(<span class="params">num: <span class="type">Double</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">UpOp</span>(<span class="params">operation: <span class="type">String</span>, arg: <span class="type">Expr</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">BinOp</span>(<span class="params">operation: <span class="type">String</span>, left: <span class="type">Expr</span>, right: <span class="type">Expr</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong><code>Option</code>类型</strong></p>
+<p><code>Option</code>，为一个标准的类型表示可选值，这样的值可以有两种形式<code>Some(x), None</code>，主要是传递参数的时候进行使用，因为有些时候必须需要判断一个对象是否为空，但是在<code>scala</code>中<code>Null</code>并不是一个合法元素，因此不能进行判断，使用<code>Option</code>类型很好的解决了这个问题。</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">show</span></span>(x: <span class="type">Option</span>[<span class="type">String</span>]) = x <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="type">Some</span>(x) =&gt; s</span><br><span class="line">  <span class="keyword">case</span> <span class="type">None</span> =&gt; <span class="string">&quot;?&quot;</span>  <span class="comment">//Option类型可以有Null</span></span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>偏函数</strong></p>
+<p>它只对会作用于指定类型的参数或指定范围值的参数实施计算，超出它的界定范围之外的参数类型和值它会忽略</p>
+<p><code>PartialFunction</code>特质规定了两个要实现的方法：<code>apply</code>和<code>isDefinedAt</code>，<code>isDefinedAt</code>用来告知调用方这个偏函数接受参数的范围，可以是类型也可以是值，如果是指定的范围，则返回<code>true</code>否者的话返回<code>false</code>。<code>apply</code>方法用来描述对已接受的值如何处理。</p>
+<p>大多数的时候服务的是case，case序列得到的其实就是一个偏函数</p>
+<p>自己定义一个偏函数</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">new</span> <span class="type">PartialFunction</span>[<span class="type">List</span>[<span class="type">Int</span>], <span class="type">Int</span>]&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">apply</span></span>(xs: <span class="type">List</span>[<span class="type">Int</span>]) = xs <span class="keyword">match</span>&#123;</span><br><span class="line">    <span class="keyword">case</span> x :: y :: _ =&gt; y</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">isDefinedAt</span></span>(xs: <span class="type">List</span>[<span class="type">Int</span>]) xs <span class="keyword">match</span>&#123;</span><br><span class="line">    <span class="keyword">case</span> x :: y :: _ =&gt; <span class="literal">true</span></span><br><span class="line">    <span class="keyword">case</span> _ =&gt; <span class="literal">false</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<h2 id="使用列表"><a href="#使用列表" class="headerlink" title="使用列表"></a>使用列表</h2>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/scala%E7%BC%96%E7%A8%8B/" rel="tag"><i class="fa fa-tag"></i> scala编程</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/9-scala%E5%8C%85%E7%9A%84%E5%BC%95%E5%85%A5%E8%B7%9F%E6%B5%8B%E8%AF%95/" rel="prev" title="scala包的引入跟测试">
+      <i class="fa fa-chevron-left"></i> scala包的引入跟测试
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E5%88%97%E8%A1%A8"><span class="nav-number">1.</span> <span class="nav-text">使用列表</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">海海不想起床</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">17</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/haihai-self" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;haihai-self" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">海海不想起床</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

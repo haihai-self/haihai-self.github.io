@@ -553,11 +553,6 @@
     <content><![CDATA[]]></content>
   </entry>
   <entry>
-    <title>scala样例类跟模式匹配</title>
-    <url>/2020/09/22/scala%E6%A0%B7%E4%BE%8B%E7%B1%BB%E8%B7%9F%E6%A8%A1%E5%BC%8F%E5%8C%B9%E9%85%8D/</url>
-    <content><![CDATA[]]></content>
-  </entry>
-  <entry>
     <title>scala包的引入跟测试</title>
     <url>/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/9-scala%E5%8C%85%E7%9A%84%E5%BC%95%E5%85%A5%E8%B7%9F%E6%B5%8B%E8%AF%95/</url>
     <content><![CDATA[<p>包就跟c++中的namespace中一样，通过将不同的类与特质组合在一起，形成一个包，测试也是通过引入scala中官方的包进行的</p>
@@ -600,6 +595,106 @@
 </li>
 </ul>
 <h2 id=""><a href="#" class="headerlink" title=""></a></h2>]]></content>
+      <categories>
+        <category>scala</category>
+      </categories>
+      <tags>
+        <tag>scala编程</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>scala样例类跟模式匹配</title>
+    <url>/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/10-scala%E6%A0%B7%E4%BE%8B%E7%B1%BB%E8%B7%9F%E6%A8%A1%E5%BC%8F%E5%8C%B9%E9%85%8D/</url>
+    <content><![CDATA[<p>样例类也是scala使用频率很高的语法，通过case进行创建，进行响应的控制，而模式匹配正是通过样例类进行相应的匹配操作</p>
+<a id="more"></a>
+
+<ul>
+<li><p><strong>样例类</strong></p>
+<p>笼统来说，就是将想要匹配的类加上一个<code>case</code>关键字。</p>
+<p>首先他会将我们的方法加上一个工厂方法，可以通过<code>Var(“x”)</code>这样的类型来进行类创建而不是<code>new Var(“x”)</code>。</p>
+<p>其次是参数列表中的参数都可以隐式的加上一个<code>val</code>前缀，这样的话就可以当做字段来进行处理。</p>
+<p>再次编译器会帮我们自然的实现<code>toString, hashCode, equals</code>方法</p>
+<p>最后编译器还会帮我们做一个<code>copy</code>方法，该方法可以进行一些参数的修改</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">Var</span>(<span class="params">name: <span class="type">String</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">number</span>(<span class="params">num: <span class="type">Double</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">UpOp</span>(<span class="params">operator: <span class="type">String</span>, arg: <span class="type">Expr</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">BinOp</span>(<span class="params">operator: <span class="type">String</span>, left: <span class="type">Expr</span>, right: <span class="type">Expr</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"></span></span><br><span class="line"><span class="class"><span class="title">//使用实例</span></span></span><br><span class="line"><span class="class"><span class="title">val</span> <span class="title">v</span> </span>= <span class="type">Var</span>(<span class="string">&quot;x&quot;</span>)</span><br><span class="line"><span class="keyword">val</span> op = <span class="type">BinOp</span>(<span class="string">&quot;+&quot;</span>, number(<span class="number">1</span>), v)</span><br><span class="line">v.name</span><br><span class="line">println(op)</span><br><span class="line">op.copy(operator = <span class="string">&quot;-&quot;</span>)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>模式匹配</strong></p>
+<p>具体形式是<code>选择器 match &#123;可选分支&#125;</code>，其中可选分支包括至少一个<code>case</code>，每一个可选分支都包括一个模式以及一个或多个表达式，如果模式匹配了，这些表达式就会被求值。<code>=&gt;</code>将模式与表达式分开。</p>
+<p><code>match switch</code>的区别</p>
+<ul>
+<li><code>match</code>是一个表达式，总是会得到一个值</li>
+<li><code>scala</code>的分支不会贯穿到下一个<code>case</code>，若是匹配的话，会隐式的加上一个<code>break</code>进行退出</li>
+<li>若是啥都不匹配的话会抛出异常，所以最后需要加上一个通配<code>case</code></li>
+</ul>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">simplifyTop</span></span>(expr: <span class="type">Expr</span>): <span class="type">Expr</span> = expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="type">UnOp</span>(<span class="string">&quot;-&quot;</span>, <span class="type">UnOp</span>(<span class="string">&quot;-&quot;</span>, e)) =&gt; e  <span class="comment">//双重取负</span></span><br><span class="line">  <span class="keyword">case</span> <span class="type">BinOp</span>(<span class="string">&quot;+&quot;</span>, e, number(<span class="number">0</span>)) =&gt; e  <span class="comment">// + 0</span></span><br><span class="line">  <span class="keyword">case</span> <span class="type">BinOp</span>(<span class="string">&quot;*&quot;</span>, e, number(<span class="number">1</span>)) =&gt; <span class="number">1</span>  <span class="comment">// * 1</span></span><br><span class="line">  <span class="keyword">case</span> _ =&gt; exrp</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>模式种类</strong></p>
+<p>所有的模式匹配跟表达式类型十分的相似</p>
+<ul>
+<li><p><strong>通配模式</strong></p>
+<p><code>(_)</code>会匹配任何对象，用来忽略你并不关心的局部</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="type">BinOp</span>(_, _, _) =&gt; println(expr + <span class="string">&quot;is a binary operation&quot;</span>)  <span class="comment">//只关心是一个二源操作</span></span><br><span class="line">  <span class="keyword">case</span> _ =&gt; println(<span class="string">&quot;something else&quot;</span>)  <span class="comment">//覆盖值处理</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>常量模式</strong></p>
+<p>只匹配自己</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="number">5</span> =&gt; <span class="string">&quot;five&quot;</span></span><br><span class="line">  <span class="keyword">case</span> <span class="type">Nil</span> =&gt; <span class="string">&quot;the empty list&quot;</span>  <span class="comment">//只能匹配空列表</span></span><br><span class="line">  <span class="keyword">case</span> _ =&gt; <span class="string">&quot;something else&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>变量模式</strong></p>
+<p>变量模式可以匹配任何对象，这点跟通配模式相同，但是变量模式会将匹配的对象绑定到变量上，这样就可以使用这个变量进行下一步的处理</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="number">0</span> =&gt; <span class="string">&quot;zero&quot;</span></span><br><span class="line">  <span class="keyword">case</span> somethingElse =&gt; <span class="string">&quot;not zero&quot;</span> + somethingElse  <span class="comment">//这里将somethingElse用作一些处理，但是这还是局部变量</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>scala</code>中一般会将<strong>小写</strong>开头的字面量当做<strong>变量匹配</strong>，要是想要继续使用小写开头字面量当做常量的话可以使用<code>this.pi, obj.pi</code>等进行处理</p>
+</li>
+<li><p><strong>构造方法模式</strong></p>
+<p>最有用的模式，由一个名称加上一个圆括号以及圆括号中的模式组成。这个模式将首先检查被匹配的对象是否是以这个名称命名的样例实例，在检查这个对象的够着方法参数是否匹配这些额外给出模式。</p>
+<p>这样意味着可以进行深度匹配，不仅仅会检查顶层，还会进一步检查对象内容是否匹配这些额外的模式要求</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="type">BinOp</span>(<span class="string">&quot;+&quot;</span>, e, number(<span class="number">0</span>)) =&gt; println(<span class="string">&quot;a deep match&quot;</span>)  <span class="comment">//首先匹配BinOp，接着匹配参数列表，最后匹配number(0)，一共有三层模式匹配</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>序列模式</strong></p>
+<p>可以跟<code>Lsis, Array</code>这些序列进行模式匹配，可以用<code>_*</code>作为模式的最后一个元素，表示的是还可以匹配任意长度的元素。</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="type">List</span>(<span class="number">0</span>, _*) =&gt; println(<span class="string">&quot;this is a list with beginning 0&quot;</span>)</span><br><span class="line">  <span class="keyword">case</span> _ =&gt; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>元组模式</strong></p>
+<p>这里跟序列模式是一样的，只不过将<code>List</code>换成了圆括号</p>
+</li>
+<li><p><strong>带类型的模式</strong></p>
+<p>使用该模式来替代类型测试跟类型转换</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> s: <span class="type">String</span> =&gt; s.length</span><br><span class="line">  <span class="keyword">case</span> m:<span class="type">Map</span>[_, _] =&gt; m.size</span><br><span class="line">  <span class="keyword">case</span> _ =&gt; <span class="number">-1</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//不好的类型转换跟测试</span></span><br><span class="line"><span class="keyword">if</span>(x.isInstanceOf[<span class="type">String</span>])&#123;  <span class="comment">//类型判断</span></span><br><span class="line">  <span class="keyword">val</span> s = x.asInstanceOf[<span class="type">String</span>]  <span class="comment">//类型转换</span></span><br><span class="line">  s.length</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>擦除类型</p>
+<p>无法检查<code>Map中Int到Int</code>的映射，因为采用的都是一个叫做擦除式泛型，但是数组是例外</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> m: <span class="type">Map</span>[<span class="type">Int</span>, <span class="type">Int</span>] =&gt; <span class="literal">true</span>  <span class="comment">//error Map不支持具体类型检查</span></span><br><span class="line">  <span class="keyword">case</span> a: <span class="type">Array</span>[<span class="type">String</span>] =&gt; <span class="string">&quot;yes&quot;</span>  <span class="comment">//true 对Array做了特殊处理</span></span><br><span class="line">  <span class="keyword">case</span> _ =&gt;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>变量绑定</p>
+<p>除了独自存在的变量模式之外，我们还可以对任何其他模式添加变量，之后在对变量做一些其他的处理，通过<code>@</code>进行比那辆的绑定</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="type">UpOp</span>(<span class="string">&quot;abs&quot;</span>, e @ <span class="type">UpOp</span>(<span class="string">&quot;abs&quot;</span>, _)) =&gt; e  <span class="comment">//变量绑定</span></span><br><span class="line">  <span class="keyword">case</span> _ =&gt;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>模式守卫</strong></p>
+<p>模式守卫是任何的布尔表达式，如果纯在模式守卫，这个匹配需要在模式守卫为<code>true</code>的时候才会成功</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> m: <span class="type">Int</span> <span class="keyword">if</span> n&gt; <span class="number">0</span> =&gt; println(m)  <span class="comment">//打印大于０的数</span></span><br><span class="line">  <span class="keyword">case</span> _ =&gt; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>密封类</strong></p>
+<p>在做模式匹配的过程中，如果想要编译器帮你确保已经列出所有的类了，通常将会申明为密封类<code>sealed</code>，密封类中所有的子类都需要在密封类所在的文件当中，这样我们只需要关心我们已知的子类就可以了</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">sealed</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">Var</span>(<span class="params">name: <span class="type">String</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">number</span>(<span class="params">num: <span class="type">Double</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">UpOp</span>(<span class="params">operation: <span class="type">String</span>, arg: <span class="type">Expr</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">BinOp</span>(<span class="params">operation: <span class="type">String</span>, left: <span class="type">Expr</span>, right: <span class="type">Expr</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong><code>Option</code>类型</strong></p>
+<p><code>Option</code>，为一个标准的类型表示可选值，这样的值可以有两种形式<code>Some(x), None</code>，主要是传递参数的时候进行使用，因为有些时候必须需要判断一个对象是否为空，但是在<code>scala</code>中<code>Null</code>并不是一个合法元素，因此不能进行判断，使用<code>Option</code>类型很好的解决了这个问题。</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">show</span></span>(x: <span class="type">Option</span>[<span class="type">String</span>]) = x <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="type">Some</span>(x) =&gt; s</span><br><span class="line">  <span class="keyword">case</span> <span class="type">None</span> =&gt; <span class="string">&quot;?&quot;</span>  <span class="comment">//Option类型可以有Null</span></span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>偏函数</strong></p>
+<p>它只对会作用于指定类型的参数或指定范围值的参数实施计算，超出它的界定范围之外的参数类型和值它会忽略</p>
+<p><code>PartialFunction</code>特质规定了两个要实现的方法：<code>apply</code>和<code>isDefinedAt</code>，<code>isDefinedAt</code>用来告知调用方这个偏函数接受参数的范围，可以是类型也可以是值，如果是指定的范围，则返回<code>true</code>否者的话返回<code>false</code>。<code>apply</code>方法用来描述对已接受的值如何处理。</p>
+<p>大多数的时候服务的是case，case序列得到的其实就是一个偏函数</p>
+<p>自己定义一个偏函数</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">new</span> <span class="type">PartialFunction</span>[<span class="type">List</span>[<span class="type">Int</span>], <span class="type">Int</span>]&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">apply</span></span>(xs: <span class="type">List</span>[<span class="type">Int</span>]) = xs <span class="keyword">match</span>&#123;</span><br><span class="line">    <span class="keyword">case</span> x :: y :: _ =&gt; y</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">isDefinedAt</span></span>(xs: <span class="type">List</span>[<span class="type">Int</span>]) xs <span class="keyword">match</span>&#123;</span><br><span class="line">    <span class="keyword">case</span> x :: y :: _ =&gt; <span class="literal">true</span></span><br><span class="line">    <span class="keyword">case</span> _ =&gt; <span class="literal">false</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<h2 id="使用列表"><a href="#使用列表" class="headerlink" title="使用列表"></a>使用列表</h2>]]></content>
       <categories>
         <category>scala</category>
       </categories>
