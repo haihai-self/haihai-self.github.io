@@ -420,4 +420,57 @@
         <tag>scala编程</tag>
       </tags>
   </entry>
+  <entry>
+    <title>scala函数跟闭包</title>
+    <url>/2020/09/22/scala%E5%87%BD%E6%95%B0%E8%B7%9F%E9%97%AD%E5%8C%85/</url>
+    <content><![CDATA[<p>需要注意的是使用字面量函数以及符号<code>=&gt;</code>的使用，闭包好比作用域，用于确定变量的范围</p>
+<a id="more"></a>
+<ul>
+<li><p>函数字面量**</p>
+<p>函数字面量存在于源码中，在运行时编译成类，并在运行时实例化为函数值，所以函数值对象形式存在于运行时</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">(x: <span class="type">Int</span>) =&gt; x + <span class="number">1</span></span><br></pre></td></tr></table></figure>
+
+<p>上述例子时函数字面量，左侧时参数列表，右侧是操作，多条语句的话，使用<code>&#123;&#125;</code>进行组合，<code>=&gt;</code>的意思表示将左侧的内容转换为右侧的内容。</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">someNumbers.filter(x =&gt; x &gt; <span class="number">0</span>)</span><br></pre></td></tr></table></figure>
+
+<p>接受一个函数做为入参，并对列表中的每个元素调用这个函数。同时由于知道了<code>someNumbers</code>是整数，所以x必定是整数，不用再申明类型</p>
+</li>
+<li><p><strong>占位符语法</strong></p>
+<p>用占位符来表示一个或多个参数，只要满足每个参数只在函数字面量中出现一次就行，第一个下划线代表第一个参数，第二个下划线代表第二个参数，第三个下划线代表第三个参数，以此类推。</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">someNumber.filter(_ &gt; <span class="number">0</span>)  <span class="comment">//变量是啥都不管</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>部分应用函数</strong></p>
+<p>可以用<code>_</code>代替独立的参数列表，但是要与主函数之间加上空格。</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">sum</span></span>(a: <span class="type">Int</span>, b: <span class="type">Int</span>, c: <span class="type">Int</span>): <span class="type">Int</span> = a + b + c</span><br><span class="line"><span class="keyword">val</span> a = sum _  <span class="comment">//_ 表示的是三个参数的参数列表 可以通过a(1, 2, 3)调用</span></span><br><span class="line"><span class="keyword">val</span> b = sum(<span class="number">1</span>, _: <span class="type">Int</span>, <span class="number">3</span>)  <span class="comment">//可以调用b(2)</span></span><br><span class="line">someNumbers.foreach(println _)</span><br><span class="line">someNumbers.foreach(println)</span><br></pre></td></tr></table></figure>
+
+<p>最后的这两种形式，可以再明确需要函数的地方给出。</p>
+</li>
+<li><p><strong>闭包</strong></p>
+<p>函数字面量创建出来的函数值被称为闭包，该名称源于“捕获”其自由变量从而“闭合”该函数字面量的操作。没有自由变量的字面量成为闭合语，比如<code>(x: Int =&gt; x + 1)</code>。任何带有自由变量的函数字面量称为开放语，比如<code>(x: Int =&gt; x + more)</code></p>
+</li>
+<li><p><strong>特殊函数的调用形式</strong></p>
+<ul>
+<li><p>重复参数</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">echo</span></span>(args: <span class="type">String</span>*) = </span><br><span class="line">	<span class="keyword">for</span> (arg &lt;- args) println(arg)</span><br><span class="line">echo(arr: _*)  <span class="comment">//传入一个String类型的数组</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>缺省值参数，带名参数</p>
+<p>缺省值参数就是将参数提前赋值，与python中一致。</p>
+<p>带名参数的作用就是再调用过程中，参数的顺序可以被打乱。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>尾递归</strong></p>
+<p>在函数的尾部自己调用自己，这样的话就是尾递归，尾递归会自动的优化成<code>while</code>循环的形式，减少栈的开销。但是只能对那些直接尾递归的函数进行优化，要是间接的调用尾递归并不会进行优化</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">isEven</span></span>(x: <span class="type">Int</span>): <span class="type">Boolean</span> = </span><br><span class="line">	<span class="keyword">if</span> (x == <span class="number">0</span>) <span class="literal">true</span> <span class="keyword">else</span> isOdd(x - <span class="number">1</span>)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">isodd</span></span>(x: <span class="type">Int</span>): <span class="type">Boolean</span> = </span><br><span class="line">	<span class="keyword">if</span> (x == <span class="number">0</span>) <span class="literal">false</span> <span class="keyword">else</span> isEven(x - <span class="number">1</span>)  <span class="comment">//这样的相互递归不会优化，最后一步调用的是另外的一个函数值，并不会进行优化</span></span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>scala</category>
+      </categories>
+      <tags>
+        <tag>scala编程</tag>
+      </tags>
+  </entry>
 </search>
