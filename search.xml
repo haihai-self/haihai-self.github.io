@@ -1,6 +1,100 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>config</title>
+    <url>/2020/09/22/chipyard/config/</url>
+    <content><![CDATA[<p>config是chipyard中的配置查找模块，实现了具体的查询逻辑</p>
+<a id="more"></a>
+
+<p>在文件</p>
+<blockquote>
+<p>generators/rocket-chip/api-config-chipsalliance/design/craft/src/config/Config.scala中。</p>
+</blockquote>
+<p><img src="/picture/2010/image-20200915091035763.png" alt="image-20200915105005563">由图中可以看出View/Field/Parameter为抽象类，不能进行实例化，view的直接子类有TerminalView/ChainView/Parameter，其中TerminalView/ChainView为私有类，只能在config包内进行访问，没有子类，而Parameter的子类有</p>
+<blockquote>
+<p>Config/ChainParameters/EmptyParameters/PartialParameters/MapParameters。</p>
+</blockquote>
+<p>以上的所有类中，暴露给外界的接口为Parameter的子类Config，其他的不是私有类就是抽象类，不能给外界继承。该package的主要目的是为了查找</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">BaseConfig</span> <span class="keyword">extends</span> <span class="title">Config</span>(<span class="params"></span></span></span><br><span class="line"><span class="class"><span class="params">  new <span class="type">WithDefaultMemPort</span>(</span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithDefaultMMIOPort</span>(<span class="params"></span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithDefaultSlavePort</span>(<span class="params"></span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithTimebase</span>(<span class="params"><span class="type">BigInt</span>(1000000</span>)) <span class="title">++</span> <span class="title">//</span> 1 <span class="title">MHz</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithDTS</span>(<span class="params">&quot;freechips,rocketchip-unknown&quot;, <span class="type">Nil</span></span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithNExtTopInterrupts</span>(<span class="params">2</span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">BaseSubsystemConfig</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="class">)</span></span><br></pre></td></tr></table></figure>
+
+<p>可以看到BaseConfig继承了Config类，使用了其中的<code>++</code>方法构造View链，在使用其中的内部查找方法，返回View。</p>
+<h2 id="Field"><a href="#Field" class="headerlink" title="Field"></a>Field</h2><p>View中的主要数据结构，为待查找的对象</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Field</span>[<span class="type">T</span>] <span class="title">private</span> (<span class="params">val default: <span class="type">Option</span>[<span class="type">T</span>]</span>)</span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">this</span></span>() = <span class="keyword">this</span>(<span class="type">None</span>)</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">this</span></span>(<span class="keyword">default</span>: <span class="type">T</span>) = <span class="keyword">this</span>(<span class="type">Some</span>(<span class="keyword">default</span>))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>接收一个Option的值，其中有两个辅助构造方法，无参的构造方法返回None，有参数的构造方法返回对应的值。</p>
+<h2 id="View"><a href="#View" class="headerlink" title="View"></a>View</h2><p>为配置视图，通过View才能看到配置，进行查找。</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">View</span> </span>&#123;</span><br><span class="line">  <span class="keyword">final</span> <span class="function"><span class="keyword">def</span> <span class="title">apply</span></span>[<span class="type">T</span>](pname: <span class="type">Field</span>[<span class="type">T</span>]): <span class="type">T</span> = apply(pname, <span class="keyword">this</span>)</span><br><span class="line">  <span class="keyword">final</span> <span class="function"><span class="keyword">def</span> <span class="title">apply</span></span>[<span class="type">T</span>](pname: <span class="type">Field</span>[<span class="type">T</span>], site: <span class="type">View</span>): <span class="type">T</span> = &#123;</span><br><span class="line">    <span class="keyword">val</span> out = find(pname, site)</span><br><span class="line">    require (out.isDefined, <span class="string">s&quot;Key <span class="subst">$&#123;pname&#125;</span> is not defined in Parameters&quot;</span>)</span><br><span class="line">    out.get</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">final</span> <span class="function"><span class="keyword">def</span> <span class="title">lift</span></span>[<span class="type">T</span>](pname: <span class="type">Field</span>[<span class="type">T</span>]): <span class="type">Option</span>[<span class="type">T</span>] = lift(pname, <span class="keyword">this</span>)</span><br><span class="line">  <span class="keyword">final</span> <span class="function"><span class="keyword">def</span> <span class="title">lift</span></span>[<span class="type">T</span>](pname: <span class="type">Field</span>[<span class="type">T</span>], site: <span class="type">View</span>): <span class="type">Option</span>[<span class="type">T</span>] = find(pname, site).map(_.asInstanceOf[<span class="type">T</span>])</span><br><span class="line"></span><br><span class="line">  <span class="keyword">protected</span>[config] <span class="function"><span class="keyword">def</span> <span class="title">find</span></span>[<span class="type">T</span>](pname: <span class="type">Field</span>[<span class="type">T</span>], site: <span class="type">View</span>): <span class="type">Option</span>[<span class="type">T</span>]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>定义了两个apply方法，其中第一个只接收待查找的对象，第二个接收待查找的对象跟需要查找的View，但是第一个apply会调用第二个apply方法，待查找的对象为本身this。</p>
+<p>第二个apply方法会调用内部的find方法，find接收待查找对象跟需要查找的 View，返回一个Option的值，在View中定义的find为抽象类，具体实现是在他的子类中。</p>
+<h3 id="TerminalView"><a href="#TerminalView" class="headerlink" title="TerminalView"></a>TerminalView</h3><p>为View的三个子类之一，实现了find方法。</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">TerminalView</span> <span class="keyword">extends</span> <span class="title">View</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">find</span></span>[<span class="type">T</span>](pname: <span class="type">Field</span>[<span class="type">T</span>], site: <span class="type">View</span>): <span class="type">Option</span>[<span class="type">T</span>] = pname.<span class="keyword">default</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>表示的是要是在链表中找不到对应的View的话，返回default的值，而最后的Filed必然是调用空的构造函数，所以最终查找不到将会返回None</p>
+<h3 id="ChainView"><a href="#ChainView" class="headerlink" title="ChainView"></a>ChainView</h3><p>这是想把两个View结合在一起。</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">ChainView</span>(<span class="params">head: <span class="type">Parameters</span>, tail: <span class="type">View</span></span>) <span class="keyword">extends</span> <span class="title">View</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">find</span></span>[<span class="type">T</span>](pname: <span class="type">Field</span>[<span class="type">T</span>], site: <span class="type">View</span>) = head.chain(site, tail, pname)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>接收一个parameters与一个View，实现了find方法，find方法就是调用parameters中的chain方法</p>
+<h3 id="Parameters"><a href="#Parameters" class="headerlink" title="Parameters"></a>Parameters</h3><p>Parameters为View的子类，实现了find方法.</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Parameters</span> <span class="keyword">extends</span> <span class="title">View</span> </span>&#123;</span><br><span class="line">  <span class="keyword">final</span> <span class="function"><span class="keyword">def</span> <span class="title">++</span> </span>(x: <span class="type">Parameters</span>): <span class="type">Parameters</span> =</span><br><span class="line">    <span class="keyword">new</span> <span class="type">ChainParameters</span>(<span class="keyword">this</span>, x)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">final</span> <span class="function"><span class="keyword">def</span> <span class="title">alter</span></span>(f: (<span class="type">View</span>, <span class="type">View</span>, <span class="type">View</span>) =&gt; <span class="type">PartialFunction</span>[<span class="type">Any</span>,<span class="type">Any</span>]): <span class="type">Parameters</span> =</span><br><span class="line">    <span class="type">Parameters</span>(f) ++ <span class="keyword">this</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">final</span> <span class="function"><span class="keyword">def</span> <span class="title">alterPartial</span></span>(f: <span class="type">PartialFunction</span>[<span class="type">Any</span>,<span class="type">Any</span>]): <span class="type">Parameters</span> =</span><br><span class="line">    <span class="type">Parameters</span>((_,_,_) =&gt; f) ++ <span class="keyword">this</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">final</span> <span class="function"><span class="keyword">def</span> <span class="title">alterMap</span></span>(m: <span class="type">Map</span>[<span class="type">Any</span>,<span class="type">Any</span>]): <span class="type">Parameters</span> =</span><br><span class="line">    <span class="keyword">new</span> <span class="type">MapParameters</span>(m) ++ <span class="keyword">this</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">protected</span>[config] <span class="function"><span class="keyword">def</span> <span class="title">chain</span></span>[<span class="type">T</span>](site: <span class="type">View</span>, tail: <span class="type">View</span>, pname: <span class="type">Field</span>[<span class="type">T</span>]): <span class="type">Option</span>[<span class="type">T</span>]</span><br><span class="line">  <span class="keyword">protected</span>[config] <span class="function"><span class="keyword">def</span> <span class="title">find</span></span>[<span class="type">T</span>](pname: <span class="type">Field</span>[<span class="type">T</span>], site: <span class="type">View</span>) = chain(site, <span class="keyword">new</span> <span class="type">TerminalView</span>, pname)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">object</span> <span class="title">Parameters</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">empty</span></span>: <span class="type">Parameters</span> = <span class="keyword">new</span> <span class="type">EmptyParameters</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">apply</span></span>(f: (<span class="type">View</span>, <span class="type">View</span>, <span class="type">View</span>) =&gt; <span class="type">PartialFunction</span>[<span class="type">Any</span>,<span class="type">Any</span>]): <span class="type">Parameters</span> = <span class="keyword">new</span> <span class="type">PartialParameters</span>(f)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>chain是一个抽象方法为一个链式查找逻辑，其中site表示当前要查找的Veiw，tail表示下一个要查找的View，pname为需要查找的对象。</li>
+<li>find将查找逻辑代理给chain方法，所以具体的查找逻辑最终还是在Parameters的子类当中。</li>
+<li>++方法将一个Parameters传递给子类的ChainParameters，将Parameters组成链。</li>
+<li>PartialFunction[Any, Any]接受一个Any类型的参数，返回一个Any类型的变量。</li>
+<li>alter的参数列表中，是一个偏函数，接收一个f，返回一个PartialFunction。</li>
+<li>alterPartial中的参数列表表示接收的是一个PartialFunction，这个PartialFunction接收一个Any类型，返回一个Any类型<ul>
+<li>上面两个函数，内部都调用了伴生对象中的apply方法，内部调用了PatialParameters</li>
+</ul>
+</li>
+<li>最后alterMap接收一个Map类型的对象调用子类MapParameters之后在调用++方法。</li>
+</ul>
+<p>最后parameters的调用方法如下所示</p>
+<p><img src="/picture/2010/image-20200915105005563.png" alt="image-20200915105005563"></p>
+<h4 id="EmptyParameters"><a href="#EmptyParameters" class="headerlink" title="EmptyParameters"></a>EmptyParameters</h4><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">EmptyParameters</span> <span class="keyword">extends</span> <span class="title">Parameters</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">chain</span></span>[<span class="type">T</span>](site: <span class="type">View</span>, tail: <span class="type">View</span>, pname: <span class="type">Field</span>[<span class="type">T</span>]) = tail.find(pname, site)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在没有配置项的情况下，直接在下一个View中进行查找，调用tail的find方法。</p>
+<h4 id="PartialParameter"><a href="#PartialParameter" class="headerlink" title="PartialParameter"></a>PartialParameter</h4><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">PartialParameters</span>(<span class="params">f: (<span class="type">View</span>, <span class="type">View</span>, <span class="type">View</span></span>) <span class="title">=&gt;</span> <span class="title">PartialFunction</span>[<span class="type">Any</span>,<span class="type">Any</span>]) <span class="keyword">extends</span> <span class="title">Parameters</span> </span>&#123;</span><br><span class="line">  <span class="keyword">protected</span>[config] <span class="function"><span class="keyword">def</span> <span class="title">chain</span></span>[<span class="type">T</span>](site: <span class="type">View</span>, tail: <span class="type">View</span>, pname: <span class="type">Field</span>[<span class="type">T</span>]) = &#123;</span><br><span class="line">    <span class="keyword">val</span> g = f(site, <span class="keyword">this</span>, tail)</span><br><span class="line">    <span class="keyword">if</span> (g.isDefinedAt(pname)) <span class="type">Some</span>(g.apply(pname).asInstanceOf[<span class="type">T</span>]) <span class="keyword">else</span> tail.find(pname, site)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>该函数参数为一个成员函数，类型为(View, View, View) =&gt; PartialFunction(Any, Any)</p>
+<ul>
+<li>接收三个类型为View的参数</li>
+<li>返回一个PartialFunction</li>
+</ul>
+<p>实现的chain方法的查找逻辑是首先生成一个匹配函数g，g是一个PartialFunction，使用isDefineAt方法查找是否匹配当前View，若不匹配，在下一个View中查找</p>
+<h4 id="MapParameters"><a href="#MapParameters" class="headerlink" title="MapParameters"></a>MapParameters</h4><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">MapParameters</span>(<span class="params">map: <span class="type">Map</span>[<span class="type">Any</span>, <span class="type">Any</span>]</span>) <span class="keyword">extends</span> <span class="title">Parameters</span> </span>&#123;</span><br><span class="line">  <span class="keyword">protected</span>[config] <span class="function"><span class="keyword">def</span> <span class="title">chain</span></span>[<span class="type">T</span>](site: <span class="type">View</span>, tail: <span class="type">View</span>, pname: <span class="type">Field</span>[<span class="type">T</span>]) = &#123;</span><br><span class="line">    <span class="keyword">val</span> g = map.get(pname)</span><br><span class="line">    <span class="keyword">if</span> (g.isDefined) <span class="type">Some</span>(g.get.asInstanceOf[<span class="type">T</span>]) <span class="keyword">else</span> tail.find(pname, site)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个跟上一个类似，但是使用的是Map查找而不是PartialFunction，若当前View存在返回，不匹配的话将在下一个View中查找。</p>
+<h4 id="ChainParameters"><a href="#ChainParameters" class="headerlink" title="ChainParameters"></a>ChainParameters</h4><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">ChainView</span>(<span class="params">head: <span class="type">Parameters</span>, tail: <span class="type">View</span></span>) <span class="keyword">extends</span> <span class="title">View</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">find</span></span>[<span class="type">T</span>](pname: <span class="type">Field</span>[<span class="type">T</span>], site: <span class="type">View</span>) = head.chain(site, tail, pname)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>该函数接收两个参数的Parameters，他将两个Parameter连接起来，首先在x中进行查找，再在y中进行查找。</p>
+<h4 id="Config"><a href="#Config" class="headerlink" title="Config"></a>Config</h4><p>最后是暴露给外界的查找接口Config</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Config</span>(<span class="params">p: <span class="type">Parameters</span></span>) <span class="keyword">extends</span> <span class="title">Parameters</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">this</span></span>(f: (<span class="type">View</span>, <span class="type">View</span>, <span class="type">View</span>) =&gt; <span class="type">PartialFunction</span>[<span class="type">Any</span>,<span class="type">Any</span>]) = <span class="keyword">this</span>(<span class="type">Parameters</span>(f))</span><br><span class="line"></span><br><span class="line">  <span class="keyword">protected</span>[config] <span class="function"><span class="keyword">def</span> <span class="title">chain</span></span>[<span class="type">T</span>](site: <span class="type">View</span>, tail: <span class="type">View</span>, pname: <span class="type">Field</span>[<span class="type">T</span>]) = p.chain(site, tail, pname)</span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">toString</span> </span>= <span class="keyword">this</span>.getClass.getSimpleName</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">toInstance</span> </span>= <span class="keyword">this</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>有两种构造方法，第一种是字节传入一个Parameters，这种方法会直接调用chain方法进行查找，另外一个辅助构造方法接收三个参数的View，这将调用Parameter的伴生对象中的apply方法进行查找，与alterPartial类似。</p>
+<h2 id="使用规范"><a href="#使用规范" class="headerlink" title="使用规范"></a>使用规范</h2><ul>
+<li><p>直接调用Parameters的伴生对象中的apple方法</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">BaseSubsystemConfig</span> <span class="keyword">extends</span> <span class="title">Config</span> (<span class="params">(site, here, up</span>) <span class="title">=&gt;</span> </span>&#123;</span><br><span class="line">  <span class="comment">// Tile parameters</span></span><br><span class="line">  <span class="keyword">case</span> <span class="type">PgLevels</span> =&gt; <span class="keyword">if</span> (site(<span class="type">XLen</span>) == <span class="number">64</span>) <span class="number">3</span> <span class="comment">/* Sv39 */</span> <span class="keyword">else</span> <span class="number">2</span> <span class="comment">/* Sv32 */</span></span><br><span class="line">  <span class="keyword">case</span> <span class="type">XLen</span> =&gt; <span class="number">64</span> <span class="comment">// Applies to all cores</span></span><br><span class="line">  <span class="keyword">case</span> <span class="type">MaxHartIdBits</span> =&gt; log2Up(site(<span class="type">RocketTilesKey</span>).size)</span><br><span class="line">  <span class="comment">// Interconnect parameters</span></span><br><span class="line">  <span class="keyword">case</span> <span class="type">SystemBusKey</span> =&gt; <span class="type">SystemBusParams</span>(</span><br><span class="line">    beatBytes = site(<span class="type">XLen</span>)/<span class="number">8</span>,</span><br><span class="line">    blockBytes = site(<span class="type">CacheBlockBytes</span>))</span><br><span class="line">  <span class="keyword">case</span> <span class="type">ControlBusKey</span> =&gt; <span class="type">PeripheryBusParams</span>(</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>由于apply方法返回的是一个PartialFunction，所以使用可以使用case方法判断查询到了具体的哪个对象</p>
+</li>
+<li><p>添加配置</p>
+<p>Config类继承了Parameters中的<code>++</code>方法，所以可以直接使用该方法来添加View</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">BaseConfig</span> <span class="keyword">extends</span> <span class="title">Config</span>(<span class="params"></span></span></span><br><span class="line"><span class="class"><span class="params">  new <span class="type">WithDefaultMemPort</span>(</span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithDefaultMMIOPort</span>(<span class="params"></span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithDefaultSlavePort</span>(<span class="params"></span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithTimebase</span>(<span class="params"><span class="type">BigInt</span>(1000000</span>)) <span class="title">++</span> <span class="title">//</span> 1 <span class="title">MHz</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithDTS</span>(<span class="params">&quot;freechips,rocketchip-unknown&quot;, <span class="type">Nil</span></span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithNExtTopInterrupts</span>(<span class="params">2</span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">BaseSubsystemConfig</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="class">)</span></span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>config中实现了查找的逻辑，与外部的调用site，here，up相对应，实现了两种查找方法，一种是递归动态的查找，使用的是PartialFunction技术，一种是静态的查找，直接使用Map中的映射进行。</p>
+]]></content>
+      <categories>
+        <category>chipyard</category>
+      </categories>
+      <tags>
+        <tag>chipyard</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Ubuntu下gcc版本管理</title>
     <url>/2020/09/20/%E6%9D%82%E8%AE%B0/Ubuntu%E4%B8%8Bgcc%E7%89%88%E6%9C%AC%E7%AE%A1%E7%90%86/</url>
     <content><![CDATA[<p>直接使用<code>build essential</code>安装的<code>gcc/g++</code>在一些比较早期的项目编译的时候会出现版本不支持的情况下需要对版本版本进行升降级，网络上看到直接使用<code>rm</code>命令确实是够好笑的，之前也上过当，这里记录一下靠谱的方法。</p>
@@ -98,168 +192,6 @@
       </tags>
   </entry>
   <entry>
-    <title>config</title>
-    <url>/2020/09/22/chipyard/config/</url>
-    <content><![CDATA[<p>config是chipyard中的配置查找模块，实现了具体的查询逻辑</p>
-<a id="more"></a>
-
-<p>在文件</p>
-<blockquote>
-<p>generators/rocket-chip/api-config-chipsalliance/design/craft/src/config/Config.scala中。</p>
-</blockquote>
-<p><img src="/picture/2010/image-20200915091035763.png" alt="image-20200915105005563">由图中可以看出View/Field/Parameter为抽象类，不能进行实例化，view的直接子类有TerminalView/ChainView/Parameter，其中TerminalView/ChainView为私有类，只能在config包内进行访问，没有子类，而Parameter的子类有</p>
-<blockquote>
-<p>Config/ChainParameters/EmptyParameters/PartialParameters/MapParameters。</p>
-</blockquote>
-<p>以上的所有类中，暴露给外界的接口为Parameter的子类Config，其他的不是私有类就是抽象类，不能给外界继承。该package的主要目的是为了查找</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">BaseConfig</span> <span class="keyword">extends</span> <span class="title">Config</span>(<span class="params"></span></span></span><br><span class="line"><span class="class"><span class="params">  new <span class="type">WithDefaultMemPort</span>(</span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithDefaultMMIOPort</span>(<span class="params"></span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithDefaultSlavePort</span>(<span class="params"></span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithTimebase</span>(<span class="params"><span class="type">BigInt</span>(1000000</span>)) <span class="title">++</span> <span class="title">//</span> 1 <span class="title">MHz</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithDTS</span>(<span class="params">&quot;freechips,rocketchip-unknown&quot;, <span class="type">Nil</span></span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithNExtTopInterrupts</span>(<span class="params">2</span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">BaseSubsystemConfig</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="class">)</span></span><br></pre></td></tr></table></figure>
-
-<p>可以看到BaseConfig继承了Config类，使用了其中的<code>++</code>方法构造View链，在使用其中的内部查找方法，返回View。</p>
-<h2 id="Field"><a href="#Field" class="headerlink" title="Field"></a>Field</h2><p>View中的主要数据结构，为待查找的对象</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Field</span>[<span class="type">T</span>] <span class="title">private</span> (<span class="params">val default: <span class="type">Option</span>[<span class="type">T</span>]</span>)</span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">this</span></span>() = <span class="keyword">this</span>(<span class="type">None</span>)</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">this</span></span>(<span class="keyword">default</span>: <span class="type">T</span>) = <span class="keyword">this</span>(<span class="type">Some</span>(<span class="keyword">default</span>))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>接收一个Option的值，其中有两个辅助构造方法，无参的构造方法返回None，有参数的构造方法返回对应的值。</p>
-<h2 id="View"><a href="#View" class="headerlink" title="View"></a>View</h2><p>为配置视图，通过View才能看到配置，进行查找。</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">View</span> </span>&#123;</span><br><span class="line">  <span class="keyword">final</span> <span class="function"><span class="keyword">def</span> <span class="title">apply</span></span>[<span class="type">T</span>](pname: <span class="type">Field</span>[<span class="type">T</span>]): <span class="type">T</span> = apply(pname, <span class="keyword">this</span>)</span><br><span class="line">  <span class="keyword">final</span> <span class="function"><span class="keyword">def</span> <span class="title">apply</span></span>[<span class="type">T</span>](pname: <span class="type">Field</span>[<span class="type">T</span>], site: <span class="type">View</span>): <span class="type">T</span> = &#123;</span><br><span class="line">    <span class="keyword">val</span> out = find(pname, site)</span><br><span class="line">    require (out.isDefined, <span class="string">s&quot;Key <span class="subst">$&#123;pname&#125;</span> is not defined in Parameters&quot;</span>)</span><br><span class="line">    out.get</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">final</span> <span class="function"><span class="keyword">def</span> <span class="title">lift</span></span>[<span class="type">T</span>](pname: <span class="type">Field</span>[<span class="type">T</span>]): <span class="type">Option</span>[<span class="type">T</span>] = lift(pname, <span class="keyword">this</span>)</span><br><span class="line">  <span class="keyword">final</span> <span class="function"><span class="keyword">def</span> <span class="title">lift</span></span>[<span class="type">T</span>](pname: <span class="type">Field</span>[<span class="type">T</span>], site: <span class="type">View</span>): <span class="type">Option</span>[<span class="type">T</span>] = find(pname, site).map(_.asInstanceOf[<span class="type">T</span>])</span><br><span class="line"></span><br><span class="line">  <span class="keyword">protected</span>[config] <span class="function"><span class="keyword">def</span> <span class="title">find</span></span>[<span class="type">T</span>](pname: <span class="type">Field</span>[<span class="type">T</span>], site: <span class="type">View</span>): <span class="type">Option</span>[<span class="type">T</span>]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>定义了两个apply方法，其中第一个只接收待查找的对象，第二个接收待查找的对象跟需要查找的View，但是第一个apply会调用第二个apply方法，待查找的对象为本身this。</p>
-<p>第二个apply方法会调用内部的find方法，find接收待查找对象跟需要查找的 View，返回一个Option的值，在View中定义的find为抽象类，具体实现是在他的子类中。</p>
-<h3 id="TerminalView"><a href="#TerminalView" class="headerlink" title="TerminalView"></a>TerminalView</h3><p>为View的三个子类之一，实现了find方法。</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">TerminalView</span> <span class="keyword">extends</span> <span class="title">View</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">find</span></span>[<span class="type">T</span>](pname: <span class="type">Field</span>[<span class="type">T</span>], site: <span class="type">View</span>): <span class="type">Option</span>[<span class="type">T</span>] = pname.<span class="keyword">default</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>表示的是要是在链表中找不到对应的View的话，返回default的值，而最后的Filed必然是调用空的构造函数，所以最终查找不到将会返回None</p>
-<h3 id="ChainView"><a href="#ChainView" class="headerlink" title="ChainView"></a>ChainView</h3><p>这是想把两个View结合在一起。</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">ChainView</span>(<span class="params">head: <span class="type">Parameters</span>, tail: <span class="type">View</span></span>) <span class="keyword">extends</span> <span class="title">View</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">find</span></span>[<span class="type">T</span>](pname: <span class="type">Field</span>[<span class="type">T</span>], site: <span class="type">View</span>) = head.chain(site, tail, pname)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>接收一个parameters与一个View，实现了find方法，find方法就是调用parameters中的chain方法</p>
-<h3 id="Parameters"><a href="#Parameters" class="headerlink" title="Parameters"></a>Parameters</h3><p>Parameters为View的子类，实现了find方法.</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Parameters</span> <span class="keyword">extends</span> <span class="title">View</span> </span>&#123;</span><br><span class="line">  <span class="keyword">final</span> <span class="function"><span class="keyword">def</span> <span class="title">++</span> </span>(x: <span class="type">Parameters</span>): <span class="type">Parameters</span> =</span><br><span class="line">    <span class="keyword">new</span> <span class="type">ChainParameters</span>(<span class="keyword">this</span>, x)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">final</span> <span class="function"><span class="keyword">def</span> <span class="title">alter</span></span>(f: (<span class="type">View</span>, <span class="type">View</span>, <span class="type">View</span>) =&gt; <span class="type">PartialFunction</span>[<span class="type">Any</span>,<span class="type">Any</span>]): <span class="type">Parameters</span> =</span><br><span class="line">    <span class="type">Parameters</span>(f) ++ <span class="keyword">this</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">final</span> <span class="function"><span class="keyword">def</span> <span class="title">alterPartial</span></span>(f: <span class="type">PartialFunction</span>[<span class="type">Any</span>,<span class="type">Any</span>]): <span class="type">Parameters</span> =</span><br><span class="line">    <span class="type">Parameters</span>((_,_,_) =&gt; f) ++ <span class="keyword">this</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">final</span> <span class="function"><span class="keyword">def</span> <span class="title">alterMap</span></span>(m: <span class="type">Map</span>[<span class="type">Any</span>,<span class="type">Any</span>]): <span class="type">Parameters</span> =</span><br><span class="line">    <span class="keyword">new</span> <span class="type">MapParameters</span>(m) ++ <span class="keyword">this</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">protected</span>[config] <span class="function"><span class="keyword">def</span> <span class="title">chain</span></span>[<span class="type">T</span>](site: <span class="type">View</span>, tail: <span class="type">View</span>, pname: <span class="type">Field</span>[<span class="type">T</span>]): <span class="type">Option</span>[<span class="type">T</span>]</span><br><span class="line">  <span class="keyword">protected</span>[config] <span class="function"><span class="keyword">def</span> <span class="title">find</span></span>[<span class="type">T</span>](pname: <span class="type">Field</span>[<span class="type">T</span>], site: <span class="type">View</span>) = chain(site, <span class="keyword">new</span> <span class="type">TerminalView</span>, pname)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">object</span> <span class="title">Parameters</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">empty</span></span>: <span class="type">Parameters</span> = <span class="keyword">new</span> <span class="type">EmptyParameters</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">apply</span></span>(f: (<span class="type">View</span>, <span class="type">View</span>, <span class="type">View</span>) =&gt; <span class="type">PartialFunction</span>[<span class="type">Any</span>,<span class="type">Any</span>]): <span class="type">Parameters</span> = <span class="keyword">new</span> <span class="type">PartialParameters</span>(f)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>chain是一个抽象方法为一个链式查找逻辑，其中site表示当前要查找的Veiw，tail表示下一个要查找的View，pname为需要查找的对象。</li>
-<li>find将查找逻辑代理给chain方法，所以具体的查找逻辑最终还是在Parameters的子类当中。</li>
-<li>++方法将一个Parameters传递给子类的ChainParameters，将Parameters组成链。</li>
-<li>PartialFunction[Any, Any]接受一个Any类型的参数，返回一个Any类型的变量。</li>
-<li>alter的参数列表中，是一个偏函数，接收一个f，返回一个PartialFunction。</li>
-<li>alterPartial中的参数列表表示接收的是一个PartialFunction，这个PartialFunction接收一个Any类型，返回一个Any类型<ul>
-<li>上面两个函数，内部都调用了伴生对象中的apply方法，内部调用了PatialParameters</li>
-</ul>
-</li>
-<li>最后alterMap接收一个Map类型的对象调用子类MapParameters之后在调用++方法。</li>
-</ul>
-<p>最后parameters的调用方法如下所示</p>
-<p><img src="/picture/2010/image-20200915105005563.png" alt="image-20200915105005563"></p>
-<h4 id="EmptyParameters"><a href="#EmptyParameters" class="headerlink" title="EmptyParameters"></a>EmptyParameters</h4><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">EmptyParameters</span> <span class="keyword">extends</span> <span class="title">Parameters</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">chain</span></span>[<span class="type">T</span>](site: <span class="type">View</span>, tail: <span class="type">View</span>, pname: <span class="type">Field</span>[<span class="type">T</span>]) = tail.find(pname, site)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>在没有配置项的情况下，直接在下一个View中进行查找，调用tail的find方法。</p>
-<h4 id="PartialParameter"><a href="#PartialParameter" class="headerlink" title="PartialParameter"></a>PartialParameter</h4><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">PartialParameters</span>(<span class="params">f: (<span class="type">View</span>, <span class="type">View</span>, <span class="type">View</span></span>) <span class="title">=&gt;</span> <span class="title">PartialFunction</span>[<span class="type">Any</span>,<span class="type">Any</span>]) <span class="keyword">extends</span> <span class="title">Parameters</span> </span>&#123;</span><br><span class="line">  <span class="keyword">protected</span>[config] <span class="function"><span class="keyword">def</span> <span class="title">chain</span></span>[<span class="type">T</span>](site: <span class="type">View</span>, tail: <span class="type">View</span>, pname: <span class="type">Field</span>[<span class="type">T</span>]) = &#123;</span><br><span class="line">    <span class="keyword">val</span> g = f(site, <span class="keyword">this</span>, tail)</span><br><span class="line">    <span class="keyword">if</span> (g.isDefinedAt(pname)) <span class="type">Some</span>(g.apply(pname).asInstanceOf[<span class="type">T</span>]) <span class="keyword">else</span> tail.find(pname, site)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>该函数参数为一个成员函数，类型为(View, View, View) =&gt; PartialFunction(Any, Any)</p>
-<ul>
-<li>接收三个类型为View的参数</li>
-<li>返回一个PartialFunction</li>
-</ul>
-<p>实现的chain方法的查找逻辑是首先生成一个匹配函数g，g是一个PartialFunction，使用isDefineAt方法查找是否匹配当前View，若不匹配，在下一个View中查找</p>
-<h4 id="MapParameters"><a href="#MapParameters" class="headerlink" title="MapParameters"></a>MapParameters</h4><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">MapParameters</span>(<span class="params">map: <span class="type">Map</span>[<span class="type">Any</span>, <span class="type">Any</span>]</span>) <span class="keyword">extends</span> <span class="title">Parameters</span> </span>&#123;</span><br><span class="line">  <span class="keyword">protected</span>[config] <span class="function"><span class="keyword">def</span> <span class="title">chain</span></span>[<span class="type">T</span>](site: <span class="type">View</span>, tail: <span class="type">View</span>, pname: <span class="type">Field</span>[<span class="type">T</span>]) = &#123;</span><br><span class="line">    <span class="keyword">val</span> g = map.get(pname)</span><br><span class="line">    <span class="keyword">if</span> (g.isDefined) <span class="type">Some</span>(g.get.asInstanceOf[<span class="type">T</span>]) <span class="keyword">else</span> tail.find(pname, site)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这个跟上一个类似，但是使用的是Map查找而不是PartialFunction，若当前View存在返回，不匹配的话将在下一个View中查找。</p>
-<h4 id="ChainParameters"><a href="#ChainParameters" class="headerlink" title="ChainParameters"></a>ChainParameters</h4><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">ChainView</span>(<span class="params">head: <span class="type">Parameters</span>, tail: <span class="type">View</span></span>) <span class="keyword">extends</span> <span class="title">View</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">find</span></span>[<span class="type">T</span>](pname: <span class="type">Field</span>[<span class="type">T</span>], site: <span class="type">View</span>) = head.chain(site, tail, pname)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>该函数接收两个参数的Parameters，他将两个Parameter连接起来，首先在x中进行查找，再在y中进行查找。</p>
-<h4 id="Config"><a href="#Config" class="headerlink" title="Config"></a>Config</h4><p>最后是暴露给外界的查找接口Config</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Config</span>(<span class="params">p: <span class="type">Parameters</span></span>) <span class="keyword">extends</span> <span class="title">Parameters</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">this</span></span>(f: (<span class="type">View</span>, <span class="type">View</span>, <span class="type">View</span>) =&gt; <span class="type">PartialFunction</span>[<span class="type">Any</span>,<span class="type">Any</span>]) = <span class="keyword">this</span>(<span class="type">Parameters</span>(f))</span><br><span class="line"></span><br><span class="line">  <span class="keyword">protected</span>[config] <span class="function"><span class="keyword">def</span> <span class="title">chain</span></span>[<span class="type">T</span>](site: <span class="type">View</span>, tail: <span class="type">View</span>, pname: <span class="type">Field</span>[<span class="type">T</span>]) = p.chain(site, tail, pname)</span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">toString</span> </span>= <span class="keyword">this</span>.getClass.getSimpleName</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">toInstance</span> </span>= <span class="keyword">this</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>有两种构造方法，第一种是字节传入一个Parameters，这种方法会直接调用chain方法进行查找，另外一个辅助构造方法接收三个参数的View，这将调用Parameter的伴生对象中的apply方法进行查找，与alterPartial类似。</p>
-<h2 id="使用规范"><a href="#使用规范" class="headerlink" title="使用规范"></a>使用规范</h2><ul>
-<li><p>直接调用Parameters的伴生对象中的apple方法</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">BaseSubsystemConfig</span> <span class="keyword">extends</span> <span class="title">Config</span> (<span class="params">(site, here, up</span>) <span class="title">=&gt;</span> </span>&#123;</span><br><span class="line">  <span class="comment">// Tile parameters</span></span><br><span class="line">  <span class="keyword">case</span> <span class="type">PgLevels</span> =&gt; <span class="keyword">if</span> (site(<span class="type">XLen</span>) == <span class="number">64</span>) <span class="number">3</span> <span class="comment">/* Sv39 */</span> <span class="keyword">else</span> <span class="number">2</span> <span class="comment">/* Sv32 */</span></span><br><span class="line">  <span class="keyword">case</span> <span class="type">XLen</span> =&gt; <span class="number">64</span> <span class="comment">// Applies to all cores</span></span><br><span class="line">  <span class="keyword">case</span> <span class="type">MaxHartIdBits</span> =&gt; log2Up(site(<span class="type">RocketTilesKey</span>).size)</span><br><span class="line">  <span class="comment">// Interconnect parameters</span></span><br><span class="line">  <span class="keyword">case</span> <span class="type">SystemBusKey</span> =&gt; <span class="type">SystemBusParams</span>(</span><br><span class="line">    beatBytes = site(<span class="type">XLen</span>)/<span class="number">8</span>,</span><br><span class="line">    blockBytes = site(<span class="type">CacheBlockBytes</span>))</span><br><span class="line">  <span class="keyword">case</span> <span class="type">ControlBusKey</span> =&gt; <span class="type">PeripheryBusParams</span>(</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
-
-<p>由于apply方法返回的是一个PartialFunction，所以使用可以使用case方法判断查询到了具体的哪个对象</p>
-</li>
-<li><p>添加配置</p>
-<p>Config类继承了Parameters中的<code>++</code>方法，所以可以直接使用该方法来添加View</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">BaseConfig</span> <span class="keyword">extends</span> <span class="title">Config</span>(<span class="params"></span></span></span><br><span class="line"><span class="class"><span class="params">  new <span class="type">WithDefaultMemPort</span>(</span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithDefaultMMIOPort</span>(<span class="params"></span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithDefaultSlavePort</span>(<span class="params"></span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithTimebase</span>(<span class="params"><span class="type">BigInt</span>(1000000</span>)) <span class="title">++</span> <span class="title">//</span> 1 <span class="title">MHz</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithDTS</span>(<span class="params">&quot;freechips,rocketchip-unknown&quot;, <span class="type">Nil</span></span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithNExtTopInterrupts</span>(<span class="params">2</span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">BaseSubsystemConfig</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="class">)</span></span><br></pre></td></tr></table></figure>
-
-</li>
-</ul>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>config中实现了查找的逻辑，与外部的调用site，here，up相对应，实现了两种查找方法，一种是递归动态的查找，使用的是PartialFunction技术，一种是静态的查找，直接使用Map中的映射进行。</p>
-]]></content>
-      <categories>
-        <category>chipyard</category>
-      </categories>
-      <tags>
-        <tag>chipyard</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>scala-implicit</title>
-    <url>/2020/09/22/scala/scala%E8%AF%AD%E6%B3%95%E7%B3%96/scala-implicit/</url>
-    <content><![CDATA[<p>方法可以具有 <em>隐式</em> 参数列表，由参数列表开头的 <em>implicit</em> 关键字标记。 如果参数列表中的参数没有像往常一样传递， Scala 将查看它是否可以获得正确类型的隐式值，如果可以，则自动传递。</p>
-<p>Scala 将查找这些参数的位置分为两类：</p>
-<ul>
-<li>Scala 在调用包含有隐式参数块的方法时，将首先查找可以直接访问的隐式定义和隐式参数 (无前缀)。</li>
-<li>然后，它在所有伴生对象中查找与隐式候选类型相关的有隐式标记的成员。</li>
-</ul>
-<a id="more"></a>
-
-<p>更加详细的关于 Scala 到哪里查找隐式参数的指南请参考 <a href="https://docs.scala-lang.org/tutorials/FAQ/finding-implicits.html">常见问题</a></p>
-<p>在下面的例子中，我们定义了一个方法 <code>sum</code>，它使用 Monoid 类的 <code>add</code> 和 <code>unit</code> 方法计算一个列表中元素的总和。 请注意，隐式值不能是顶级值。</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Monoid</span>[<span class="type">A</span>] </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">add</span></span>(x: <span class="type">A</span>, y: <span class="type">A</span>): <span class="type">A</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">unit</span></span>: <span class="type">A</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">object</span> <span class="title">ImplicitTest</span> </span>&#123;</span><br><span class="line">  <span class="keyword">implicit</span> <span class="keyword">val</span> stringMonoid: <span class="type">Monoid</span>[<span class="type">String</span>] = <span class="keyword">new</span> <span class="type">Monoid</span>[<span class="type">String</span>] &#123;</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">add</span></span>(x: <span class="type">String</span>, y: <span class="type">String</span>): <span class="type">String</span> = x concat y</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">unit</span></span>: <span class="type">String</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">implicit</span> <span class="keyword">val</span> intMonoid: <span class="type">Monoid</span>[<span class="type">Int</span>] = <span class="keyword">new</span> <span class="type">Monoid</span>[<span class="type">Int</span>] &#123;</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">add</span></span>(x: <span class="type">Int</span>, y: <span class="type">Int</span>): <span class="type">Int</span> = x + y</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">unit</span></span>: <span class="type">Int</span> = <span class="number">0</span></span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">sum</span></span>[<span class="type">A</span>](xs: <span class="type">List</span>[<span class="type">A</span>])(<span class="keyword">implicit</span> m: <span class="type">Monoid</span>[<span class="type">A</span>]): <span class="type">A</span> =</span><br><span class="line">    <span class="keyword">if</span> (xs.isEmpty) m.unit</span><br><span class="line">    <span class="keyword">else</span> m.add(xs.head, sum(xs.tail))</span><br><span class="line">    </span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">main</span></span>(args: <span class="type">Array</span>[<span class="type">String</span>]): <span class="type">Unit</span> = &#123;</span><br><span class="line">    println(sum(<span class="type">List</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)))       <span class="comment">// uses IntMonoid implicitly</span></span><br><span class="line">    println(sum(<span class="type">List</span>(<span class="string">&quot;a&quot;</span>, <span class="string">&quot;b&quot;</span>, <span class="string">&quot;c&quot;</span>))) <span class="comment">// uses StringMonoid implicitly</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>类 <code>Monoid</code> 定义了一个名为 <code>add</code> 的操作，它将一对 <code>A</code> 类型的值相加并返回一个 <code>A</code>，以及一个名为 <code>unit</code> 的操作，用来创建一个（特定的）<code>A</code> 类型的值。</p>
-<p>为了说明隐式参数如何工作，我们首先分别为字符串和整数定义 Monoid 实例， <code>StringMonoid</code> 和 <code>IntMonoid</code>。 <code>implicit</code> 关键字表示可以隐式使用相应的对象。</p>
-<p>方法 <code>sum</code> 接受一个 <code>List[A]</code>，并返回一个 <code>A</code> 的值，它从 <code>unit</code> 中取初始的 <code>A</code> 值，并使用 <code>add</code> 方法依次将列表中的下一个 <code>A</code> 值相加。在这里将参数 <code>m</code> 定义为隐式意味着，如果 Scala 可以找到隐式 <code>Monoid[A]</code> 用于隐式参数 <code>m</code>，我们在调用 <code>sum</code> 方法时只需要传入 <code>xs</code> 参数。</p>
-<p>在 <code>main</code> 方法中我们调用了 <code>sum</code> 方法两次，并且只传入参数 <code>xs</code>。 Scala 会在上例的上下文范围内寻找隐式值。 第一次调用 <code>sum</code> 方法的时候传入了一个 <code>List[Int]</code> 作为 <code>xs</code> 的值，这意味着此处类型 <code>A</code> 是 <code>Int</code>。 隐式参数列表 <code>m</code> 被省略了，因此 Scala 将查找类型为 <code>Monoid[Int]</code> 的隐式值。 第一查找规则如下</p>
-<blockquote>
-<p>Scala 在调用包含有隐式参数块的方法时，将首先查找可以直接访问的隐式定义和隐式参数 (无前缀)。</p>
-</blockquote>
-<p><code>intMonoid</code> 是一个隐式定义，可以在<code>main</code>中直接访问。 并且它的类型也正确，因此它会被自动传递给 <code>sum</code> 方法。</p>
-<p>第二次调用 <code>sum</code> 方法的时候传入一个 <code>List[String]</code>，这意味着此处类型 <code>A</code> 是 <code>String</code>。 与查找 <code>Int</code> 型的隐式参数时类似，但这次会找到 <code>stringMonoid</code>，并自动将其作为 <code>m</code> 传入。</p>
-<p>该程序将输出</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">6</span><br><span class="line">abc</span><br></pre></td></tr></table></figure>
-
-<p><img src="/picture/2010/image-20200922001335357.png" alt="image-20200922001335357"></p>
-<p><img src="/picture/2010/image-20200922001451905.png" alt="image-20200922001451905"></p>
-]]></content>
-      <categories>
-        <category>scala</category>
-      </categories>
-      <tags>
-        <tag>scala-常用语法</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>scala-lazy</title>
-    <url>/2020/09/22/scala/scala%E8%AF%AD%E6%B3%95%E7%B3%96/scala-lazy/</url>
-    <content><![CDATA[<ul>
-<li><p><strong>初始化顺序问题</strong></p>
-<p>构造顺序的问题，要是变量在类中没有初始化就使用他，这个时候会产生错误，使用<code>lazy</code>关键字很好的回避了这个问题，在用到的时候在进行初始化，保证了在用到该变量之前依赖的变量已经完成初始化。</p>
-<a id="more"></a>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Person</span></span>&#123;</span><br><span class="line">  <span class="keyword">val</span> name: <span class="type">String</span></span><br><span class="line">  <span class="keyword">val</span> name_len = name.length</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Student</span> <span class="keyword">extends</span> <span class="title">Person</span></span>&#123;</span><br><span class="line">  <span class="keyword">override</span> <span class="keyword">val</span> name: <span class="type">String</span> = <span class="string">&quot;Tom&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>此时要是在<code>main</code>中新建一个<code>Student</code>的类会出现异常，因为父类会先于子类进行构造，在执行<code>name.length</code>的时候试图查找一个空指针的长度，出现异常</p>
-<p>想要解决这个问题需要将<code>name_len</code>加上<code>lazy</code>关键字，这样的就可以保证其初始化的顺序。</p>
-<p><code>lazy val name_len = name.length</code></p>
-</li>
-<li><p><strong>初始化某个变量的时间过长</strong></p>
-<p>在类的初始化过程中，要是有某个类初始化时间过长，可以申明为<code>lazy</code>这样的话，只有在使用他的第一次才进行初始化，显著减少了初始化的执行时间</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Person</span></span>&#123;</span><br><span class="line">  <span class="keyword">lazy</span> <span class="keyword">val</span> properties = &#123;</span><br><span class="line">    print(<span class="string">&quot;init&quot;</span>)</span><br><span class="line">    <span class="type">Thread</span>.sleep(<span class="number">2000</span>)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>将<code>properties</code>变量声明为<code>lazy</code>将会使其在使用的时候才对其进行初始化</p>
-</li>
-<li><p><strong>缺点</strong></p>
-<p>每次使用前都会检查是否已经初始化，会有额外的开销，并没有那么高效</p>
-</li>
-</ul>
-]]></content>
-      <categories>
-        <category>scala</category>
-      </categories>
-      <tags>
-        <tag>scala语法</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>为什么scala</title>
     <url>/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/1-%E4%B8%BA%E4%BB%80%E4%B9%88scala/</url>
     <content><![CDATA[<p>scala不是一门纯粹的面向对象的语言，他强调函数式编程，函数式编程的两大核心理念是函数是一等的，以及程序中应该将值直接映射到输出，尽量的减少在函数中对程序的副作用。</p>
@@ -287,6 +219,105 @@
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> scala.io.<span class="type">Source</span></span><br><span class="line"><span class="keyword">if</span>(args.length &gt; <span class="number">0</span>)&#123;</span><br><span class="line">  <span class="keyword">for</span>(line &lt;- <span class="type">Source</span>.fromFile(args(<span class="number">0</span>)).getLines())</span><br><span class="line">    println(line.length + <span class="string">&quot; &quot;</span> + line)</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">else</span> </span><br><span class="line">  <span class="type">Console</span>.err.println(<span class="string">&quot;please enter filename&quot;</span>)</span><br></pre></td></tr></table></figure>
 
 <h2 id=""><a href="#" class="headerlink" title=""></a></h2>]]></content>
+      <categories>
+        <category>scala</category>
+      </categories>
+      <tags>
+        <tag>scala编程</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>scala样例类跟模式匹配</title>
+    <url>/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/10-scala%E6%A0%B7%E4%BE%8B%E7%B1%BB%E8%B7%9F%E6%A8%A1%E5%BC%8F%E5%8C%B9%E9%85%8D/</url>
+    <content><![CDATA[<p>样例类也是scala使用频率很高的语法，通过case进行创建，进行响应的控制，而模式匹配正是通过样例类进行相应的匹配操作</p>
+<a id="more"></a>
+
+<ul>
+<li><p><strong>样例类</strong></p>
+<p>笼统来说，就是将想要匹配的类加上一个<code>case</code>关键字。</p>
+<p>首先他会将我们的方法加上一个工厂方法，可以通过<code>Var(“x”)</code>这样的类型来进行类创建而不是<code>new Var(“x”)</code>。</p>
+<p>其次是参数列表中的参数都可以隐式的加上一个<code>val</code>前缀，这样的话就可以当做字段来进行处理。</p>
+<p>再次编译器会帮我们自然的实现<code>toString, hashCode, equals</code>方法</p>
+<p>最后编译器还会帮我们做一个<code>copy</code>方法，该方法可以进行一些参数的修改</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">Var</span>(<span class="params">name: <span class="type">String</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">number</span>(<span class="params">num: <span class="type">Double</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">UpOp</span>(<span class="params">operator: <span class="type">String</span>, arg: <span class="type">Expr</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">BinOp</span>(<span class="params">operator: <span class="type">String</span>, left: <span class="type">Expr</span>, right: <span class="type">Expr</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"></span></span><br><span class="line"><span class="class"><span class="title">//使用实例</span></span></span><br><span class="line"><span class="class"><span class="title">val</span> <span class="title">v</span> </span>= <span class="type">Var</span>(<span class="string">&quot;x&quot;</span>)</span><br><span class="line"><span class="keyword">val</span> op = <span class="type">BinOp</span>(<span class="string">&quot;+&quot;</span>, number(<span class="number">1</span>), v)</span><br><span class="line">v.name</span><br><span class="line">println(op)</span><br><span class="line">op.copy(operator = <span class="string">&quot;-&quot;</span>)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>模式匹配</strong></p>
+<p>具体形式是<code>选择器 match &#123;可选分支&#125;</code>，其中可选分支包括至少一个<code>case</code>，每一个可选分支都包括一个模式以及一个或多个表达式，如果模式匹配了，这些表达式就会被求值。<code>=&gt;</code>将模式与表达式分开。</p>
+<p><code>match switch</code>的区别</p>
+<ul>
+<li><code>match</code>是一个表达式，总是会得到一个值</li>
+<li><code>scala</code>的分支不会贯穿到下一个<code>case</code>，若是匹配的话，会隐式的加上一个<code>break</code>进行退出</li>
+<li>若是啥都不匹配的话会抛出异常，所以最后需要加上一个通配<code>case</code></li>
+</ul>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">simplifyTop</span></span>(expr: <span class="type">Expr</span>): <span class="type">Expr</span> = expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="type">UnOp</span>(<span class="string">&quot;-&quot;</span>, <span class="type">UnOp</span>(<span class="string">&quot;-&quot;</span>, e)) =&gt; e  <span class="comment">//双重取负</span></span><br><span class="line">  <span class="keyword">case</span> <span class="type">BinOp</span>(<span class="string">&quot;+&quot;</span>, e, number(<span class="number">0</span>)) =&gt; e  <span class="comment">// + 0</span></span><br><span class="line">  <span class="keyword">case</span> <span class="type">BinOp</span>(<span class="string">&quot;*&quot;</span>, e, number(<span class="number">1</span>)) =&gt; <span class="number">1</span>  <span class="comment">// * 1</span></span><br><span class="line">  <span class="keyword">case</span> _ =&gt; exrp</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>模式种类</strong></p>
+<p>所有的模式匹配跟表达式类型十分的相似</p>
+<ul>
+<li><p><strong>通配模式</strong></p>
+<p><code>(_)</code>会匹配任何对象，用来忽略你并不关心的局部</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="type">BinOp</span>(_, _, _) =&gt; println(expr + <span class="string">&quot;is a binary operation&quot;</span>)  <span class="comment">//只关心是一个二源操作</span></span><br><span class="line">  <span class="keyword">case</span> _ =&gt; println(<span class="string">&quot;something else&quot;</span>)  <span class="comment">//覆盖值处理</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>常量模式</strong></p>
+<p>只匹配自己</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="number">5</span> =&gt; <span class="string">&quot;five&quot;</span></span><br><span class="line">  <span class="keyword">case</span> <span class="type">Nil</span> =&gt; <span class="string">&quot;the empty list&quot;</span>  <span class="comment">//只能匹配空列表</span></span><br><span class="line">  <span class="keyword">case</span> _ =&gt; <span class="string">&quot;something else&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>变量模式</strong></p>
+<p>变量模式可以匹配任何对象，这点跟通配模式相同，但是变量模式会将匹配的对象绑定到变量上，这样就可以使用这个变量进行下一步的处理</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="number">0</span> =&gt; <span class="string">&quot;zero&quot;</span></span><br><span class="line">  <span class="keyword">case</span> somethingElse =&gt; <span class="string">&quot;not zero&quot;</span> + somethingElse  <span class="comment">//这里将somethingElse用作一些处理，但是这还是局部变量</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>scala</code>中一般会将<strong>小写</strong>开头的字面量当做<strong>变量匹配</strong>，要是想要继续使用小写开头字面量当做常量的话可以使用<code>this.pi, obj.pi</code>等进行处理</p>
+</li>
+<li><p><strong>构造方法模式</strong></p>
+<p>最有用的模式，由一个名称加上一个圆括号以及圆括号中的模式组成。这个模式将首先检查被匹配的对象是否是以这个名称命名的样例实例，在检查这个对象的够着方法参数是否匹配这些额外给出模式。</p>
+<p>这样意味着可以进行深度匹配，不仅仅会检查顶层，还会进一步检查对象内容是否匹配这些额外的模式要求</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="type">BinOp</span>(<span class="string">&quot;+&quot;</span>, e, number(<span class="number">0</span>)) =&gt; println(<span class="string">&quot;a deep match&quot;</span>)  <span class="comment">//首先匹配BinOp，接着匹配参数列表，最后匹配number(0)，一共有三层模式匹配</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>序列模式</strong></p>
+<p>可以跟<code>Lsis, Array</code>这些序列进行模式匹配，可以用<code>_*</code>作为模式的最后一个元素，表示的是还可以匹配任意长度的元素。</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="type">List</span>(<span class="number">0</span>, _*) =&gt; println(<span class="string">&quot;this is a list with beginning 0&quot;</span>)</span><br><span class="line">  <span class="keyword">case</span> _ =&gt; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>元组模式</strong></p>
+<p>这里跟序列模式是一样的，只不过将<code>List</code>换成了圆括号</p>
+</li>
+<li><p><strong>带类型的模式</strong></p>
+<p>使用该模式来替代类型测试跟类型转换</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> s: <span class="type">String</span> =&gt; s.length</span><br><span class="line">  <span class="keyword">case</span> m:<span class="type">Map</span>[_, _] =&gt; m.size</span><br><span class="line">  <span class="keyword">case</span> _ =&gt; <span class="number">-1</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//不好的类型转换跟测试</span></span><br><span class="line"><span class="keyword">if</span>(x.isInstanceOf[<span class="type">String</span>])&#123;  <span class="comment">//类型判断</span></span><br><span class="line">  <span class="keyword">val</span> s = x.asInstanceOf[<span class="type">String</span>]  <span class="comment">//类型转换</span></span><br><span class="line">  s.length</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>擦除类型</p>
+<p>无法检查<code>Map中Int到Int</code>的映射，因为采用的都是一个叫做擦除式泛型，但是数组是例外</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> m: <span class="type">Map</span>[<span class="type">Int</span>, <span class="type">Int</span>] =&gt; <span class="literal">true</span>  <span class="comment">//error Map不支持具体类型检查</span></span><br><span class="line">  <span class="keyword">case</span> a: <span class="type">Array</span>[<span class="type">String</span>] =&gt; <span class="string">&quot;yes&quot;</span>  <span class="comment">//true 对Array做了特殊处理</span></span><br><span class="line">  <span class="keyword">case</span> _ =&gt;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>变量绑定</p>
+<p>除了独自存在的变量模式之外，我们还可以对任何其他模式添加变量，之后在对变量做一些其他的处理，通过<code>@</code>进行比那辆的绑定</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="type">UpOp</span>(<span class="string">&quot;abs&quot;</span>, e @ <span class="type">UpOp</span>(<span class="string">&quot;abs&quot;</span>, _)) =&gt; e  <span class="comment">//变量绑定</span></span><br><span class="line">  <span class="keyword">case</span> _ =&gt;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>模式守卫</strong></p>
+<p>模式守卫是任何的布尔表达式，如果纯在模式守卫，这个匹配需要在模式守卫为<code>true</code>的时候才会成功</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> m: <span class="type">Int</span> <span class="keyword">if</span> n&gt; <span class="number">0</span> =&gt; println(m)  <span class="comment">//打印大于０的数</span></span><br><span class="line">  <span class="keyword">case</span> _ =&gt; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>密封类</strong></p>
+<p>在做模式匹配的过程中，如果想要编译器帮你确保已经列出所有的类了，通常将会申明为密封类<code>sealed</code>，密封类中所有的子类都需要在密封类所在的文件当中，这样我们只需要关心我们已知的子类就可以了</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">sealed</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">Var</span>(<span class="params">name: <span class="type">String</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">number</span>(<span class="params">num: <span class="type">Double</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">UpOp</span>(<span class="params">operation: <span class="type">String</span>, arg: <span class="type">Expr</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">BinOp</span>(<span class="params">operation: <span class="type">String</span>, left: <span class="type">Expr</span>, right: <span class="type">Expr</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong><code>Option</code>类型</strong></p>
+<p><code>Option</code>，为一个标准的类型表示可选值，这样的值可以有两种形式<code>Some(x), None</code>，主要是传递参数的时候进行使用，因为有些时候必须需要判断一个对象是否为空，但是在<code>scala</code>中<code>Null</code>并不是一个合法元素，因此不能进行判断，使用<code>Option</code>类型很好的解决了这个问题。</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">show</span></span>(x: <span class="type">Option</span>[<span class="type">String</span>]) = x <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="type">Some</span>(x) =&gt; s</span><br><span class="line">  <span class="keyword">case</span> <span class="type">None</span> =&gt; <span class="string">&quot;?&quot;</span>  <span class="comment">//Option类型可以有Null</span></span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>偏函数</strong></p>
+<p>它只对会作用于指定类型的参数或指定范围值的参数实施计算，超出它的界定范围之外的参数类型和值它会忽略</p>
+<p><code>PartialFunction</code>特质规定了两个要实现的方法：<code>apply</code>和<code>isDefinedAt</code>，<code>isDefinedAt</code>用来告知调用方这个偏函数接受参数的范围，可以是类型也可以是值，如果是指定的范围，则返回<code>true</code>否者的话返回<code>false</code>。<code>apply</code>方法用来描述对已接受的值如何处理。</p>
+<p>大多数的时候服务的是case，case序列得到的其实就是一个偏函数</p>
+<p>自己定义一个偏函数</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">new</span> <span class="type">PartialFunction</span>[<span class="type">List</span>[<span class="type">Int</span>], <span class="type">Int</span>]&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">apply</span></span>(xs: <span class="type">List</span>[<span class="type">Int</span>]) = xs <span class="keyword">match</span>&#123;</span><br><span class="line">    <span class="keyword">case</span> x :: y :: _ =&gt; y</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">isDefinedAt</span></span>(xs: <span class="type">List</span>[<span class="type">Int</span>]) xs <span class="keyword">match</span>&#123;</span><br><span class="line">    <span class="keyword">case</span> x :: y :: _ =&gt; <span class="literal">true</span></span><br><span class="line">    <span class="keyword">case</span> _ =&gt; <span class="literal">false</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+]]></content>
       <categories>
         <category>scala</category>
       </categories>
@@ -627,94 +658,63 @@
       </tags>
   </entry>
   <entry>
-    <title>scala样例类跟模式匹配</title>
-    <url>/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/10-scala%E6%A0%B7%E4%BE%8B%E7%B1%BB%E8%B7%9F%E6%A8%A1%E5%BC%8F%E5%8C%B9%E9%85%8D/</url>
-    <content><![CDATA[<p>样例类也是scala使用频率很高的语法，通过case进行创建，进行响应的控制，而模式匹配正是通过样例类进行相应的匹配操作</p>
+    <title>scala-implicit</title>
+    <url>/2020/09/22/scala/scala%E8%AF%AD%E6%B3%95%E7%B3%96/scala-implicit/</url>
+    <content><![CDATA[<p>方法可以具有 <em>隐式</em> 参数列表，由参数列表开头的 <em>implicit</em> 关键字标记。 如果参数列表中的参数没有像往常一样传递， Scala 将查看它是否可以获得正确类型的隐式值，如果可以，则自动传递。</p>
+<p>Scala 将查找这些参数的位置分为两类：</p>
+<ul>
+<li>Scala 在调用包含有隐式参数块的方法时，将首先查找可以直接访问的隐式定义和隐式参数 (无前缀)。</li>
+<li>然后，它在所有伴生对象中查找与隐式候选类型相关的有隐式标记的成员。</li>
+</ul>
 <a id="more"></a>
 
-<ul>
-<li><p><strong>样例类</strong></p>
-<p>笼统来说，就是将想要匹配的类加上一个<code>case</code>关键字。</p>
-<p>首先他会将我们的方法加上一个工厂方法，可以通过<code>Var(“x”)</code>这样的类型来进行类创建而不是<code>new Var(“x”)</code>。</p>
-<p>其次是参数列表中的参数都可以隐式的加上一个<code>val</code>前缀，这样的话就可以当做字段来进行处理。</p>
-<p>再次编译器会帮我们自然的实现<code>toString, hashCode, equals</code>方法</p>
-<p>最后编译器还会帮我们做一个<code>copy</code>方法，该方法可以进行一些参数的修改</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">Var</span>(<span class="params">name: <span class="type">String</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">number</span>(<span class="params">num: <span class="type">Double</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">UpOp</span>(<span class="params">operator: <span class="type">String</span>, arg: <span class="type">Expr</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">BinOp</span>(<span class="params">operator: <span class="type">String</span>, left: <span class="type">Expr</span>, right: <span class="type">Expr</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"></span></span><br><span class="line"><span class="class"><span class="title">//使用实例</span></span></span><br><span class="line"><span class="class"><span class="title">val</span> <span class="title">v</span> </span>= <span class="type">Var</span>(<span class="string">&quot;x&quot;</span>)</span><br><span class="line"><span class="keyword">val</span> op = <span class="type">BinOp</span>(<span class="string">&quot;+&quot;</span>, number(<span class="number">1</span>), v)</span><br><span class="line">v.name</span><br><span class="line">println(op)</span><br><span class="line">op.copy(operator = <span class="string">&quot;-&quot;</span>)</span><br></pre></td></tr></table></figure>
-</li>
-<li><p><strong>模式匹配</strong></p>
-<p>具体形式是<code>选择器 match &#123;可选分支&#125;</code>，其中可选分支包括至少一个<code>case</code>，每一个可选分支都包括一个模式以及一个或多个表达式，如果模式匹配了，这些表达式就会被求值。<code>=&gt;</code>将模式与表达式分开。</p>
-<p><code>match switch</code>的区别</p>
-<ul>
-<li><code>match</code>是一个表达式，总是会得到一个值</li>
-<li><code>scala</code>的分支不会贯穿到下一个<code>case</code>，若是匹配的话，会隐式的加上一个<code>break</code>进行退出</li>
-<li>若是啥都不匹配的话会抛出异常，所以最后需要加上一个通配<code>case</code></li>
-</ul>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">simplifyTop</span></span>(expr: <span class="type">Expr</span>): <span class="type">Expr</span> = expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="type">UnOp</span>(<span class="string">&quot;-&quot;</span>, <span class="type">UnOp</span>(<span class="string">&quot;-&quot;</span>, e)) =&gt; e  <span class="comment">//双重取负</span></span><br><span class="line">  <span class="keyword">case</span> <span class="type">BinOp</span>(<span class="string">&quot;+&quot;</span>, e, number(<span class="number">0</span>)) =&gt; e  <span class="comment">// + 0</span></span><br><span class="line">  <span class="keyword">case</span> <span class="type">BinOp</span>(<span class="string">&quot;*&quot;</span>, e, number(<span class="number">1</span>)) =&gt; <span class="number">1</span>  <span class="comment">// * 1</span></span><br><span class="line">  <span class="keyword">case</span> _ =&gt; exrp</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p><strong>模式种类</strong></p>
-<p>所有的模式匹配跟表达式类型十分的相似</p>
-<ul>
-<li><p><strong>通配模式</strong></p>
-<p><code>(_)</code>会匹配任何对象，用来忽略你并不关心的局部</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="type">BinOp</span>(_, _, _) =&gt; println(expr + <span class="string">&quot;is a binary operation&quot;</span>)  <span class="comment">//只关心是一个二源操作</span></span><br><span class="line">  <span class="keyword">case</span> _ =&gt; println(<span class="string">&quot;something else&quot;</span>)  <span class="comment">//覆盖值处理</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p><strong>常量模式</strong></p>
-<p>只匹配自己</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="number">5</span> =&gt; <span class="string">&quot;five&quot;</span></span><br><span class="line">  <span class="keyword">case</span> <span class="type">Nil</span> =&gt; <span class="string">&quot;the empty list&quot;</span>  <span class="comment">//只能匹配空列表</span></span><br><span class="line">  <span class="keyword">case</span> _ =&gt; <span class="string">&quot;something else&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p><strong>变量模式</strong></p>
-<p>变量模式可以匹配任何对象，这点跟通配模式相同，但是变量模式会将匹配的对象绑定到变量上，这样就可以使用这个变量进行下一步的处理</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="number">0</span> =&gt; <span class="string">&quot;zero&quot;</span></span><br><span class="line">  <span class="keyword">case</span> somethingElse =&gt; <span class="string">&quot;not zero&quot;</span> + somethingElse  <span class="comment">//这里将somethingElse用作一些处理，但是这还是局部变量</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>更加详细的关于 Scala 到哪里查找隐式参数的指南请参考 <a href="https://docs.scala-lang.org/tutorials/FAQ/finding-implicits.html">常见问题</a></p>
+<p>在下面的例子中，我们定义了一个方法 <code>sum</code>，它使用 Monoid 类的 <code>add</code> 和 <code>unit</code> 方法计算一个列表中元素的总和。 请注意，隐式值不能是顶级值。</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Monoid</span>[<span class="type">A</span>] </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">add</span></span>(x: <span class="type">A</span>, y: <span class="type">A</span>): <span class="type">A</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">unit</span></span>: <span class="type">A</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">object</span> <span class="title">ImplicitTest</span> </span>&#123;</span><br><span class="line">  <span class="keyword">implicit</span> <span class="keyword">val</span> stringMonoid: <span class="type">Monoid</span>[<span class="type">String</span>] = <span class="keyword">new</span> <span class="type">Monoid</span>[<span class="type">String</span>] &#123;</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">add</span></span>(x: <span class="type">String</span>, y: <span class="type">String</span>): <span class="type">String</span> = x concat y</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">unit</span></span>: <span class="type">String</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">implicit</span> <span class="keyword">val</span> intMonoid: <span class="type">Monoid</span>[<span class="type">Int</span>] = <span class="keyword">new</span> <span class="type">Monoid</span>[<span class="type">Int</span>] &#123;</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">add</span></span>(x: <span class="type">Int</span>, y: <span class="type">Int</span>): <span class="type">Int</span> = x + y</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">unit</span></span>: <span class="type">Int</span> = <span class="number">0</span></span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">sum</span></span>[<span class="type">A</span>](xs: <span class="type">List</span>[<span class="type">A</span>])(<span class="keyword">implicit</span> m: <span class="type">Monoid</span>[<span class="type">A</span>]): <span class="type">A</span> =</span><br><span class="line">    <span class="keyword">if</span> (xs.isEmpty) m.unit</span><br><span class="line">    <span class="keyword">else</span> m.add(xs.head, sum(xs.tail))</span><br><span class="line">    </span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">main</span></span>(args: <span class="type">Array</span>[<span class="type">String</span>]): <span class="type">Unit</span> = &#123;</span><br><span class="line">    println(sum(<span class="type">List</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)))       <span class="comment">// uses IntMonoid implicitly</span></span><br><span class="line">    println(sum(<span class="type">List</span>(<span class="string">&quot;a&quot;</span>, <span class="string">&quot;b&quot;</span>, <span class="string">&quot;c&quot;</span>))) <span class="comment">// uses StringMonoid implicitly</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p><code>scala</code>中一般会将<strong>小写</strong>开头的字面量当做<strong>变量匹配</strong>，要是想要继续使用小写开头字面量当做常量的话可以使用<code>this.pi, obj.pi</code>等进行处理</p>
-</li>
-<li><p><strong>构造方法模式</strong></p>
-<p>最有用的模式，由一个名称加上一个圆括号以及圆括号中的模式组成。这个模式将首先检查被匹配的对象是否是以这个名称命名的样例实例，在检查这个对象的够着方法参数是否匹配这些额外给出模式。</p>
-<p>这样意味着可以进行深度匹配，不仅仅会检查顶层，还会进一步检查对象内容是否匹配这些额外的模式要求</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="type">BinOp</span>(<span class="string">&quot;+&quot;</span>, e, number(<span class="number">0</span>)) =&gt; println(<span class="string">&quot;a deep match&quot;</span>)  <span class="comment">//首先匹配BinOp，接着匹配参数列表，最后匹配number(0)，一共有三层模式匹配</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p><strong>序列模式</strong></p>
-<p>可以跟<code>Lsis, Array</code>这些序列进行模式匹配，可以用<code>_*</code>作为模式的最后一个元素，表示的是还可以匹配任意长度的元素。</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="type">List</span>(<span class="number">0</span>, _*) =&gt; println(<span class="string">&quot;this is a list with beginning 0&quot;</span>)</span><br><span class="line">  <span class="keyword">case</span> _ =&gt; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p><strong>元组模式</strong></p>
-<p>这里跟序列模式是一样的，只不过将<code>List</code>换成了圆括号</p>
-</li>
-<li><p><strong>带类型的模式</strong></p>
-<p>使用该模式来替代类型测试跟类型转换</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> s: <span class="type">String</span> =&gt; s.length</span><br><span class="line">  <span class="keyword">case</span> m:<span class="type">Map</span>[_, _] =&gt; m.size</span><br><span class="line">  <span class="keyword">case</span> _ =&gt; <span class="number">-1</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//不好的类型转换跟测试</span></span><br><span class="line"><span class="keyword">if</span>(x.isInstanceOf[<span class="type">String</span>])&#123;  <span class="comment">//类型判断</span></span><br><span class="line">  <span class="keyword">val</span> s = x.asInstanceOf[<span class="type">String</span>]  <span class="comment">//类型转换</span></span><br><span class="line">  s.length</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>类 <code>Monoid</code> 定义了一个名为 <code>add</code> 的操作，它将一对 <code>A</code> 类型的值相加并返回一个 <code>A</code>，以及一个名为 <code>unit</code> 的操作，用来创建一个（特定的）<code>A</code> 类型的值。</p>
+<p>为了说明隐式参数如何工作，我们首先分别为字符串和整数定义 Monoid 实例， <code>StringMonoid</code> 和 <code>IntMonoid</code>。 <code>implicit</code> 关键字表示可以隐式使用相应的对象。</p>
+<p>方法 <code>sum</code> 接受一个 <code>List[A]</code>，并返回一个 <code>A</code> 的值，它从 <code>unit</code> 中取初始的 <code>A</code> 值，并使用 <code>add</code> 方法依次将列表中的下一个 <code>A</code> 值相加。在这里将参数 <code>m</code> 定义为隐式意味着，如果 Scala 可以找到隐式 <code>Monoid[A]</code> 用于隐式参数 <code>m</code>，我们在调用 <code>sum</code> 方法时只需要传入 <code>xs</code> 参数。</p>
+<p>在 <code>main</code> 方法中我们调用了 <code>sum</code> 方法两次，并且只传入参数 <code>xs</code>。 Scala 会在上例的上下文范围内寻找隐式值。 第一次调用 <code>sum</code> 方法的时候传入了一个 <code>List[Int]</code> 作为 <code>xs</code> 的值，这意味着此处类型 <code>A</code> 是 <code>Int</code>。 隐式参数列表 <code>m</code> 被省略了，因此 Scala 将查找类型为 <code>Monoid[Int]</code> 的隐式值。 第一查找规则如下</p>
+<blockquote>
+<p>Scala 在调用包含有隐式参数块的方法时，将首先查找可以直接访问的隐式定义和隐式参数 (无前缀)。</p>
+</blockquote>
+<p><code>intMonoid</code> 是一个隐式定义，可以在<code>main</code>中直接访问。 并且它的类型也正确，因此它会被自动传递给 <code>sum</code> 方法。</p>
+<p>第二次调用 <code>sum</code> 方法的时候传入一个 <code>List[String]</code>，这意味着此处类型 <code>A</code> 是 <code>String</code>。 与查找 <code>Int</code> 型的隐式参数时类似，但这次会找到 <code>stringMonoid</code>，并自动将其作为 <code>m</code> 传入。</p>
+<p>该程序将输出</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">6</span><br><span class="line">abc</span><br></pre></td></tr></table></figure>
 
-<ul>
-<li><p>擦除类型</p>
-<p>无法检查<code>Map中Int到Int</code>的映射，因为采用的都是一个叫做擦除式泛型，但是数组是例外</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> m: <span class="type">Map</span>[<span class="type">Int</span>, <span class="type">Int</span>] =&gt; <span class="literal">true</span>  <span class="comment">//error Map不支持具体类型检查</span></span><br><span class="line">  <span class="keyword">case</span> a: <span class="type">Array</span>[<span class="type">String</span>] =&gt; <span class="string">&quot;yes&quot;</span>  <span class="comment">//true 对Array做了特殊处理</span></span><br><span class="line">  <span class="keyword">case</span> _ =&gt;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="/picture/2010/image-20200922001335357.png" alt="image-20200922001335357"></p>
+<p><img src="/picture/2010/image-20200922001451905.png" alt="image-20200922001451905"></p>
+]]></content>
+      <categories>
+        <category>scala</category>
+      </categories>
+      <tags>
+        <tag>scala-常用语法</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>scala-lazy</title>
+    <url>/2020/09/22/scala/scala%E8%AF%AD%E6%B3%95%E7%B3%96/scala-lazy/</url>
+    <content><![CDATA[<ul>
+<li><p><strong>初始化顺序问题</strong></p>
+<p>构造顺序的问题，要是变量在类中没有初始化就使用他，这个时候会产生错误，使用<code>lazy</code>关键字很好的回避了这个问题，在用到的时候在进行初始化，保证了在用到该变量之前依赖的变量已经完成初始化。</p>
+<a id="more"></a>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Person</span></span>&#123;</span><br><span class="line">  <span class="keyword">val</span> name: <span class="type">String</span></span><br><span class="line">  <span class="keyword">val</span> name_len = name.length</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Student</span> <span class="keyword">extends</span> <span class="title">Person</span></span>&#123;</span><br><span class="line">  <span class="keyword">override</span> <span class="keyword">val</span> name: <span class="type">String</span> = <span class="string">&quot;Tom&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>此时要是在<code>main</code>中新建一个<code>Student</code>的类会出现异常，因为父类会先于子类进行构造，在执行<code>name.length</code>的时候试图查找一个空指针的长度，出现异常</p>
+<p>想要解决这个问题需要将<code>name_len</code>加上<code>lazy</code>关键字，这样的就可以保证其初始化的顺序。</p>
+<p><code>lazy val name_len = name.length</code></p>
 </li>
-<li><p>变量绑定</p>
-<p>除了独自存在的变量模式之外，我们还可以对任何其他模式添加变量，之后在对变量做一些其他的处理，通过<code>@</code>进行比那辆的绑定</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="type">UpOp</span>(<span class="string">&quot;abs&quot;</span>, e @ <span class="type">UpOp</span>(<span class="string">&quot;abs&quot;</span>, _)) =&gt; e  <span class="comment">//变量绑定</span></span><br><span class="line">  <span class="keyword">case</span> _ =&gt;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<li><p><strong>初始化某个变量的时间过长</strong></p>
+<p>在类的初始化过程中，要是有某个类初始化时间过长，可以申明为<code>lazy</code>这样的话，只有在使用他的第一次才进行初始化，显著减少了初始化的执行时间</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Person</span></span>&#123;</span><br><span class="line">  <span class="keyword">lazy</span> <span class="keyword">val</span> properties = &#123;</span><br><span class="line">    print(<span class="string">&quot;init&quot;</span>)</span><br><span class="line">    <span class="type">Thread</span>.sleep(<span class="number">2000</span>)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>将<code>properties</code>变量声明为<code>lazy</code>将会使其在使用的时候才对其进行初始化</p>
 </li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p><strong>模式守卫</strong></p>
-<p>模式守卫是任何的布尔表达式，如果纯在模式守卫，这个匹配需要在模式守卫为<code>true</code>的时候才会成功</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> m: <span class="type">Int</span> <span class="keyword">if</span> n&gt; <span class="number">0</span> =&gt; println(m)  <span class="comment">//打印大于０的数</span></span><br><span class="line">  <span class="keyword">case</span> _ =&gt; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p><strong>密封类</strong></p>
-<p>在做模式匹配的过程中，如果想要编译器帮你确保已经列出所有的类了，通常将会申明为密封类<code>sealed</code>，密封类中所有的子类都需要在密封类所在的文件当中，这样我们只需要关心我们已知的子类就可以了</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">sealed</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">Var</span>(<span class="params">name: <span class="type">String</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">number</span>(<span class="params">num: <span class="type">Double</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">UpOp</span>(<span class="params">operation: <span class="type">String</span>, arg: <span class="type">Expr</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">BinOp</span>(<span class="params">operation: <span class="type">String</span>, left: <span class="type">Expr</span>, right: <span class="type">Expr</span></span>) <span class="keyword">extends</span> <span class="title">Expr</span></span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p><strong><code>Option</code>类型</strong></p>
-<p><code>Option</code>，为一个标准的类型表示可选值，这样的值可以有两种形式<code>Some(x), None</code>，主要是传递参数的时候进行使用，因为有些时候必须需要判断一个对象是否为空，但是在<code>scala</code>中<code>Null</code>并不是一个合法元素，因此不能进行判断，使用<code>Option</code>类型很好的解决了这个问题。</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">show</span></span>(x: <span class="type">Option</span>[<span class="type">String</span>]) = x <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="type">Some</span>(x) =&gt; s</span><br><span class="line">  <span class="keyword">case</span> <span class="type">None</span> =&gt; <span class="string">&quot;?&quot;</span>  <span class="comment">//Option类型可以有Null</span></span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
-</li>
-<li><p><strong>偏函数</strong></p>
-<p>它只对会作用于指定类型的参数或指定范围值的参数实施计算，超出它的界定范围之外的参数类型和值它会忽略</p>
-<p><code>PartialFunction</code>特质规定了两个要实现的方法：<code>apply</code>和<code>isDefinedAt</code>，<code>isDefinedAt</code>用来告知调用方这个偏函数接受参数的范围，可以是类型也可以是值，如果是指定的范围，则返回<code>true</code>否者的话返回<code>false</code>。<code>apply</code>方法用来描述对已接受的值如何处理。</p>
-<p>大多数的时候服务的是case，case序列得到的其实就是一个偏函数</p>
-<p>自己定义一个偏函数</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">new</span> <span class="type">PartialFunction</span>[<span class="type">List</span>[<span class="type">Int</span>], <span class="type">Int</span>]&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">apply</span></span>(xs: <span class="type">List</span>[<span class="type">Int</span>]) = xs <span class="keyword">match</span>&#123;</span><br><span class="line">    <span class="keyword">case</span> x :: y :: _ =&gt; y</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">isDefinedAt</span></span>(xs: <span class="type">List</span>[<span class="type">Int</span>]) xs <span class="keyword">match</span>&#123;</span><br><span class="line">    <span class="keyword">case</span> x :: y :: _ =&gt; <span class="literal">true</span></span><br><span class="line">    <span class="keyword">case</span> _ =&gt; <span class="literal">false</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<li><p><strong>缺点</strong></p>
+<p>每次使用前都会检查是否已经初始化，会有额外的开销，并没有那么高效</p>
 </li>
 </ul>
 ]]></content>
@@ -722,7 +722,7 @@
         <category>scala</category>
       </categories>
       <tags>
-        <tag>scala编程</tag>
+        <tag>scala语法</tag>
       </tags>
   </entry>
 </search>
