@@ -1,0 +1,89 @@
+<h1 id="numpy"><a href="#numpy" class="headerlink" title="numpy"></a>numpy</h1><p><strong>reshape</strong></p>
+<p>reshape中 -1表示不确定的值，如X.reshape(-1,8)表示行数不确定，每行8列。要是不能恰好划分的话，会报错。</p>
+<p><strong>random</strong></p>
+<ol>
+<li><p>np.random.random([3,4]),生成一维元素个数为num的数组，0-1均匀分布。</p>
+</li>
+<li><p>np.random.rand(4, 5)，numpy.random.rand(d0,d1,…,dn)</p>
+<ul>
+<li>生成（0, 1]的随机数</li>
+<li>dn表格每个维度</li>
+<li>返回值为指定维度的array</li>
+</ul>
+</li>
+<li><p>np.random.randn(3, 4)，numpy.random.randn(d0,d1,…,dn)</p>
+<ul>
+<li><p>生成(0,1]之间的随机数，标准正态分布。</p>
+</li>
+<li><p>dn表格每个维度</p>
+</li>
+<li><p>返回值为指定维度的array</p>
+</li>
+</ul>
+</li>
+<li><p>numpy.random.randint(low, high=None, size=None, dtype=’l’)</p>
+<ul>
+<li>low, high表示的是范围，左闭右开</li>
+<li>size为数组维度，dtype为数据类型，默认为np.int</li>
+<li>当high没有填写时，默认为[0,low]</li>
+</ul>
+</li>
+<li><p>np.random.seed()</p>
+<ul>
+<li>设置随机数种子，这样的话每次都可以生成一样的随机数，每次设置之后生效一次</li>
+</ul>
+</li>
+<li><p>numpy.random.uniform(low,high,size)</p>
+<p>功能：从一个均匀分布[low,high)中随机采样，注意定义域是左闭右开，即包含low，不包含high.</p>
+<ul>
+<li>low: 采样下界，float类型，默认值为0</li>
+<li>high: 采样上界，float类型，默认值为1</li>
+<li>size: 输出样本数目，为int或元组(tuple)类型，例如，size=(m,n,k), 则输出m<em>n</em>k个样本，缺省时输出1个值。</li>
+<li>返回值：ndarray类型，其形状和参数size中描述一致。</li>
+</ul>
+</li>
+</ol>
+<p><strong>np.shape np.size</strong></p>
+<p>shape返回的是矩阵的形状如[5, 4]等，size返回的是矩阵的大小，矩阵内有多少个元素</p>
+<p><strong>np.full</strong></p>
+<p>numpy.full(shape, fill_value, dtype=None, order=’C’)</p>
+<p>返回一个根据指定shape和type,并用fill_value填充的新数组</p>
+<h1 id="matplotlib-pyplot"><a href="#matplotlib-pyplot" class="headerlink" title="matplotlib.pyplot"></a>matplotlib.pyplot</h1><p><strong>plt.subplot(row, col, index)</strong></p>
+<p>row, col分别指示画的子图为几行几列，index表明的是第几个子图。</p>
+<p><strong>plt.legend()</strong></p>
+<p>显示曲线标注选项。</p>
+<h1 id="pamdas"><a href="#pamdas" class="headerlink" title="pamdas"></a>pamdas</h1><p><strong>Series</strong></p>
+<p><a href="https://blog.csdn.net/Quincuntial/article/details/72886716">https://blog.csdn.net/Quincuntial/article/details/72886716</a></p>
+<h1 id="pytorch"><a href="#pytorch" class="headerlink" title="pytorch"></a>pytorch</h1><p><strong>tensor.view</strong></p>
+<p>相当于numpy中的resize的用法，比如out = out.view(out.size(0), -1)，蒋out resize成out.size(0)行，列数不限的二维向量</p>
+<p><strong>nn.Conv2d</strong></p>
+<pre><code class="python">class torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True)</code></pre>
+<p><code>in_channels</code>表示输入的通道数</p>
+<p><code>out_channels</code>表示输出的通道数</p>
+<p><code>kernel_size</code>表示kernel的长款，可以是一个元组，也可以是一个int</p>
+<p>这样卷积核的大小就是<code>kernel_size * kernel_size * in_channels * out_channels</code>大小，每次使用一个大小为``kernel_size * kernel_size * in_channels`的卷积核与输入特征做卷积。</p>
+<p><code>stride=1</code>表示默认情况下，卷积核的步长为1</p>
+<p><strong>nn.MaxPool2d</strong></p>
+<pre><code class="python">class torch.nn.MaxPool2d(kernel_size, stride=None, padding=0, dilation=1, return_indices=False, ceil_mode=False)</code></pre>
+<ul>
+<li>kernel_size(<code>int</code> or <code>tuple</code>) - max pooling的窗口大小</li>
+<li>stride(<code>int</code> or <code>tuple</code>, <code>optional</code>) - max pooling的窗口移动的步长。默认值是<code>kernel_size</code></li>
+<li>padding(<code>int</code> or <code>tuple</code>, <code>optional</code>) - 输入的每一条边补充0的层数</li>
+<li>dilation(<code>int</code> or <code>tuple</code>, <code>optional</code>) – 一个控制窗口中元素步幅的参数</li>
+<li>return_indices - 如果等于<code>True</code>，会返回输出最大值的序号，对于上采样操作会有帮助</li>
+<li>ceil_mode - 如果等于<code>True</code>，计算输出信号大小的时候，会使用向上取整，代替默认的向下取整的操作</li>
+</ul>
+<p>输入: (N,C,H_{in},W_in)<br>输出: (N,C,H_out,W_out)<br>$$H_{out}=floor((H_{in} + 2<em>padding[0] - dilation[0]</em>(kernel_size[0] - 1) - 1)/stride[0] + 1$$</p>
+<p>$$W_{out}=floor((W_{in} + 2<em>padding[1] - dilation[1]</em>(kernel_size[1] - 1) - 1)/stride[1] + 1$$</p>
+<p>在默认的情况下就是输入宽度/stride</p>
+<p><strong>卷积层输出大小计算</strong></p>
+<p>假设：输入图片（Input）大小为I<em>I，卷积核（Filter）大小为K</em>K，步长（stride）为S，填充（Padding）的像素数为P，那卷积层输出（Output）的特征图大小为多少呢?</p>
+<p>可以得出推导公式：</p>
+<p>O=（I-K+2P）/S+1</p>
+<p><strong>nn.BatchNorm2d</strong></p>
+<pre><code class="python">class torch.nn.BatchNorm2d(num_features, eps=1e-05, momentum=0.1, affine=True)</code></pre>
+<p>直接传入输入特征的通道数量，对每个通道进行归一化操作$$ y = \frac{x - mean[x]}{ \sqrt{Var[x]} + \epsilon} * gamma + beta $$</p>
+<h1 id="tensorflow"><a href="#tensorflow" class="headerlink" title="tensorflow"></a>tensorflow</h1><p><strong>获取tensor维度</strong></p>
+<pre><code class="python">input.shape.as_list() # Out: [2,3]
+input.get_shape().as_list() # Out: [2,3]</code></pre>
+<p>可以看到s.shape和x.get_shape()都是返回TensorShape类型对象，而tf.shape(x)返回的是Tensor类型对象。</p>

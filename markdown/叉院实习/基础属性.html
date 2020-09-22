@@ -1,0 +1,662 @@
+<p>[TOC]</p>
+<h2 id="程序介绍"><a href="#程序介绍" class="headerlink" title="程序介绍"></a>程序介绍</h2><h3 id="程序结构"><a href="#程序结构" class="headerlink" title="程序结构"></a>程序结构</h3><p>我主要是阅读了camera perception相关的代码，其中包括了很多caffe相关、tensorRT相关、cuda c相关、c++线性代数库相关的知识，如需要可以找相应的材料进行学习。</p>
+<p><img src="C:%5CUsers%5Cmohai%5CDesktop%5C1595922450.jpg" alt="1595922450"></p>
+<h3 id="Blob"><a href="#Blob" class="headerlink" title="Blob"></a>Blob</h3><p>其直观的可以把它看成一个有4纬的结构体（包含数据和梯度），而实际上，它们只是一维的指针而已，其4维结构通过shape属性得以计算出来（根据C语言的数据顺序）。</p>
+<p>其成员变量有</p>
+<pre><code class="c++">protected:
+  shared_ptr&lt;SyncedMemory&gt; data_;// 存放数据
+  shared_ptr&lt;SyncedMemory&gt; diff_;//存放梯度
+  vector&lt;int&gt; shape_; //存放形状
+  int count_; //数据个数
+</code></pre>
+<p>常见的成员函数有</p>
+<pre><code class="c++">const Dtype* cpu_data() const; //cpu使用的数据
+  void set_cpu_data(Dtype* data);//用数据块的值来blob里面的data。
+  const Dtype* gpu_data() const;//返回不可更改的指针，下同
+  const Dtype* cpu_diff() const;
+  const Dtype* gpu_diff() const;
+  Dtype* mutable_cpu_data();//返回可更改的指针，下同
+  Dtype* mutable_gpu_data();
+  Dtype* mutable_cpu_diff();
+  Dtype* mutable_gpu_diff();</code></pre>
+<p>带mutable开头的意味着可以对返回的指针内容进行更改，而不带mutable开头的返回const 指针，不能对其指针的内容进行修改，</p>
+<ul>
+<li>其中封装了syncedmemory类，该类主要是进行了cpu跟GPU数据类型的同步</li>
+<li>第一版的代码我延续时使用了Blob数据结构，主要为了兼容其他的算法。</li>
+</ul>
+<p>对于具体的图像而言blob是个四维数组(num，channels，height，width)，计算count=num×channels×height×width。<br>num是batch_size，channels是颜色通道数，RGB就是3;h和w分别就是图像的高和宽了。</p>
+<p>对于全连接网络来说，blob是二维数组(num，datum)。</p>
+<p>如果是卷积层，blob是四维数组，与图像数据相同;<br>如果是全连接层那么就是二维数组(num_inputs,num_outputs)。</p>
+<h3 id="Image8U"><a href="#Image8U" class="headerlink" title="Image8U"></a>Image8U</h3><p>是对Blob类的一层封装，同时特定为image类型，不会有全连接类型，其中主要的属性有</p>
+<pre><code class="c++">  int rows_;  //图片row
+  int cols_;  //图片col
+  Color type_;  //rbg bgr gray三种
+  int channels_; 
+  int width_step_;
+  std::shared_ptr&lt;Blob&lt;uint8_t&gt;&gt; blob_;  //主要数据还是存储在blob中</code></pre>
+<p>分装了两种指针，Image8UPtr可变指针，Image8UConstPtr不可变指针。</p>
+<p>除了blob中的xxx_data()属性之外，还有prt属性，可以指定一定的偏移。</p>
+<h3 id="配置信息流"><a href="#配置信息流" class="headerlink" title="配置信息流"></a>配置信息流</h3><ul>
+<li>首先全局的配置信息在   “/apollo/modules/perception/testdata/camera/app/conf/perception/camera/obstacle/obstacle.pt”;中</li>
+<li>YoloObstacleDetector的配置信息在/apollo/modules/perception/production/data/perception/camera/models/yolo_obstacle_detector/conf.pt中，会分为model_param、net_param、nms_param三个主要的message，定义在modules\perception\camera\lib\obstacle\detector\yolo\proto\yolo.proto中。</li>
+<li>在init函数中，通过GetProtoFromFile从config file中加载具体的配置参数</li>
+<li>调用initnet函数对输入输出接口进行初始化，主要初始化了inference类跟其的input与output，之后在InitYoloBlob中进行了blob的初始化。</li>
+</ul>
+<h3 id="网络input-output"><a href="#网络input-output" class="headerlink" title="网络input output"></a>网络input output</h3><p>使用<a href="http://ethereon.github.io/netscope/#/editor">网站</a>查看caffe网络结构</p>
+<p>apollo\modules\perception\production\data\perception\camera\models\yolo_obstacle_detector\3d-r4-half-config.pt</p>
+<p><strong>3d-r4-half-config</strong></p>
+<p><img src="C:%5CUsers%5Cmohai%5CDesktop%5C3d-r4-half.png" alt="3d-r4-half"></p>
+<p><strong>input</strong></p>
+<table>
+<thead>
+<tr>
+<th align="center">name</th>
+<th align="center">shape</th>
+<th align="center">describe</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">input</td>
+<td align="center">1 x 800 x 1440 x 3</td>
+<td align="center">image</td>
+</tr>
+</tbody></table>
+<p><strong>output</strong></p>
+<table>
+<thead>
+<tr>
+<th align="center">name</th>
+<th align="center">shape</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">det1_loc_blob: “loc_pred”</td>
+<td align="center">50 x 90 x 64</td>
+</tr>
+<tr>
+<td align="center">det1_obj_blob: “obj_pred”</td>
+<td align="center">50 x 90 x 16</td>
+</tr>
+<tr>
+<td align="center">det1_cls_blob: “cls_pred”</td>
+<td align="center">4500 x 128</td>
+</tr>
+<tr>
+<td align="center">det1_ori_blob: “ori_pred”</td>
+<td align="center">50 x 90 x 32</td>
+</tr>
+<tr>
+<td align="center">det1_dim_blob: “dim_pred”</td>
+<td align="center">50 x 90 x 48</td>
+</tr>
+<tr>
+<td align="center">det2_loc_blob: “detect2_loc_pred”</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="center">det2_obj_blob: “detect2_obj_pred”</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="center">det2_cls_blob: “detect2_cls_pred”</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="center">det2_ori_conf_blob: “detect2_ori_conf_pred”</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="center">det2_ori_blob: “detect2_ori_pred”</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="center">det2_dim_blob: “detect2_dim_pred”</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="center">det3_loc_blob: “detect3_loc_pred”</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="center">det3_obj_blob: “detect3_obj_pred”</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="center">det3_cls_blob: “detect3_cls_pred”</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="center">det3_ori_conf_blob: “detect3_ori_conf_pred”</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="center">det3_ori_blob: “detect3_ori_pred”</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="center">det3_dim_blob: “detect3_dim_pred”</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="center">lof_blob: “lof_pred”</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="center">lor_blob: “lor_pred”</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="center">brvis_blob:”brvis_pred”</td>
+<td align="center">50 x 90 x 16</td>
+</tr>
+<tr>
+<td align="center">brswt_blob:”brswt_pred”</td>
+<td align="center">50 x 90 x 16</td>
+</tr>
+<tr>
+<td align="center">ltvis_blob:”ltvis_pred”</td>
+<td align="center">50 x 90 x 16</td>
+</tr>
+<tr>
+<td align="center">ltswt_blob:”ltswt_pred”</td>
+<td align="center">50 x 90 x 16</td>
+</tr>
+<tr>
+<td align="center">rtvis_blob:”rtvis_pred”</td>
+<td align="center">50 x 90 x 16</td>
+</tr>
+<tr>
+<td align="center">rtswt_blob:”rtvis_pred”</td>
+<td align="center">50 x 90 x 16</td>
+</tr>
+<tr>
+<td align="center">feat_blob:”conv_feat”</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="center">area_id_blob:”area_id_pred”</td>
+<td align="center">72000 x 4</td>
+</tr>
+<tr>
+<td align="center">visible_ratio_blob:”vis_pred”</td>
+<td align="center">72000 x 4</td>
+</tr>
+<tr>
+<td align="center">cut_off_ratio_blob:”cut_pred”</td>
+<td align="center">50 x 90 x 64</td>
+</tr>
+</tbody></table>
+<p><strong>yolo_param</strong></p>
+<table>
+<thead>
+<tr>
+<th align="center">name</th>
+<th align="center">shape</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">input</td>
+<td align="center">1 x 800 x 1440 x 3</td>
+</tr>
+<tr>
+<td align="center">data_perm</td>
+<td align="center">1 x 3 x 800 x 1440</td>
+</tr>
+<tr>
+<td align="center">conv1</td>
+<td align="center">16 x 800 x 1440 (batch 维度接下来省略)</td>
+</tr>
+<tr>
+<td align="center">pool1</td>
+<td align="center">16 x 400 x 720</td>
+</tr>
+<tr>
+<td align="center">conv2</td>
+<td align="center">32 x 400 x 720</td>
+</tr>
+<tr>
+<td align="center">pool2</td>
+<td align="center">32 x 200 x 360</td>
+</tr>
+<tr>
+<td align="center">conv3_1</td>
+<td align="center">64 x 200 x 360</td>
+</tr>
+<tr>
+<td align="center">conv3_2</td>
+<td align="center">32 x 200 x 360</td>
+</tr>
+<tr>
+<td align="center">conv3_3</td>
+<td align="center">64 x 200 x 360</td>
+</tr>
+<tr>
+<td align="center">pool3</td>
+<td align="center">64 x 100 x 180</td>
+</tr>
+<tr>
+<td align="center">conv4_1</td>
+<td align="center">128 x 100 x 180</td>
+</tr>
+<tr>
+<td align="center">conv4_2</td>
+<td align="center">64 x 100 x 180</td>
+</tr>
+<tr>
+<td align="center">conv4_3</td>
+<td align="center">128 x 100 x 180</td>
+</tr>
+<tr>
+<td align="center">pool4</td>
+<td align="center">128 x 50 x 90</td>
+</tr>
+<tr>
+<td align="center">conv5_1</td>
+<td align="center">256 x 50 x 90</td>
+</tr>
+<tr>
+<td align="center">conv5_2</td>
+<td align="center">128 x 50 x 90</td>
+</tr>
+<tr>
+<td align="center">conv5_3</td>
+<td align="center">256 x 50 x 90</td>
+</tr>
+<tr>
+<td align="center">conv5_4</td>
+<td align="center">128 x 50 x 90</td>
+</tr>
+<tr>
+<td align="center">conv5_5</td>
+<td align="center">256 x 50 x 90</td>
+</tr>
+<tr>
+<td align="center">conv6_1</td>
+<td align="center">512 x 50 x 90</td>
+</tr>
+<tr>
+<td align="center">conv6_2</td>
+<td align="center">256 x 50 x 90</td>
+</tr>
+<tr>
+<td align="center">conv6_3</td>
+<td align="center">512 x 50 x 90</td>
+</tr>
+<tr>
+<td align="center">conv6_4</td>
+<td align="center">256 x 50 x 90</td>
+</tr>
+<tr>
+<td align="center">conv6_5</td>
+<td align="center">512 x 50 x 90</td>
+</tr>
+<tr>
+<td align="center">conv7_1</td>
+<td align="center">512 x 50 x 90</td>
+</tr>
+<tr>
+<td align="center">conv7_2</td>
+<td align="center">256 x 50 x 90</td>
+</tr>
+<tr>
+<td align="center"><strong>concat8</strong></td>
+<td align="center"><strong>(256 + 256) x 50 x 90</strong></td>
+</tr>
+<tr>
+<td align="center">conv9</td>
+<td align="center">512 x 50 x 90</td>
+</tr>
+<tr>
+<td align="center">conv10</td>
+<td align="center">512 x 50 x 90</td>
+</tr>
+<tr>
+<td align="center">conv_final_8cls</td>
+<td align="center">208 x 50 x 90</td>
+</tr>
+<tr>
+<td align="center">conv_final_permute</td>
+<td align="center">50 x 90 x 208</td>
+</tr>
+<tr>
+<td align="center">slice</td>
+<td align="center">loc_pred(50 x 90 x 64), obj_perm(50 x 90 x 16), cls_perm(50 x 90 x 128)</td>
+</tr>
+<tr>
+<td align="center">cls_reshape</td>
+<td align="center">72000 x 8</td>
+</tr>
+<tr>
+<td align="center">cls_pred_prob</td>
+<td align="center">72000 x 8</td>
+</tr>
+<tr>
+<td align="center"><strong>cls_pred</strong></td>
+<td align="center"><strong>4500 x 128</strong></td>
+</tr>
+<tr>
+<td align="center"><strong>obj_pred</strong></td>
+<td align="center"><strong>50 x 90 x 16</strong></td>
+</tr>
+<tr>
+<td align="center"><strong>loc_pred</strong></td>
+<td align="center"><strong>50 x 90 x 64</strong></td>
+</tr>
+<tr>
+<td align="center">dim_origin</td>
+<td align="center">48 x 50 x 90</td>
+</tr>
+<tr>
+<td align="center"><strong>dim_pred</strong></td>
+<td align="center"><strong>50 x 90 x 48</strong></td>
+</tr>
+<tr>
+<td align="center">ori_origin</td>
+<td align="center">32 x 50 x 90</td>
+</tr>
+<tr>
+<td align="center"><strong>ori_pred</strong></td>
+<td align="center"><strong>50 x 90 x 32</strong></td>
+</tr>
+<tr>
+<td align="center">brvis_ori</td>
+<td align="center">16 x 50 x 90</td>
+</tr>
+<tr>
+<td align="center"><strong>brvis_perm</strong></td>
+<td align="center"><strong>50 x 90 x 16</strong></td>
+</tr>
+<tr>
+<td align="center">ltvis_ori</td>
+<td align="center">16 x 50 x 90</td>
+</tr>
+<tr>
+<td align="center"><strong>ltvis_perm</strong></td>
+<td align="center"><strong>50 x 90 x 16</strong></td>
+</tr>
+<tr>
+<td align="center">rtvis_ori</td>
+<td align="center">16 x 50 x 90</td>
+</tr>
+<tr>
+<td align="center"><strong>rtvis_perm</strong></td>
+<td align="center"><strong>50 x 90 x 16</strong></td>
+</tr>
+<tr>
+<td align="center">brswt_ori</td>
+<td align="center">16 x 50 x 90</td>
+</tr>
+<tr>
+<td align="center"><strong>brswt_perm</strong></td>
+<td align="center"><strong>50 x 90 x 16</strong></td>
+</tr>
+<tr>
+<td align="center">ltswt_ori</td>
+<td align="center">16 x 50 x 90</td>
+</tr>
+<tr>
+<td align="center"><strong>ltswt_perm</strong></td>
+<td align="center"><strong>50 x 90 x 16</strong></td>
+</tr>
+<tr>
+<td align="center">rtswt_ori</td>
+<td align="center">16 x 50 x 90</td>
+</tr>
+<tr>
+<td align="center"><strong>rtswt_perm</strong></td>
+<td align="center"><strong>50 x 90 x 16</strong></td>
+</tr>
+<tr>
+<td align="center">vis_pack</td>
+<td align="center">64 x 50 x 90</td>
+</tr>
+<tr>
+<td align="center">vis_perm</td>
+<td align="center">50 x 90 x 64</td>
+</tr>
+<tr>
+<td align="center">vis_perm_reshape</td>
+<td align="center">72000 x 4</td>
+</tr>
+<tr>
+<td align="center"><strong>vis_pred</strong></td>
+<td align="center"><strong>72000 x 4</strong></td>
+</tr>
+<tr>
+<td align="center">conv_area_id_half</td>
+<td align="center">64 x 50 x 90</td>
+</tr>
+<tr>
+<td align="center">area_id_perm</td>
+<td align="center">50 x 90 x 64</td>
+</tr>
+<tr>
+<td align="center"><strong>area_id_perm_reshape</strong></td>
+<td align="center"><strong>72000 x 4</strong></td>
+</tr>
+<tr>
+<td align="center">cut_4d_origin</td>
+<td align="center">64 x 50 x 90</td>
+</tr>
+<tr>
+<td align="center">cut_sig</td>
+<td align="center">64 x 50 x 90</td>
+</tr>
+<tr>
+<td align="center"><strong>cut_pred</strong></td>
+<td align="center"><strong>50 x 90 x 64</strong></td>
+</tr>
+</tbody></table>
+<h3 id="Detect-class"><a href="#Detect-class" class="headerlink" title="Detect class"></a>Detect class</h3><pre><code class="c++">enum class ObjectSubType {
+  UNKNOWN = 0,
+  UNKNOWN_MOVABLE = 1,
+  UNKNOWN_UNMOVABLE = 2,
+  CAR = 3,
+  VAN = 4,
+  TRUCK = 5,
+  BUS = 6,
+  CYCLIST = 7,
+  MOTORCYCLIST = 8,
+  TRICYCLIST = 9,
+  PEDESTRIAN = 10,
+  TRAFFICCONE = 11,
+  MAX_OBJECT_TYPE = 12,
+};</code></pre>
+<h3 id="Detect"><a href="#Detect" class="headerlink" title="Detect"></a>Detect</h3><ul>
+<li><p>ResizeGPU</p>
+<p>在进行resize之前需要将camerafarmer中的额data_provider中的image放到image中，image_是一个image8U类型的数据，resize的结果放到input_blob中，这是在inference中已经申请了空间的数据结构，用于infer的输入。</p>
+</li>
+<li><p>Infer </p>
+<p>通过之前配置好的网络以及input_blob中的数据，进行inference</p>
+<pre><code class="c++">  for (auto name : output_names_) {
+    auto blob = get_blob(name);
+    if (blob != nullptr) {
+      blob-&gt;mutable_gpu_data();
+    }</code></pre>
+<p>可以看到的是，他将得到网络所有output的结果，保存在最后保存在yolo_blob_中，感觉这个inference更多的是为后面的get_object_gpu（Yolo）服务的</p>
+</li>
+<li><p>get_objects_gpu</p>
+<ul>
+<li>实现在modules\perception\camera\lib\obstacle\detector\yolo\region_output.cu中。</li>
+<li>其中主要是对infer的output进行处理，输入参数说明如下所示</li>
+</ul>
+<pre><code class="c++">yolo_blobs_; //inference得到的结果
+stream_; //cuda所用到的流
+types_; //type类型，主要有car，per等
+nms_; //NMSParam
+yolo_param_.model_param(); //yolo的module param
+light_vis_conf_threshold_; //float类型的数据，阈值
+light_swt_conf_threshold_; //float类型的数据，阈值
+overlapped_.get();  //bool类型的blob
+idx_sm_.get(); //int类型的blob
+&amp;(frame-&gt;detected_objects); //传入的引用，最终改函数的结果保存在这。</code></pre>
+</li>
+</ul>
+<ul>
+<li>开始是进行一些准备信息的工作，提取出yolo_blob_中的信息，判断lof、lor等信息，其中还有一些具体的维度计算没有跟踪。</li>
+<li>get_object_kernel函数，猜测可能是检测用的网络用的函数，没太看明白中间在干些啥。</li>
+<li>对于每一种物体类别，调用apply_nms_gpu()函数去除多余的检测框。两个apply_nms_gpu，第一个在for之外，其实是对最大的confidence的使用NMS算法，在for之中的是分别对剩下的使用NMS算法，最终的结果保存在indices中。</li>
+<li>最后对剩下的框，填充物体的种类跟score，最后的fill box相关就是将obj-&gt;camera_supplement.box.xmin这些相关的信息填入cameraframe中。</li>
+</ul>
+<p>  对于每一种物体类别，调用apply_nms_gpu()函数去除多余的检测框。这个函数首先先用阀值过滤下，把confidence小于0.8的干掉，剩下的框的index和confidence放在idx和confidence两个vector中。然后把剩下的元素按confidence排个序。接着调用compute_overlapped_by_idx_gpu()函数计算这些框间的重叠关系。当两个框间的IoU（即Jaccard overlap）大于0.4时，算两者重叠。基于这个结果，就可以调用apply_nms()执行NMS算法。结果放在indeces这个成员中。indices是类别到物体框index数组的映射。</p>
+<ul>
+<li><p>filter_bbox</p>
+<p>这就是将不合理的框筛选出去，如左上角的点的坐标大于右上坐标的点。</p>
+</li>
+<li><p>feature_extractor_-&gt;Extract</p>
+<p>根据初始化中使用的是“TrackingFeatureExtractor”，所以调用的是modules\perception\camera\lib\feature_extractor\tfe\tracking_feat_extractor.cc中的extract。</p>
+<p>这里是使用输入的box的位置信息，得到该box表示的是什么样的东西（如person等），主要注意的是这里也有一个网络。</p>
+<pre><code class="c++">float *rois_data =
+    feature_extractor_layer_ptr-&gt;rois_blob-&gt;mutable_cpu_data();
+for (const auto &amp;obj : frame-&gt;detected_objects) {
+    rois_data[0] = 0;
+    rois_data[1] =
+        obj-&gt;camera_supplement.box.xmin * static_cast&lt;float&gt;(feat_width_);
+    rois_data[2] =
+        obj-&gt;camera_supplement.box.ymin * static_cast&lt;float&gt;(feat_height_);
+    rois_data[3] =
+        obj-&gt;camera_supplement.box.xmax * static_cast&lt;float&gt;(feat_width_);
+    rois_data[4] =
+        obj-&gt;camera_supplement.box.ymax * static_cast&lt;float&gt;(feat_height_);
+    ADEBUG &lt;&lt; rois_data[0] &lt;&lt; &quot; &quot; &lt;&lt; rois_data[1] &lt;&lt; &quot; &quot; &lt;&lt; rois_data[2]
+        &lt;&lt; &quot; &quot; &lt;&lt; rois_data[3] &lt;&lt; &quot; &quot; &lt;&lt; rois_data[4];
+    rois_data += feature_extractor_layer_ptr-&gt;rois_blob-&gt;offset(1);
+}
+feature_extractor_layer_ptr-&gt;pooling_layer-&gt;ForwardGPU(
+    {feat_blob_, feature_extractor_layer_ptr-&gt;rois_blob},
+    {frame-&gt;track_feature_blob});</code></pre>
+</li>
+</ul>
+<ul>
+<li><p>recover_bbox</p>
+<p>这个函数主要做的是一些与坐标转换相关的处理，upper_left/uppper_right中填的是相对于ROI（图片下面1920 x 768）中并且归一化到[0，1]范围内的。比如xmin/ymin/xmax/ymax为(0.552336, 0.27967, 0.583794, 0.344488)。这个坐标会转换到ROI中的像素坐标。转换后x/y/w/h为(1060, 526, 60, 49)。之后还会和图像的大小做一个并，把那些超出图像的部分切掉。最后如果框的边界是在图像的边上的，会设置VisualObject的trunc_width/trunc_height成员。</p>
+</li>
+</ul>
+<p>最终可以看到detect中各项函数使用的时间如下所示。</p>
+<table>
+<thead>
+<tr>
+<th align="center">name</th>
+<th align="center">time(ms)</th>
+<th align="center">describe</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">start</td>
+<td align="center">0.003</td>
+<td align="center">get input blob</td>
+</tr>
+<tr>
+<td align="center">GetImageBlob</td>
+<td align="center">0.014</td>
+<td align="center">from provider to input blob</td>
+</tr>
+<tr>
+<td align="center">ResizeGPU</td>
+<td align="center">0.014</td>
+<td align="center">resize</td>
+</tr>
+<tr>
+<td align="center"><strong>Infer</strong></td>
+<td align="center"><strong>7.367</strong></td>
+<td align="center"><strong>inference</strong></td>
+</tr>
+<tr>
+<td align="center"><strong>get_objects_gpu</strong></td>
+<td align="center"><strong>4.184</strong></td>
+<td align="center"><strong>get objects</strong></td>
+</tr>
+<tr>
+<td align="center">filter_bbox</td>
+<td align="center">0.042</td>
+<td align="center">filter not create box</td>
+</tr>
+<tr>
+<td align="center"><strong>Extract</strong></td>
+<td align="center"><strong>0.115</strong></td>
+<td align="center"><strong>Extract features</strong></td>
+</tr>
+<tr>
+<td align="center">recover_bbox</td>
+<td align="center">0.014</td>
+<td align="center">recover</td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+<p>可以通过perception的tool的offline中的offline_obstacle_pipeline.cc进行离线的算法测试，最终生成测试图片如下所示。</p>
+<p><img src="C:%5CUsers%5Cmohai%5CDesktop%5Ctest%5B84%5D11111.jpg" alt="test[84]11111"></p>
+<p>最终的object检测的结果其实会保存在输入的frame.detected_objects.camera_supplement中，其中画出的box主要是在box中，这里的主要是2D的矩形，许在真实的系统中其实还进行了3D重建。</p>
+<table>
+<thead>
+<tr>
+<th align="center">name</th>
+<th align="center">describe</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">xmin, ymin</td>
+<td align="center">矩形的左上角点</td>
+</tr>
+<tr>
+<td align="center">xmax, ymax</td>
+<td align="center">矩形的右上角的点</td>
+</tr>
+</tbody></table>
+<p>给出一该图片的检测输出</p>
+<table>
+<thead>
+<tr>
+<th align="center">name</th>
+<th align="center">value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">car</td>
+<td align="center">547 670 800 857 0.949245</td>
+</tr>
+<tr>
+<td align="center">car</td>
+<td align="center">1213 633 1789 988 0.934825</td>
+</tr>
+<tr>
+<td align="center">car</td>
+<td align="center">185 553 636 1024 0.89498</td>
+</tr>
+<tr>
+<td align="center">car</td>
+<td align="center">851 682 929 741 0.88613</td>
+</tr>
+<tr>
+<td align="center">car</td>
+<td align="center">905 685 948 727 0.605641</td>
+</tr>
+<tr>
+<td align="center">car</td>
+<td align="center">1010 685 1034 710 0.528782</td>
+</tr>
+<tr>
+<td align="center">pedestrian</td>
+<td align="center">1751 573 1852 875 0.951115</td>
+</tr>
+</tbody></table>
+<h3 id="NMS算法"><a href="#NMS算法" class="headerlink" title="NMS算法"></a>NMS算法</h3><p>根据候选框的类别分类概率做排序: A  &lt; B &lt; C &lt; D &lt; E &lt; F</p>
+<ol>
+<li>先标记最大概率F</li>
+<li>将F与A-E进行IOU，设定阈值，要是小的舍掉，假设B，D舍掉</li>
+<li>在A C E中选取最大的E重复上述步骤</li>
+</ol>
+<p><img src="C:%5CUsers%5Cmohai%5CDesktop%5C20180120111703066.jpg" alt="20180120111703066"></p>
+<h2 id="工具介绍"><a href="#工具介绍" class="headerlink" title="工具介绍"></a>工具介绍</h2><h3 id="tensorRT"><a href="#tensorRT" class="headerlink" title="tensorRT"></a>tensorRT</h3><p>TensorRT是NVIDIA推出的一个高性能的深度学习推理框架，可以让深度学习模型在NVIDIA <a href="https://cloud.tencent.com/product/gpu?from=10680">GPU</a>上实现低延迟，高吞吐量的部署。TensorRT支持Caffe，TensorFlow，Mxnet，Pytorch等主流深度学习框架。TensorRT是一个C++库，并且提供了C++ API和Python API，主要在NVIDIA GPU进行高性能的推理(Inference)加速。</p>
+<p><strong>程序在运行的过程中会出现INT8 mode not support的字样，这是因为2070super不支持一个叫做<code>DP4A </code>的指令集优化，换上支持此指令集的GPU如2080TI会得到3-5倍的加速</strong></p>
+<p>tensorRT的相关知识点比较多，我主要参看了<a href="https://arleyzhang.github.io/">这篇博客</a>，如果需要将默认的yolo网络修改为自己想要的网络，需要对tensorRT有一定的认识</p>
+<h3 id="nvinfer1"><a href="#nvinfer1" class="headerlink" title="nvinfer1"></a>nvinfer1</h3><p>这是tensorRT中的一个namespace，他比较重要的地方是实现了网络中的不同层的GPU加速，在apollo中主要的优化就是争对apollo这个系统所特有的数据格式进行了数据处理，计算函数还是使用的tensorRT自带的计算函数，具体函数的使用可以查看<a href="https://docs.nvidia.com/deeplearning/tensorrt/api/c_api/classnvinfer1_1_1_i_tensor.html">官方文档</a>，文档中给了具体函数的使用接口，以及功能介绍。</p>
+<h3 id="caffe"><a href="#caffe" class="headerlink" title="caffe"></a>caffe</h3><p>相对于工程性的项目，caffe的使用感觉是比tensorflow这些会方便一点，特别时融合了很多其他框架的时候，caffe的优势就体现出来了，caffe完全以配置信息的形势呈现，修改对应的网络模型只需要修改对应的配置文件，不需要重新对代码进行修改或者编译，我学习过程主要参考了这个人的<a href="https://www.cnblogs.com/denny402/category/759199.html">博客</a>，以及对源码进行了一定额阅读，其实在apollo的算法模块很多都是caffe的源码，需要的话可以进行阅读。</p>
+<h3 id="gtest"><a href="#gtest" class="headerlink" title="gtest"></a>gtest</h3><p>google开源测试工具，可以很方便的争对你开发的每一个函数进行快速的测试，具体可以查看<a href="https://github.com/google/googletest">官方教程</a></p>
+<h3 id="protobuf"><a href="#protobuf" class="headerlink" title="protobuf"></a>protobuf</h3><p>google开源的类似json或者xml，是一种轻便高效的结构化数据存储格式，可以用于结构化数据串行化，或者说序列化。具体可查看<a href="https://developers.google.com/protocol-buffers/docs/cpptutorial">官方教程</a>，以及一些不错的<a href="https://www.ibm.com/developerworks/cn/linux/l-cn-gpb/index.html">博客</a>。</p>
+<h3 id="cuda-c"><a href="#cuda-c" class="headerlink" title="cuda c"></a>cuda c</h3><p>为了调用GPU进行运算，需要用到cuda c给出的API，Apollo也是使用cuda c这样的框架进行的异构设备的管理。</p>
+<h3 id="eigen"><a href="#eigen" class="headerlink" title="eigen"></a>eigen</h3><p>Eigen 是C++语言里的一个开源模版库，支持线性代数运算，矩阵和矢量运算，数值分析及其相关的算法。在Apollo中需要用这个库中的矩阵操作，包括一些矩阵乘法，放射变换等。在cameraframe类中有挺多。</p>
+<h3 id="opencv"><a href="#opencv" class="headerlink" title="opencv"></a>opencv</h3><p>会使用到cv中一些图像处理的函数，比如resize中的线性插值等。</p>

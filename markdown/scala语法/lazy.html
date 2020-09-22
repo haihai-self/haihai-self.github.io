@@ -1,0 +1,29 @@
+<h1 id="lazy-in-scala"><a href="#lazy-in-scala" class="headerlink" title="lazy in scala"></a>lazy in scala</h1><ul>
+<li><p><strong>初始化顺序问题</strong></p>
+<p>构造顺序的问题，要是变量在类中没有初始化就使用他，这个时候会产生错误，使用<code>lazy</code>关键字很好的回避了这个问题，在用到的时候在进行初始化，保证了在用到该变量之前依赖的变量已经完成初始化。</p>
+<pre><code class="scala">class Person{
+  val name: String
+  val name_len = name.length
+}
+
+class Student extends Person{
+  override val name: String = &quot;Tom&quot;
+}</code></pre>
+<p>此时要是在<code>main</code>中新建一个<code>Student</code>的类会出现异常，因为父类会先于子类进行构造，在执行<code>name.length</code>的时候试图查找一个空指针的长度，出现异常</p>
+<p>想要解决这个问题需要将<code>name_len</code>加上<code>lazy</code>关键字，这样的就可以保证其初始化的顺序。</p>
+<p><code>lazy val name_len = name.length</code></p>
+</li>
+<li><p><strong>初始化某个变量的时间过长</strong></p>
+<p>在类的初始化过程中，要是有某个类初始化时间过长，可以申明为<code>lazy</code>这样的话，只有在使用他的第一次才进行初始化，显著减少了初始化的执行时间</p>
+<pre><code class="scala">class Person{
+  lazy val properties = {
+    print(&quot;init&quot;)
+    Thread.sleep(2000)
+  }
+}</code></pre>
+<p>将<code>properties</code>变量声明为<code>lazy</code>将会使其在使用的时候才对其进行初始化</p>
+</li>
+<li><p><strong>缺点</strong></p>
+<p>每次使用前都会检查是否已经初始化，会有额外的开销，并没有那么高效</p>
+</li>
+</ul>
