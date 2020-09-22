@@ -20,20 +20,20 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="scala不是一门纯粹的面向对象的语言，他强调函数式编程，函数式编程的两大核心理念是函数是一等的，以及程序中应该将值直接映射到输出，尽量的减少在函数中对程序的副作用。">
+  <meta name="description" content="需要注意的是使用字面量函数以及符号&#x3D;&gt;的使用，闭包好比作用域，用于确定变量的范围">
 <meta property="og:type" content="article">
-<meta property="og:title" content="为什么scala">
-<meta property="og:url" content="http://example.com/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/%E4%B8%BA%E4%BB%80%E4%B9%88scala/index.html">
+<meta property="og:title" content="scala函数跟闭包">
+<meta property="og:url" content="http://example.com/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/5-scala%E5%87%BD%E6%95%B0%E8%B7%9F%E9%97%AD%E5%8C%85/index.html">
 <meta property="og:site_name" content="haihai-blog">
-<meta property="og:description" content="scala不是一门纯粹的面向对象的语言，他强调函数式编程，函数式编程的两大核心理念是函数是一等的，以及程序中应该将值直接映射到输出，尽量的减少在函数中对程序的副作用。">
+<meta property="og:description" content="需要注意的是使用字面量函数以及符号&#x3D;&gt;的使用，闭包好比作用域，用于确定变量的范围">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2020-09-22T12:26:38.000Z">
-<meta property="article:modified_time" content="2020-09-22T12:28:41.275Z">
+<meta property="article:published_time" content="2020-09-22T12:38:12.000Z">
+<meta property="article:modified_time" content="2020-09-22T12:43:01.346Z">
 <meta property="article:author" content="海海不想起床">
 <meta property="article:tag" content="scala编程">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://example.com/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/%E4%B8%BA%E4%BB%80%E4%B9%88scala/">
+<link rel="canonical" href="http://example.com/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/5-scala%E5%87%BD%E6%95%B0%E8%B7%9F%E9%97%AD%E5%8C%85/">
 
 
 <script id="page-configurations">
@@ -46,7 +46,7 @@
   };
 </script>
 
-  <title>为什么scala | haihai-blog</title>
+  <title>scala函数跟闭包 | haihai-blog</title>
   
 
 
@@ -157,7 +157,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/%E4%B8%BA%E4%BB%80%E4%B9%88scala/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/5-scala%E5%87%BD%E6%95%B0%E8%B7%9F%E9%97%AD%E5%8C%85/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -170,7 +170,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          为什么scala
+          scala函数跟闭包
         </h1>
 
         <div class="post-meta">
@@ -181,7 +181,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2020-09-22 20:26:38 / 修改时间：20:28:41" itemprop="dateCreated datePublished" datetime="2020-09-22T20:26:38+08:00">2020-09-22</time>
+              <time title="创建时间：2020-09-22 20:38:12 / 修改时间：20:43:01" itemprop="dateCreated datePublished" datetime="2020-09-22T20:38:12+08:00">2020-09-22</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -211,31 +211,49 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>scala不是一门纯粹的面向对象的语言，他强调函数式编程，函数式编程的两大核心理念是函数是一等的，以及程序中应该将值直接映射到输出，尽量的减少在函数中对程序的副作用。</p>
+        <p>需要注意的是使用字面量函数以及符号<code>=&gt;</code>的使用，闭包好比作用域，用于确定变量的范围</p>
 <a id="more"></a>
 <ul>
-<li><p>一等函数</p>
-<p>函数可以做为别的函数的参数、返回值，赋值给变量</p>
+<li><p>函数字面量**</p>
+<p>函数字面量存在于源码中，在运行时编译成类，并在运行时实例化为函数值，所以函数值对象形式存在于运行时</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(x: <span class="type">Int</span>) =&gt; x + <span class="number">1</span></span><br></pre></td></tr></table></figure>
+
+<p>上述例子时函数字面量，左侧时参数列表，右侧是操作，多条语句的话，使用<code>&#123;&#125;</code>进行组合，<code>=&gt;</code>的意思表示将左侧的内容转换为右侧的内容。</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">someNumbers.filter(x =&gt; x &gt; <span class="number">0</span>)</span><br></pre></td></tr></table></figure>
+
+<p>接受一个函数做为入参，并对列表中的每个元素调用这个函数。同时由于知道了<code>someNumbers</code>是整数，所以x必定是整数，不用再申明类型</p>
 </li>
-<li><p>直接映射到输出</p>
-<p>操作直接将输入值映射到输出值，而不是当场修改数据。</p>
+<li><p><strong>占位符语法</strong></p>
+<p>用占位符来表示一个或多个参数，只要满足每个参数只在函数字面量中出现一次就行，第一个下划线代表第一个参数，第二个下划线代表第二个参数，第三个下划线代表第三个参数，以此类推。</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">someNumber.filter(_ &gt; <span class="number">0</span>)  <span class="comment">//变量是啥都不管</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>部分应用函数</strong></p>
+<p>可以用<code>_</code>代替独立的参数列表，但是要与主函数之间加上空格。</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">sum</span></span>(a: <span class="type">Int</span>, b: <span class="type">Int</span>, c: <span class="type">Int</span>): <span class="type">Int</span> = a + b + c</span><br><span class="line"><span class="keyword">val</span> a = sum _  <span class="comment">//_ 表示的是三个参数的参数列表 可以通过a(1, 2, 3)调用</span></span><br><span class="line"><span class="keyword">val</span> b = sum(<span class="number">1</span>, _: <span class="type">Int</span>, <span class="number">3</span>)  <span class="comment">//可以调用b(2)</span></span><br><span class="line">someNumbers.foreach(println _)</span><br><span class="line">someNumbers.foreach(println)</span><br></pre></td></tr></table></figure>
+
+<p>最后的这两种形式，可以再明确需要函数的地方给出。</p>
+</li>
+<li><p><strong>闭包</strong></p>
+<p>函数字面量创建出来的函数值被称为闭包，该名称源于“捕获”其自由变量从而“闭合”该函数字面量的操作。没有自由变量的字面量成为闭合语，比如<code>(x: Int =&gt; x + 1)</code>。任何带有自由变量的函数字面量称为开放语，比如<code>(x: Int =&gt; x + more)</code></p>
+</li>
+<li><p><strong>特殊函数的调用形式</strong></p>
+<ul>
+<li><p>重复参数</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">echo</span></span>(args: <span class="type">String</span>*) = </span><br><span class="line">	<span class="keyword">for</span> (arg &lt;- args) println(arg)</span><br><span class="line">echo(arr: _*)  <span class="comment">//传入一个String类型的数组</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>缺省值参数，带名参数</p>
+<p>缺省值参数就是将参数提前赋值，与python中一致。</p>
+<p>带名参数的作用就是再调用过程中，参数的顺序可以被打乱。</p>
 </li>
 </ul>
-<p><strong>变量定义</strong>：变量分为两种，一周是val类型，一种是var类型，val类型一旦被初始化就不能修改其值，var类型在整个生命周期之内都可以被重新赋值。</p>
-<p><strong>函数定义</strong>：def开始，接下来是函数名，之后吃参数列表，紧跟一个冒号，之后是返回类型，接下来是等号，花括号之内是函数体</p>
-<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"> <span class="function"><span class="keyword">def</span> <span class="title">max</span></span>(x: int, y:<span class="type">Int</span>): <span class="type">Int</span> = &#123;</span><br><span class="line">  <span class="keyword">if</span>(x &gt; y)</span><br><span class="line">    x</span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">    y</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>尾递归</strong></p>
+<p>在函数的尾部自己调用自己，这样的话就是尾递归，尾递归会自动的优化成<code>while</code>循环的形式，减少栈的开销。但是只能对那些直接尾递归的函数进行优化，要是间接的调用尾递归并不会进行优化</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">isEven</span></span>(x: <span class="type">Int</span>): <span class="type">Boolean</span> = </span><br><span class="line">	<span class="keyword">if</span> (x == <span class="number">0</span>) <span class="literal">true</span> <span class="keyword">else</span> isOdd(x - <span class="number">1</span>)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">isodd</span></span>(x: <span class="type">Int</span>): <span class="type">Boolean</span> = </span><br><span class="line">	<span class="keyword">if</span> (x == <span class="number">0</span>) <span class="literal">false</span> <span class="keyword">else</span> isEven(x - <span class="number">1</span>)  <span class="comment">//这样的相互递归不会优化，最后一步调用的是另外的一个函数值，并不会进行优化</span></span><br></pre></td></tr></table></figure>
 
-<p><strong>函数字面量</strong>：用圆括号括起来一组带名字的参数，一个又箭头和函数体</p>
-<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(x: <span class="type">Int</span>, y: <span class="type">Int</span>) =&gt; x + y</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
 
-<p><strong>foreach,跟for遍历</strong></p>
-<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">args.foreach(arg =&gt; println(arg))</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span>(arg &lt;- args)</span><br><span class="line">	println(arg)</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span>(i &lt;- <span class="number">0</span> to <span class="number">2</span>)</span><br><span class="line">	println(i)</span><br><span class="line"><span class="comment">//for括号中，左边是变量，右边是数组</span></span><br></pre></td></tr></table></figure>
-
-<p>方法调用：在scala中并没有操作符重载，1 + 2被解释成(1).+(2)调用Int的+方法</p>
-<p><strong>从文件读取文本行</strong>：</p>
-<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> scala.io.<span class="type">Source</span></span><br><span class="line"><span class="keyword">if</span>(args.length &gt; <span class="number">0</span>)&#123;</span><br><span class="line">  <span class="keyword">for</span>(line &lt;- <span class="type">Source</span>.fromFile(args(<span class="number">0</span>)).getLines())</span><br><span class="line">    println(line.length + <span class="string">&quot; &quot;</span> + line)</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">else</span> </span><br><span class="line">  <span class="type">Console</span>.err.println(<span class="string">&quot;please enter filename&quot;</span>)</span><br></pre></td></tr></table></figure>
-
-<h2 id=""><a href="#" class="headerlink" title=""></a></h2>
     </div>
 
     
@@ -253,12 +271,12 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2020/09/22/scala/scala%E8%AF%AD%E6%B3%95%E7%B3%96/scala-lazy/" rel="prev" title="scala-lazy">
-      <i class="fa fa-chevron-left"></i> scala-lazy
+    <a href="/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/4-scala%E5%86%85%E5%BB%BA%E6%8E%A7%E5%88%B6/" rel="prev" title="scala内建控制">
+      <i class="fa fa-chevron-left"></i> scala内建控制
     </a></div>
       <div class="post-nav-item">
-    <a href="/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/scala%E7%B1%BB%E8%B7%9F%E5%9F%BA%E7%A1%80%E6%93%8D%E4%BD%9C/" rel="next" title="scala类跟基础操作">
-      scala类跟基础操作 <i class="fa fa-chevron-right"></i>
+    <a href="/2020/09/22/scala%E6%8A%BD%E8%B1%A1%E6%8E%A7%E5%88%B6/" rel="next" title="scala抽象控制">
+      scala抽象控制 <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
       </footer>
@@ -318,7 +336,6 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text"></span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -332,7 +349,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-count">13</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>

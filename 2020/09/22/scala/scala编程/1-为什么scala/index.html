@@ -20,15 +20,20 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta property="og:type" content="website">
-<meta property="og:title" content="haihai-blog">
-<meta property="og:url" content="http://example.com/archives/index.html">
+  <meta name="description" content="scala不是一门纯粹的面向对象的语言，他强调函数式编程，函数式编程的两大核心理念是函数是一等的，以及程序中应该将值直接映射到输出，尽量的减少在函数中对程序的副作用。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="为什么scala">
+<meta property="og:url" content="http://example.com/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/1-%E4%B8%BA%E4%BB%80%E4%B9%88scala/index.html">
 <meta property="og:site_name" content="haihai-blog">
+<meta property="og:description" content="scala不是一门纯粹的面向对象的语言，他强调函数式编程，函数式编程的两大核心理念是函数是一等的，以及程序中应该将值直接映射到输出，尽量的减少在函数中对程序的副作用。">
 <meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-09-22T12:26:38.000Z">
+<meta property="article:modified_time" content="2020-09-22T12:41:54.266Z">
 <meta property="article:author" content="海海不想起床">
+<meta property="article:tag" content="scala编程">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://example.com/archives/">
+<link rel="canonical" href="http://example.com/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/1-%E4%B8%BA%E4%BB%80%E4%B9%88scala/">
 
 
 <script id="page-configurations">
@@ -36,12 +41,12 @@
   CONFIG.page = {
     sidebar: "",
     isHome : false,
-    isPost : false,
+    isPost : true,
     lang   : 'zh-CN'
   };
 </script>
 
-  <title>归档 | haihai-blog</title>
+  <title>为什么scala | haihai-blog</title>
   
 
 
@@ -145,234 +150,123 @@
         <div class="content-wrap">
           
 
-          <div class="content archive">
+          <div class="content post posts-expand">
             
 
+    
   
   
-  
-  <div class="post-block">
-    <div class="posts-collapse">
-      <div class="collection-title">
-        <span class="collection-header">嗯..! 目前共计 13 篇日志。 继续努力。</span>
-      </div>
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/1-%E4%B8%BA%E4%BB%80%E4%B9%88scala/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="海海不想起床">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="haihai-blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          为什么scala
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2020-09-22 20:26:38 / 修改时间：20:41:54" itemprop="dateCreated datePublished" datetime="2020-09-22T20:26:38+08:00">2020-09-22</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/scala/" itemprop="url" rel="index"><span itemprop="name">scala</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
 
       
-    <div class="collection-year">
-      <span class="collection-header">2020</span>
+        <p>scala不是一门纯粹的面向对象的语言，他强调函数式编程，函数式编程的两大核心理念是函数是一等的，以及程序中应该将值直接映射到输出，尽量的减少在函数中对程序的副作用。</p>
+<a id="more"></a>
+<ul>
+<li><p>一等函数</p>
+<p>函数可以做为别的函数的参数、返回值，赋值给变量</p>
+</li>
+<li><p>直接映射到输出</p>
+<p>操作直接将输入值映射到输出值，而不是当场修改数据。</p>
+</li>
+</ul>
+<p><strong>变量定义</strong>：变量分为两种，一周是val类型，一种是var类型，val类型一旦被初始化就不能修改其值，var类型在整个生命周期之内都可以被重新赋值。</p>
+<p><strong>函数定义</strong>：def开始，接下来是函数名，之后吃参数列表，紧跟一个冒号，之后是返回类型，接下来是等号，花括号之内是函数体</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"> <span class="function"><span class="keyword">def</span> <span class="title">max</span></span>(x: int, y:<span class="type">Int</span>): <span class="type">Int</span> = &#123;</span><br><span class="line">  <span class="keyword">if</span>(x &gt; y)</span><br><span class="line">    x</span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">    y</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>函数字面量</strong>：用圆括号括起来一组带名字的参数，一个又箭头和函数体</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(x: <span class="type">Int</span>, y: <span class="type">Int</span>) =&gt; x + y</span><br></pre></td></tr></table></figure>
+
+<p><strong>foreach,跟for遍历</strong></p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">args.foreach(arg =&gt; println(arg))</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span>(arg &lt;- args)</span><br><span class="line">	println(arg)</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span>(i &lt;- <span class="number">0</span> to <span class="number">2</span>)</span><br><span class="line">	println(i)</span><br><span class="line"><span class="comment">//for括号中，左边是变量，右边是数组</span></span><br></pre></td></tr></table></figure>
+
+<p>方法调用：在scala中并没有操作符重载，1 + 2被解释成(1).+(2)调用Int的+方法</p>
+<p><strong>从文件读取文本行</strong>：</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> scala.io.<span class="type">Source</span></span><br><span class="line"><span class="keyword">if</span>(args.length &gt; <span class="number">0</span>)&#123;</span><br><span class="line">  <span class="keyword">for</span>(line &lt;- <span class="type">Source</span>.fromFile(args(<span class="number">0</span>)).getLines())</span><br><span class="line">    println(line.length + <span class="string">&quot; &quot;</span> + line)</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">else</span> </span><br><span class="line">  <span class="type">Console</span>.err.println(<span class="string">&quot;please enter filename&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<h2 id=""><a href="#" class="headerlink" title=""></a></h2>
     </div>
 
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
+    
+    
+    
 
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2020-09-22T20:40:38+08:00"
-              content="2020-09-22">
-          09-22
-        </time>
-      </div>
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/scala%E7%BC%96%E7%A8%8B/" rel="tag"><i class="fa fa-tag"></i> scala编程</a>
+          </div>
 
-      <div class="post-title">
-          <a class="post-title-link" href="/2020/09/22/scala%E6%8A%BD%E8%B1%A1%E6%8E%A7%E5%88%B6/" itemprop="url">
-            <span itemprop="name">scala抽象控制</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2020-09-22T20:38:12+08:00"
-              content="2020-09-22">
-          09-22
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/5-scala%E5%87%BD%E6%95%B0%E8%B7%9F%E9%97%AD%E5%8C%85/" itemprop="url">
-            <span itemprop="name">scala函数跟闭包</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2020-09-22T20:36:04+08:00"
-              content="2020-09-22">
-          09-22
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/4-scala%E5%86%85%E5%BB%BA%E6%8E%A7%E5%88%B6/" itemprop="url">
-            <span itemprop="name">scala内建控制</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2020-09-22T20:34:33+08:00"
-              content="2020-09-22">
-          09-22
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/3-scala%E5%87%BD%E6%95%B0%E5%BC%8F%E5%AF%B9%E8%B1%A1/" itemprop="url">
-            <span itemprop="name">scala函数式对象</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2020-09-22T20:32:11+08:00"
-              content="2020-09-22">
-          09-22
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/2-scala%E7%B1%BB%E8%B7%9F%E5%9F%BA%E7%A1%80%E6%93%8D%E4%BD%9C/" itemprop="url">
-            <span itemprop="name">scala类跟基础操作</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2020-09-22T20:26:38+08:00"
-              content="2020-09-22">
-          09-22
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/1-%E4%B8%BA%E4%BB%80%E4%B9%88scala/" itemprop="url">
-            <span itemprop="name">为什么scala</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2020-09-22T20:25:16+08:00"
-              content="2020-09-22">
-          09-22
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2020/09/22/scala/scala%E8%AF%AD%E6%B3%95%E7%B3%96/scala-lazy/" itemprop="url">
-            <span itemprop="name">scala-lazy</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2020-09-22T16:38:51+08:00"
-              content="2020-09-22">
-          09-22
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2020/09/22/chipyard/config/" itemprop="url">
-            <span itemprop="name">config</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2020-09-22T12:41:22+08:00"
-              content="2020-09-22">
-          09-22
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2020/09/22/%E6%9D%82%E8%AE%B0/typora%E5%AE%89%E8%A3%85%E6%96%B0%E4%B8%BB%E9%A2%98/" itemprop="url">
-            <span itemprop="name">typora安装新主题</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2020-09-22T12:40:25+08:00"
-              content="2020-09-22">
-          09-22
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2020/09/22/%E6%9D%82%E8%AE%B0/Ubuntu%E4%B8%8Bgit-clone%E7%BC%93%E6%85%A2/" itemprop="url">
-            <span itemprop="name">Ubuntu下git-clone缓慢</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
+        
 
 
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/09/22/scala/scala%E8%AF%AD%E6%B3%95%E7%B3%96/scala-lazy/" rel="prev" title="scala-lazy">
+      <i class="fa fa-chevron-left"></i> scala-lazy
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/2-scala%E7%B1%BB%E8%B7%9F%E5%9F%BA%E7%A1%80%E6%93%8D%E4%BD%9C/" rel="next" title="scala类跟基础操作">
+      scala类跟基础操作 <i class="fa fa-chevron-right"></i>
+    </a></div>
     </div>
-  </div>
+      </footer>
+    
+  </article>
   
   
   
-
-  
-  <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/archives/page/2/">2</a><a class="extend next" rel="next" href="/archives/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
-  </nav>
 
 
 
@@ -424,6 +318,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text"></span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
