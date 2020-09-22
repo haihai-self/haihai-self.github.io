@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title>scala-implicit</title>
+    <url>/2020/09/22/scala/scala-implicit/</url>
+    <content><![CDATA[<p>方法可以具有 <em>隐式</em> 参数列表，由参数列表开头的 <em>implicit</em> 关键字标记。 如果参数列表中的参数没有像往常一样传递， Scala 将查看它是否可以获得正确类型的隐式值，如果可以，则自动传递。</p>
+<p>Scala 将查找这些参数的位置分为两类：</p>
+<ul>
+<li>Scala 在调用包含有隐式参数块的方法时，将首先查找可以直接访问的隐式定义和隐式参数 (无前缀)。</li>
+<li>然后，它在所有伴生对象中查找与隐式候选类型相关的有隐式标记的成员。</li>
+</ul>
+<a id="more"></a>
+
+<p>更加详细的关于 Scala 到哪里查找隐式参数的指南请参考 <a href="https://docs.scala-lang.org/tutorials/FAQ/finding-implicits.html">常见问题</a></p>
+<p>在下面的例子中，我们定义了一个方法 <code>sum</code>，它使用 Monoid 类的 <code>add</code> 和 <code>unit</code> 方法计算一个列表中元素的总和。 请注意，隐式值不能是顶级值。</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Monoid</span>[<span class="type">A</span>] </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">add</span></span>(x: <span class="type">A</span>, y: <span class="type">A</span>): <span class="type">A</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">unit</span></span>: <span class="type">A</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">object</span> <span class="title">ImplicitTest</span> </span>&#123;</span><br><span class="line">  <span class="keyword">implicit</span> <span class="keyword">val</span> stringMonoid: <span class="type">Monoid</span>[<span class="type">String</span>] = <span class="keyword">new</span> <span class="type">Monoid</span>[<span class="type">String</span>] &#123;</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">add</span></span>(x: <span class="type">String</span>, y: <span class="type">String</span>): <span class="type">String</span> = x concat y</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">unit</span></span>: <span class="type">String</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">implicit</span> <span class="keyword">val</span> intMonoid: <span class="type">Monoid</span>[<span class="type">Int</span>] = <span class="keyword">new</span> <span class="type">Monoid</span>[<span class="type">Int</span>] &#123;</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">add</span></span>(x: <span class="type">Int</span>, y: <span class="type">Int</span>): <span class="type">Int</span> = x + y</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">unit</span></span>: <span class="type">Int</span> = <span class="number">0</span></span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">sum</span></span>[<span class="type">A</span>](xs: <span class="type">List</span>[<span class="type">A</span>])(<span class="keyword">implicit</span> m: <span class="type">Monoid</span>[<span class="type">A</span>]): <span class="type">A</span> =</span><br><span class="line">    <span class="keyword">if</span> (xs.isEmpty) m.unit</span><br><span class="line">    <span class="keyword">else</span> m.add(xs.head, sum(xs.tail))</span><br><span class="line">    </span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">main</span></span>(args: <span class="type">Array</span>[<span class="type">String</span>]): <span class="type">Unit</span> = &#123;</span><br><span class="line">    println(sum(<span class="type">List</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)))       <span class="comment">// uses IntMonoid implicitly</span></span><br><span class="line">    println(sum(<span class="type">List</span>(<span class="string">&quot;a&quot;</span>, <span class="string">&quot;b&quot;</span>, <span class="string">&quot;c&quot;</span>))) <span class="comment">// uses StringMonoid implicitly</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>类 <code>Monoid</code> 定义了一个名为 <code>add</code> 的操作，它将一对 <code>A</code> 类型的值相加并返回一个 <code>A</code>，以及一个名为 <code>unit</code> 的操作，用来创建一个（特定的）<code>A</code> 类型的值。</p>
+<p>为了说明隐式参数如何工作，我们首先分别为字符串和整数定义 Monoid 实例， <code>StringMonoid</code> 和 <code>IntMonoid</code>。 <code>implicit</code> 关键字表示可以隐式使用相应的对象。</p>
+<p>方法 <code>sum</code> 接受一个 <code>List[A]</code>，并返回一个 <code>A</code> 的值，它从 <code>unit</code> 中取初始的 <code>A</code> 值，并使用 <code>add</code> 方法依次将列表中的下一个 <code>A</code> 值相加。在这里将参数 <code>m</code> 定义为隐式意味着，如果 Scala 可以找到隐式 <code>Monoid[A]</code> 用于隐式参数 <code>m</code>，我们在调用 <code>sum</code> 方法时只需要传入 <code>xs</code> 参数。</p>
+<p>在 <code>main</code> 方法中我们调用了 <code>sum</code> 方法两次，并且只传入参数 <code>xs</code>。 Scala 会在上例的上下文范围内寻找隐式值。 第一次调用 <code>sum</code> 方法的时候传入了一个 <code>List[Int]</code> 作为 <code>xs</code> 的值，这意味着此处类型 <code>A</code> 是 <code>Int</code>。 隐式参数列表 <code>m</code> 被省略了，因此 Scala 将查找类型为 <code>Monoid[Int]</code> 的隐式值。 第一查找规则如下</p>
+<blockquote>
+<p>Scala 在调用包含有隐式参数块的方法时，将首先查找可以直接访问的隐式定义和隐式参数 (无前缀)。</p>
+</blockquote>
+<p><code>intMonoid</code> 是一个隐式定义，可以在<code>main</code>中直接访问。 并且它的类型也正确，因此它会被自动传递给 <code>sum</code> 方法。</p>
+<p>第二次调用 <code>sum</code> 方法的时候传入一个 <code>List[String]</code>，这意味着此处类型 <code>A</code> 是 <code>String</code>。 与查找 <code>Int</code> 型的隐式参数时类似，但这次会找到 <code>stringMonoid</code>，并自动将其作为 <code>m</code> 传入。</p>
+<p>该程序将输出</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">6</span><br><span class="line">abc</span><br></pre></td></tr></table></figure>
+
+<p><img src="/picture/2010/image-20200922001335357.png" alt="image-20200922001335357"></p>
+<p><img src="/picture/2010/image-20200922001451905.png" alt="image-20200922001451905"></p>
+]]></content>
+      <categories>
+        <category>scala</category>
+      </categories>
+      <tags>
+        <tag>scala-常用语法</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Ubuntu下gcc版本管理</title>
+    <url>/2020/09/20/%E6%9D%82%E8%AE%B0/Ubuntu%E4%B8%8Bgcc%E7%89%88%E6%9C%AC%E7%AE%A1%E7%90%86/</url>
+    <content><![CDATA[<p>直接使用<code>build essential</code>安装的<code>gcc/g++</code>在一些比较早期的项目编译的时候会出现版本不支持的情况下需要对版本版本进行升降级，网络上看到直接使用<code>rm</code>命令确实是够好笑的，之前也上过当，这里记录一下靠谱的方法。</p>
+<a id="more"></a>
+<ul>
+<li><p>使用<code>sudo apt-get install</code>安装多个版本的<code>gcc</code></p>
+</li>
+<li><p>使用<code>ll /usr/bin/gcc*</code>命令查看系统中安装的<code>gcc/g++</code>版本</p>
+</li>
+<li><p>使用<code>update-alternatives</code></p>
+<p><code>update-alternatives</code>是ubuntu中专门维护系统命令链接的工具，可以通过他很方便的设置系统默认命令的版本，通过数值<code>50</code>等设置优先级，优先级越大的级别越高，<code>--slava</code>命令确保<code>gcc/g++</code>是同一个版本 ,直接使用<code>sudo update-alternatives: --install</code>可以看到该命令的格式<code>update-alternatives: --install 需要 &lt;链接&gt; &lt;名称&gt; &lt;路径&gt; &lt;优先级&gt;</code>，所以可以使用如下命令链接到特定版不的<code>gcc</code></p>
+<p><code>sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7  70 --slave /usr/bin/g++ g++ /usr/bin/g++-7</code></p>
+</li>
+<li><p>验证是否安装成功</p>
+<p>使用<code>gcc -v / g++ -v</code>查看是否安装成功，同时也可以使用<code>sudo update-alternatives --config gcc</code>命令查看添加的版本，此时也可以手动选择需要的版本</p>
+<p><img src="/picture/2010/gccconfig.png" alt="gccconfig"></p>
+</li>
+<li><p>删除</p>
+<p>需要删除某个版本的话，可以直接使用</p>
+<p><code>sudo update-alternatives --remove gcc /usr/bin/gcc-7</code></p>
+<p>也可以查看该命令个格式<code>update-alternatives: --remove 需要 &lt;名称&gt; &lt;路径&gt;</code></p>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>杂记</category>
+      </categories>
+      <tags>
+        <tag>tools</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Ubuntu下git-clone缓慢</title>
+    <url>/2020/09/22/%E6%9D%82%E8%AE%B0/Ubuntu%E4%B8%8Bgit-clone%E7%BC%93%E6%85%A2/</url>
+    <content><![CDATA[<p><code>git clone</code>缓慢的主要原因是国内<code>DNS</code>无法自动转跳到<code>github.global.ssl.fastly.net</code>，该域名被限制导致，通过在<code>/etc/hosts</code>加上对应的地址可以解决这个问题</p>
+<a id="more"></a>
+
+<ul>
+<li><p>查询<code>github.global.ssl.fastly.net</code>对应域名的地址，在<code>shell</code>下输入</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">nslookup github.global.ssl.fastly.Net</span><br></pre></td></tr></table></figure>
+
+<p>查询到对应的<code>ip</code>如：<code>151.101.77.194</code></p>
+</li>
+<li><p>查询<code>github.com</code>对应的域名</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">nslookup github.com </span><br></pre></td></tr></table></figure>
+
+<p>查询到对应的<code>ip</code>如：<code>13.229.188.59</code></p>
+</li>
+</ul>
+<p>最后在<code>hosts</code>文件尾加上两行如下所示</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">151.101.77.194 http://global-ssl.fastly.net</span><br><span class="line">13.229.188.59  http://github.com</span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>杂记</category>
+      </categories>
+      <tags>
+        <tag>tools git</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>typora安装新主题</title>
+    <url>/2020/09/22/%E6%9D%82%E8%AE%B0/typora%E5%AE%89%E8%A3%85%E6%96%B0%E4%B8%BB%E9%A2%98/</url>
+    <content><![CDATA[<p>在文件选项中找到偏好设置中的外观设置，点击<code>获取主题</code>，下载喜欢的主题，在打开主题中的<code>打开主题文件夹</code>，会打开对应的文件夹，再将对应的文件复制到文件夹中即可。</p>
+<a id="more"></a>
+<p><img src="/picture/2010/typora%E4%B8%BB%E9%A2%98.png" alt="typora主题"></p>
+]]></content>
+      <categories>
+        <category>杂记</category>
+      </categories>
+      <tags>
+        <tag>tools</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ubuntu20.01搜狗输入法安装</title>
+    <url>/2020/09/22/%E6%9D%82%E8%AE%B0/ubuntu20-01%E6%90%9C%E7%8B%97%E8%BE%93%E5%85%A5%E6%B3%95%E5%AE%89%E8%A3%85/</url>
+    <content><![CDATA[<p>在<a href="https://pinyin.sogou.com/linux/?r=pinyin">官网</a>下载对应的<code>deb</code>安装包，直接使用<code>dpkg</code>进行安装，会发现出现错误提示安装失败，因为搜狗输入法使用的是<code>fcitx</code>框架，对应的框架没有安装完成所以无法安装成功。</p>
+<a id="more"></a>
+
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo dpkg -i sogoupinyin_2.3.2.07_amd64.deb</span><br></pre></td></tr></table></figure>
+
+<p>在出现错误之后，使用如下命令安装<code>fcitx</code></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo apt-get install --fix-broken</span><br></pre></td></tr></table></figure>
+
+<p>在重新使用<code>dpkg</code>命令进行安装</p>
+<p>安装成功之后，在右上角的配置栏中找到搜狗输入法，添加到第一项，同时按照自己的习惯配置激活按钮即可。</p>
+]]></content>
+      <categories>
+        <category>杂记</category>
+      </categories>
+      <tags>
+        <tag>tools</tag>
+      </tags>
+  </entry>
+</search>
