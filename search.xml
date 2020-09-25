@@ -725,4 +725,146 @@
         <tag>scala语法</tag>
       </tags>
   </entry>
+  <entry>
+    <title>Decoupled用法</title>
+    <url>/2020/09/26/chisel/Decoupled%E7%94%A8%E6%B3%95/</url>
+    <content><![CDATA[<p>Decoupled 即为接口包装一层valid 和 ready ，<code>decoupled 默认方向为输出</code>，如果需要输入，可以加.flip, Decoupled 可以直接调用Bundle或者Bits，Bundle 内的端口也应该用bits定义</p>
+<a id="more"></a>
+
+<p>Example1:</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">testIO</span> <span class="keyword">extends</span> <span class="title">Bundle</span> </span>&#123;</span><br><span class="line"><span class="keyword">val</span> a = <span class="type">Bits</span>(<span class="number">3.</span><span class="type">W</span>)</span><br><span class="line"><span class="keyword">val</span> b = <span class="type">Bits</span>(<span class="number">2.</span><span class="type">W</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">testmodule</span> <span class="keyword">extends</span> <span class="title">Module</span></span>&#123;</span><br><span class="line"><span class="keyword">val</span> io = <span class="type">IO</span>( <span class="keyword">new</span> <span class="type">Bundle</span>&#123;</span><br><span class="line">   <span class="keyword">val</span> test = <span class="type">Decoupled</span>(<span class="keyword">new</span> testIO)</span><br><span class="line"></span><br><span class="line">&#125;)</span><br><span class="line">io.test.valid := io.test.ready</span><br><span class="line">io.test.bits.a := <span class="number">1.</span><span class="type">U</span></span><br><span class="line">io.test.bits.b := <span class="number">1.</span><span class="type">U</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line">println(getVerilog(<span class="keyword">new</span> testmodule))</span><br></pre></td></tr></table></figure>
+
+<p>生成的verilog为</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">module cmd5Helpertestmodule(</span><br><span class="line">  input        clock,</span><br><span class="line">  input        reset,</span><br><span class="line">  input        io_test_ready,</span><br><span class="line">  output       io_test_valid,</span><br><span class="line">  output [<span class="number">2</span>:<span class="number">0</span>] io_test_bits_a,</span><br><span class="line">  output [<span class="number">1</span>:<span class="number">0</span>] io_test_bits_b</span><br><span class="line">);</span><br><span class="line">  assign io_test_valid = io_test_ready; <span class="comment">// @[cmd5.sc 10:15]</span></span><br><span class="line">  assign io_test_bits_a = <span class="number">3</span><span class="symbol">&#x27;h1</span>; <span class="comment">// @[cmd5.sc 11:16]</span></span><br><span class="line">  assign io_test_bits_b = <span class="number">2</span><span class="symbol">&#x27;h1</span>; <span class="comment">// @[cmd5.sc 12:16]</span></span><br><span class="line">endmodule</span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>chisel</category>
+      </categories>
+      <tags>
+        <tag>chisel</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>不同reg的用法</title>
+    <url>/2020/09/25/chisel/%E4%B8%8D%E5%90%8Creg%E7%9A%84%E7%94%A8%E6%B3%95/</url>
+    <content><![CDATA[<p><code>reg</code>是寄存器，会使得数据传输延时一个节拍，在时序电路中常用</p>
+<a id="more"></a>
+
+<h2 id="Reg"><a href="#Reg" class="headerlink" title="Reg"></a>Reg</h2><p>函数原型</p>
+<blockquote>
+<p>def apply[T &lt;: [Data]] (t: T = null, next: T = null, init: T = null)(<em>implicit</em> sourceInfo: SourceInfo, compileOptions: [CompileOptions]): T</p>
+</blockquote>
+<ul>
+<li>t是寄存器的数据类型</li>
+<li>next是输入端的数据，即延迟一拍输出的数据</li>
+<li>init是复位幸好有效时初始的数据</li>
+</ul>
+<p><strong>使用方法</strong></p>
+<ul>
+<li>val B = Reg(UInt(width=3)) //指明类型和位宽</li>
+<li>B := C //next的值为C的值</li>
+<li>val r3 = Reg(Vec(4, UInt(8.W)))  //每个元素申明为8位宽</li>
+</ul>
+<h2 id="RegInit"><a href="#RegInit" class="headerlink" title="RegInit"></a>RegInit</h2><p>函数原型</p>
+<blockquote>
+<p>defapply[T &lt;: Data] (init: T)(implicit sourceInfo: SourceInfo, compileOptions: CompileOptions): T</p>
+</blockquote>
+<ul>
+<li>init是初始化寄存器的值</li>
+</ul>
+<p>函数原型</p>
+<blockquote>
+<p>defapply[T &lt;: Data] (t: T, init: T)(implicit sourceInfo: SourceInfo, compileOptions: CompileOptions): T</p>
+</blockquote>
+<ul>
+<li>t是初始化的数据类型</li>
+<li>init是初始化的值</li>
+</ul>
+<p><strong>使用方法</strong></p>
+<ul>
+<li><p>位宽会自动匹配或者也可以手动申明</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">val</span> r1 = <span class="type">RegInit</span>(<span class="number">1.</span><span class="type">U</span>) <span class="comment">// width will be inferred to be 1</span></span><br><span class="line"><span class="keyword">val</span> r2 = <span class="type">RegInit</span>(<span class="number">1.</span><span class="type">U</span>(<span class="number">8.</span><span class="type">W</span>)) <span class="comment">// width is set to 8</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>可以使用寄存器类型进行统一申明</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyBundle</span> <span class="keyword">extends</span> <span class="title">Bundle</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> unknown = <span class="type">UInt</span>()</span><br><span class="line">  <span class="keyword">val</span> known   = <span class="type">UInt</span>(<span class="number">8.</span><span class="type">W</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">val</span> w1 = <span class="type">Reg</span>(<span class="keyword">new</span> <span class="type">MyBundle</span>)</span><br><span class="line"><span class="keyword">val</span> w2 = <span class="type">RegInit</span>(w1)</span><br><span class="line"><span class="comment">// Width of w2.unknown is inferred</span></span><br><span class="line"><span class="comment">// Width of w2.known is set to 8</span></span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<h2 id="RegNext"><a href="#RegNext" class="headerlink" title="RegNext"></a>RegNext</h2><p>函数原型</p>
+<blockquote>
+<p>defapply[T &lt;: Data] (next: T, init: T)(implicit sourceInfo: SourceInfo, compileOptions: CompileOptions): T</p>
+</blockquote>
+<ul>
+<li>next为输入的接口</li>
+<li>init为复位信号有效时的初始值</li>
+</ul>
+<p>函数原型</p>
+<blockquote>
+<p>defapply[T &lt;: Data] (next: T)(implicit sourceInfo: SourceInfo, compileOptions: CompileOptions): T</p>
+</blockquote>
+<ul>
+<li>next为输入的接口，即下一个时钟节拍寄存器的值</li>
+</ul>
+<p><strong>使用方法</strong></p>
+<ul>
+<li><p>数据的位宽将会被自动推断</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">val</span> foo = <span class="type">Reg</span>(<span class="type">UInt</span>(<span class="number">4.</span><span class="type">W</span>))         <span class="comment">// width is 4</span></span><br><span class="line"><span class="keyword">val</span> bar = <span class="type">RegNext</span>(foo)           <span class="comment">// width is unset</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">val</span> foo = <span class="type">Reg</span>(<span class="type">UInt</span>(<span class="number">4.</span><span class="type">W</span>))         <span class="comment">// width is 4</span></span><br><span class="line"><span class="keyword">val</span> bar = <span class="type">Reg</span>(chiselTypeOf(foo)) <span class="comment">// width is 4</span></span><br><span class="line">bar := foo  <span class="comment">//先初始化寄存器位宽，之后在初始化next的值</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>可是使用Bundle进行自动的推断初始化</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyBundle</span> <span class="keyword">extends</span> <span class="title">Bundle</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> x = <span class="type">UInt</span>(<span class="number">4.</span><span class="type">W</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">val</span> foo = <span class="type">Wire</span>(<span class="keyword">new</span> <span class="type">MyBundle</span>)     <span class="comment">// the width of foo.x is 4</span></span><br><span class="line"><span class="keyword">val</span> bar = <span class="type">RegNext</span>(foo)           <span class="comment">// the width of bar.x is 4</span></span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<h2 id="RegEnable"><a href="#RegEnable" class="headerlink" title="RegEnable"></a>RegEnable</h2><p>函数原型</p>
+<blockquote>
+<p>defapply[T &lt;: Data] (next: T, init: T, enable: Bool): T</p>
+</blockquote>
+<ul>
+<li>next寄存器的输入</li>
+<li>init初始化的值</li>
+<li>enable，显示化使能信号，当为true的时候，该寄存器才能始终有效，否者将会被锁定</li>
+</ul>
+<p>函数原型</p>
+<blockquote>
+<p>defapply[T &lt;: Data] (next: T, enable: Bool): T</p>
+</blockquote>
+<ul>
+<li>next为输入信号</li>
+<li>enable为使能端</li>
+</ul>
+<p><strong>使用方法</strong></p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">val</span> regWithEnableAndReset = <span class="type">RegEnable</span>(nextVal, <span class="number">0.</span><span class="type">U</span>, ena)  <span class="comment">//使用第一个函数原型进行初始化</span></span><br><span class="line"><span class="keyword">val</span> regWithEnable = <span class="type">RegEnable</span>(nextVal, ena)  <span class="comment">//使用第二个函数原型进行初始户</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="ShiftRegister"><a href="#ShiftRegister" class="headerlink" title="ShiftRegister"></a>ShiftRegister</h2><p>这是延时寄存器</p>
+<p>函数原型</p>
+<blockquote>
+<p>defapply[T &lt;: Data] (in: T, n: Int, resetData: T, en: Bool): T</p>
+</blockquote>
+<ul>
+<li>in为输出数据</li>
+<li>n为掩饰周期</li>
+<li>resetData为初始化数据</li>
+<li>en为使能端</li>
+</ul>
+<p>函数原型</p>
+<blockquote>
+<p>defapply[T &lt;: Data] (in: T, n: Int, en: Bool = true.B): T</p>
+</blockquote>
+<ul>
+<li>in为输入数据</li>
+<li>n为延时周期，</li>
+<li>en为使能端</li>
+</ul>
+<p><strong>使用方法</strong></p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">val</span> regDelayTwoReset = <span class="type">ShiftRegister</span>(nextVal, <span class="number">2</span>, <span class="number">0.</span><span class="type">U</span>, ena) <span class="comment">//使用第一个函数原型进行初始化</span></span><br><span class="line"><span class="keyword">val</span> regDelayTwo = <span class="type">ShiftRegister</span>(nextVal, <span class="number">2</span>, ena)  <span class="comment">//使用第二个函数原型进行初始化</span></span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>chisel</category>
+      </categories>
+      <tags>
+        <tag>chisel语法</tag>
+      </tags>
+  </entry>
 </search>

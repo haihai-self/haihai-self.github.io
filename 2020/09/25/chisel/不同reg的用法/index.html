@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/hai-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/hai-16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="reg是寄存器，会使得数据传输延时一个节拍，在时序电路中常用">
+<meta property="og:type" content="article">
+<meta property="og:title" content="不同reg的用法">
+<meta property="og:url" content="http://example.com/2020/09/25/chisel/%E4%B8%8D%E5%90%8Creg%E7%9A%84%E7%94%A8%E6%B3%95/index.html">
+<meta property="og:site_name" content="haihai">
+<meta property="og:description" content="reg是寄存器，会使得数据传输延时一个节拍，在时序电路中常用">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-09-25T15:59:43.000Z">
+<meta property="article:modified_time" content="2020-09-25T16:03:16.661Z">
+<meta property="article:author" content="海海不想起床">
+<meta property="article:tag" content="chisel语法">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2020/09/25/chisel/%E4%B8%8D%E5%90%8Creg%E7%9A%84%E7%94%A8%E6%B3%95/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>不同reg的用法 | haihai</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">haihai</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/09/25/chisel/%E4%B8%8D%E5%90%8Creg%E7%9A%84%E7%94%A8%E6%B3%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="海海不想起床">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="haihai">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          不同reg的用法
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-09-25 23:59:43" itemprop="dateCreated datePublished" datetime="2020-09-25T23:59:43+08:00">2020-09-25</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-09-26 00:03:16" itemprop="dateModified" datetime="2020-09-26T00:03:16+08:00">2020-09-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/chisel/" itemprop="url" rel="index"><span itemprop="name">chisel</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><code>reg</code>是寄存器，会使得数据传输延时一个节拍，在时序电路中常用</p>
+<a id="more"></a>
+
+<h2 id="Reg"><a href="#Reg" class="headerlink" title="Reg"></a>Reg</h2><p>函数原型</p>
+<blockquote>
+<p>def apply[T &lt;: [Data]] (t: T = null, next: T = null, init: T = null)(<em>implicit</em> sourceInfo: SourceInfo, compileOptions: [CompileOptions]): T</p>
+</blockquote>
+<ul>
+<li>t是寄存器的数据类型</li>
+<li>next是输入端的数据，即延迟一拍输出的数据</li>
+<li>init是复位幸好有效时初始的数据</li>
+</ul>
+<p><strong>使用方法</strong></p>
+<ul>
+<li>val B = Reg(UInt(width=3)) //指明类型和位宽</li>
+<li>B := C //next的值为C的值</li>
+<li>val r3 = Reg(Vec(4, UInt(8.W)))  //每个元素申明为8位宽</li>
+</ul>
+<h2 id="RegInit"><a href="#RegInit" class="headerlink" title="RegInit"></a>RegInit</h2><p>函数原型</p>
+<blockquote>
+<p>defapply[T &lt;: Data] (init: T)(implicit sourceInfo: SourceInfo, compileOptions: CompileOptions): T</p>
+</blockquote>
+<ul>
+<li>init是初始化寄存器的值</li>
+</ul>
+<p>函数原型</p>
+<blockquote>
+<p>defapply[T &lt;: Data] (t: T, init: T)(implicit sourceInfo: SourceInfo, compileOptions: CompileOptions): T</p>
+</blockquote>
+<ul>
+<li>t是初始化的数据类型</li>
+<li>init是初始化的值</li>
+</ul>
+<p><strong>使用方法</strong></p>
+<ul>
+<li><p>位宽会自动匹配或者也可以手动申明</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> r1 = <span class="type">RegInit</span>(<span class="number">1.</span><span class="type">U</span>) <span class="comment">// width will be inferred to be 1</span></span><br><span class="line"><span class="keyword">val</span> r2 = <span class="type">RegInit</span>(<span class="number">1.</span><span class="type">U</span>(<span class="number">8.</span><span class="type">W</span>)) <span class="comment">// width is set to 8</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>可以使用寄存器类型进行统一申明</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyBundle</span> <span class="keyword">extends</span> <span class="title">Bundle</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> unknown = <span class="type">UInt</span>()</span><br><span class="line">  <span class="keyword">val</span> known   = <span class="type">UInt</span>(<span class="number">8.</span><span class="type">W</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">val</span> w1 = <span class="type">Reg</span>(<span class="keyword">new</span> <span class="type">MyBundle</span>)</span><br><span class="line"><span class="keyword">val</span> w2 = <span class="type">RegInit</span>(w1)</span><br><span class="line"><span class="comment">// Width of w2.unknown is inferred</span></span><br><span class="line"><span class="comment">// Width of w2.known is set to 8</span></span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<h2 id="RegNext"><a href="#RegNext" class="headerlink" title="RegNext"></a>RegNext</h2><p>函数原型</p>
+<blockquote>
+<p>defapply[T &lt;: Data] (next: T, init: T)(implicit sourceInfo: SourceInfo, compileOptions: CompileOptions): T</p>
+</blockquote>
+<ul>
+<li>next为输入的接口</li>
+<li>init为复位信号有效时的初始值</li>
+</ul>
+<p>函数原型</p>
+<blockquote>
+<p>defapply[T &lt;: Data] (next: T)(implicit sourceInfo: SourceInfo, compileOptions: CompileOptions): T</p>
+</blockquote>
+<ul>
+<li>next为输入的接口，即下一个时钟节拍寄存器的值</li>
+</ul>
+<p><strong>使用方法</strong></p>
+<ul>
+<li><p>数据的位宽将会被自动推断</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> foo = <span class="type">Reg</span>(<span class="type">UInt</span>(<span class="number">4.</span><span class="type">W</span>))         <span class="comment">// width is 4</span></span><br><span class="line"><span class="keyword">val</span> bar = <span class="type">RegNext</span>(foo)           <span class="comment">// width is unset</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">val</span> foo = <span class="type">Reg</span>(<span class="type">UInt</span>(<span class="number">4.</span><span class="type">W</span>))         <span class="comment">// width is 4</span></span><br><span class="line"><span class="keyword">val</span> bar = <span class="type">Reg</span>(chiselTypeOf(foo)) <span class="comment">// width is 4</span></span><br><span class="line">bar := foo  <span class="comment">//先初始化寄存器位宽，之后在初始化next的值</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>可是使用Bundle进行自动的推断初始化</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyBundle</span> <span class="keyword">extends</span> <span class="title">Bundle</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> x = <span class="type">UInt</span>(<span class="number">4.</span><span class="type">W</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">val</span> foo = <span class="type">Wire</span>(<span class="keyword">new</span> <span class="type">MyBundle</span>)     <span class="comment">// the width of foo.x is 4</span></span><br><span class="line"><span class="keyword">val</span> bar = <span class="type">RegNext</span>(foo)           <span class="comment">// the width of bar.x is 4</span></span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<h2 id="RegEnable"><a href="#RegEnable" class="headerlink" title="RegEnable"></a>RegEnable</h2><p>函数原型</p>
+<blockquote>
+<p>defapply[T &lt;: Data] (next: T, init: T, enable: Bool): T</p>
+</blockquote>
+<ul>
+<li>next寄存器的输入</li>
+<li>init初始化的值</li>
+<li>enable，显示化使能信号，当为true的时候，该寄存器才能始终有效，否者将会被锁定</li>
+</ul>
+<p>函数原型</p>
+<blockquote>
+<p>defapply[T &lt;: Data] (next: T, enable: Bool): T</p>
+</blockquote>
+<ul>
+<li>next为输入信号</li>
+<li>enable为使能端</li>
+</ul>
+<p><strong>使用方法</strong></p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> regWithEnableAndReset = <span class="type">RegEnable</span>(nextVal, <span class="number">0.</span><span class="type">U</span>, ena)  <span class="comment">//使用第一个函数原型进行初始化</span></span><br><span class="line"><span class="keyword">val</span> regWithEnable = <span class="type">RegEnable</span>(nextVal, ena)  <span class="comment">//使用第二个函数原型进行初始户</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="ShiftRegister"><a href="#ShiftRegister" class="headerlink" title="ShiftRegister"></a>ShiftRegister</h2><p>这是延时寄存器</p>
+<p>函数原型</p>
+<blockquote>
+<p>defapply[T &lt;: Data] (in: T, n: Int, resetData: T, en: Bool): T</p>
+</blockquote>
+<ul>
+<li>in为输出数据</li>
+<li>n为掩饰周期</li>
+<li>resetData为初始化数据</li>
+<li>en为使能端</li>
+</ul>
+<p>函数原型</p>
+<blockquote>
+<p>defapply[T &lt;: Data] (in: T, n: Int, en: Bool = true.B): T</p>
+</blockquote>
+<ul>
+<li>in为输入数据</li>
+<li>n为延时周期，</li>
+<li>en为使能端</li>
+</ul>
+<p><strong>使用方法</strong></p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> regDelayTwoReset = <span class="type">ShiftRegister</span>(nextVal, <span class="number">2</span>, <span class="number">0.</span><span class="type">U</span>, ena) <span class="comment">//使用第一个函数原型进行初始化</span></span><br><span class="line"><span class="keyword">val</span> regDelayTwo = <span class="type">ShiftRegister</span>(nextVal, <span class="number">2</span>, ena)  <span class="comment">//使用第二个函数原型进行初始化</span></span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/chisel%E8%AF%AD%E6%B3%95/" rel="tag"><i class="fa fa-tag"></i> chisel语法</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/10-scala%E6%A0%B7%E4%BE%8B%E7%B1%BB%E8%B7%9F%E6%A8%A1%E5%BC%8F%E5%8C%B9%E9%85%8D/" rel="prev" title="scala样例类跟模式匹配">
+      <i class="fa fa-chevron-left"></i> scala样例类跟模式匹配
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/09/26/chisel/Decoupled%E7%94%A8%E6%B3%95/" rel="next" title="Decoupled用法">
+      Decoupled用法 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Reg"><span class="nav-number">1.</span> <span class="nav-text">Reg</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RegInit"><span class="nav-number">2.</span> <span class="nav-text">RegInit</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RegNext"><span class="nav-number">3.</span> <span class="nav-text">RegNext</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RegEnable"><span class="nav-number">4.</span> <span class="nav-text">RegEnable</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ShiftRegister"><span class="nav-number">5.</span> <span class="nav-text">ShiftRegister</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">海海不想起床</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">19</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/haihai-self" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;haihai-self" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">海海不想起床</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
