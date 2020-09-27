@@ -20,28 +20,36 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta property="og:type" content="website">
-<meta property="og:title" content="haihai">
-<meta property="og:url" content="http://example.com/index.html">
+  <meta name="description" content="ECC编码即（Error Correcting Code&#x2F;Error Checking and Correcting），是使用海明码等方式对数据进行编码，从而可以得到数据检测以及校验功能 code &amp; DecodingDecoding字段解释 12345678abstract class Decoding&amp;#123;  def uncorrected: UInt  def correcte">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ECC编码">
+<meta property="og:url" content="http://example.com/2020/09/27/chipyard/ECC%E7%BC%96%E7%A0%81/index.html">
 <meta property="og:site_name" content="haihai">
+<meta property="og:description" content="ECC编码即（Error Correcting Code&#x2F;Error Checking and Correcting），是使用海明码等方式对数据进行编码，从而可以得到数据检测以及校验功能 code &amp; DecodingDecoding字段解释 12345678abstract class Decoding&amp;#123;  def uncorrected: UInt  def correcte">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/picture/2010/positioning_redundant_bits.jpg">
+<meta property="og:image" content="http://example.com/picture/2010/image-20200926155848830.png">
+<meta property="article:published_time" content="2020-09-27T11:32:37.000Z">
+<meta property="article:modified_time" content="2020-09-27T11:33:17.399Z">
 <meta property="article:author" content="海海不想起床">
+<meta property="article:tag" content="chipyard">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/picture/2010/positioning_redundant_bits.jpg">
 
-<link rel="canonical" href="http://example.com/">
+<link rel="canonical" href="http://example.com/2020/09/27/chipyard/ECC%E7%BC%96%E7%A0%81/">
 
 
 <script id="page-configurations">
   // https://hexo.io/docs/variables.html
   CONFIG.page = {
     sidebar: "",
-    isHome : true,
-    isPost : false,
+    isHome : false,
+    isPost : true,
     lang   : 'zh-CN'
   };
 </script>
 
-  <title>haihai</title>
+  <title>ECC编码 | haihai</title>
   
 
 
@@ -145,52 +153,10 @@
         <div class="content-wrap">
           
 
-          <div class="content index posts-expand">
+          <div class="content post posts-expand">
             
 
-	<div class="tag-cloud">
-	  <div class="tag-cloud-tags" id="tags">
-		<a href="/tags/chipyard/" style="font-size: 16px; color: #fff">chipyard</a> <a href="/tags/chisel/" style="font-size: 16px; color: #fff">chisel</a> <a href="/tags/chisel%E8%AF%AD%E6%B3%95/" style="font-size: 16px; color: #fff">chisel语法</a> <a href="/tags/git/" style="font-size: 16px; color: #fff">git</a> <a href="/tags/scala-%E5%B8%B8%E7%94%A8%E8%AF%AD%E6%B3%95/" style="font-size: 16px; color: #fff">scala-常用语法</a> <a href="/tags/scala%E7%BC%96%E7%A8%8B/" style="font-size: 16px; color: #fff">scala编程</a> <a href="/tags/scala%E8%AF%AD%E6%B3%95/" style="font-size: 16px; color: #fff">scala语法</a> <a href="/tags/tools/" style="font-size: 16px; color: #fff">tools</a>
-	  </div>
-	</div>
-	<br>
-	
-	<script type="text/javascript">
-     var alltags = document.getElementsByClassName('tag-cloud-tags');
-     var tags = alltags[0].getElementsByTagName('a');
-     for (var i = tags.length - 1; i >= 0; i--) {
-       var r=Math.floor(Math.random()*75+130);
-       var g=Math.floor(Math.random()*75+100);
-       var b=Math.floor(Math.random()*75+80);
-       tags[i].style.background = "rgb("+r+","+g+","+b+")";
-     }
-</script>
-
-<style>
-  .tag-cloud-tags{
-    /*font-family: Helvetica, Tahoma, Arial;*/
-    /*font-weight: 100;*/
-    text-align: center;
-    counter-reset: tags;
-  }
-  .tag-cloud-tags a{
-    border-radius: 6px;
-    padding-right: 5px;
-    padding-left: 5px;
-    margin: 8px 5px 0px 0px;
-  }
-  .tag-cloud-tags a:before{
-    content: "";
-  }
-
-  .tag-cloud-tags a:hover{
-     box-shadow: 0px 5px 15px 0px rgba(0,0,0,.4);
-     transform: scale(1.1);
-     /*box-shadow: 10px 10px 15px 2px rgba(0,0,0,.12), 0 0 6px 0 rgba(104, 104, 105, 0.1);*/
-     transition-duration: 0.15s;
-  }
-</style>
-      
+    
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
@@ -206,10 +172,9 @@
       <meta itemprop="name" content="haihai">
     </span>
       <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/09/27/chipyard/ECC%E7%BC%96%E7%A0%81/" class="post-title-link" itemprop="url">ECC编码</a>
-        </h2>
+        <h1 class="post-title" itemprop="name headline">
+          ECC编码
+        </h1>
 
         <div class="post-meta">
             <span class="post-meta-item">
@@ -232,6 +197,13 @@
             </span>
 
           
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
 
         </div>
       </header>
@@ -242,7 +214,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>ECC编码即（Error Correcting Code/Error Checking and Correcting），是使用海明码等方式对数据进行编码，从而可以得到数据检测以及校验功能</p>
+        <p>ECC编码即（Error Correcting Code/Error Checking and Correcting），是使用海明码等方式对数据进行编码，从而可以得到数据检测以及校验功能</p>
 <h2 id="code-amp-Decoding"><a href="#code-amp-Decoding" class="headerlink" title="code &amp; Decoding"></a>code &amp; Decoding</h2><p><strong>Decoding字段解释</strong></p>
 <figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Decoding</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">uncorrected</span></span>: <span class="type">UInt</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">corrected</span></span>: <span class="type">UInt</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">correctable</span></span>: <span class="type">Bool</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">uncorrectable</span></span>: <span class="type">Bool</span> <span class="comment">// If true, correctable should be ignored</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">error</span> </span>= correctable || uncorrectable</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -366,706 +338,34 @@
 <p>编码方式，首先k是对应的数据位长度，使用<code>width</code>计算出需要的hamming码的长度，传入impl函数，impl返回的syndrome就是计算hamming码对应编码的函数，他是使用system code的编发方式，不同上面的<code>PPxPxxxPxxxxxxxP</code>，他通过数据的转换， 转换成对应的<code>xxxxxxxxxxxPPPPP</code>对应的形式。</p>
 <h2 id="SECDEDCode"><a href="#SECDEDCode" class="headerlink" title="SECDEDCode"></a>SECDEDCode</h2><p>Single Error Correction, Double Error Detection，即能纠正一位错误，并能检测出两位错误，留坑算法先不解读。</p>
 
-      
     </div>
 
     
     
     
+
       <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
+          <div class="post-tags">
+              <a href="/tags/chipyard/" rel="tag"><i class="fa fa-tag"></i> chipyard</a>
+          </div>
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2020/09/26/chisel/Decoupled%E7%94%A8%E6%B3%95/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="海海不想起床">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="haihai">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/09/26/chisel/Decoupled%E7%94%A8%E6%B3%95/" class="post-title-link" itemprop="url">Decoupled用法</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2020-09-26 00:02:31 / 修改时间：00:05:23" itemprop="dateCreated datePublished" datetime="2020-09-26T00:02:31+08:00">2020-09-26</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/chisel/" itemprop="url" rel="index"><span itemprop="name">chisel</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>Decoupled 即为接口包装一层valid 和 ready ，<code>decoupled 默认方向为输出</code>，如果需要输入，可以加.flip, Decoupled 可以直接调用Bundle或者Bits，Bundle 内的端口也应该用bits定义</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/09/26/chisel/Decoupled%E7%94%A8%E6%B3%95/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
         
-      
-    </div>
 
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2020/09/25/chisel/%E4%B8%8D%E5%90%8Creg%E7%9A%84%E7%94%A8%E6%B3%95/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="海海不想起床">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="haihai">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/09/25/chisel/%E4%B8%8D%E5%90%8Creg%E7%9A%84%E7%94%A8%E6%B3%95/" class="post-title-link" itemprop="url">不同reg的用法</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-09-25 23:59:43" itemprop="dateCreated datePublished" datetime="2020-09-25T23:59:43+08:00">2020-09-25</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-09-26 00:03:16" itemprop="dateModified" datetime="2020-09-26T00:03:16+08:00">2020-09-26</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/chisel/" itemprop="url" rel="index"><span itemprop="name">chisel</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p><code>reg</code>是寄存器，会使得数据传输延时一个节拍，在时序电路中常用</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/09/25/chisel/%E4%B8%8D%E5%90%8Creg%E7%9A%84%E7%94%A8%E6%B3%95/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
         
-      
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/09/26/chisel/Decoupled%E7%94%A8%E6%B3%95/" rel="prev" title="Decoupled用法">
+      <i class="fa fa-chevron-left"></i> Decoupled用法
+    </a></div>
+      <div class="post-nav-item"></div>
     </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
       </footer>
+    
   </article>
   
   
   
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/10-scala%E6%A0%B7%E4%BE%8B%E7%B1%BB%E8%B7%9F%E6%A8%A1%E5%BC%8F%E5%8C%B9%E9%85%8D/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="海海不想起床">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="haihai">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/10-scala%E6%A0%B7%E4%BE%8B%E7%B1%BB%E8%B7%9F%E6%A8%A1%E5%BC%8F%E5%8C%B9%E9%85%8D/" class="post-title-link" itemprop="url">scala样例类跟模式匹配</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2020-09-22 21:00:37 / 修改时间：21:11:45" itemprop="dateCreated datePublished" datetime="2020-09-22T21:00:37+08:00">2020-09-22</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/scala/" itemprop="url" rel="index"><span itemprop="name">scala</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>样例类也是scala使用频率很高的语法，通过case进行创建，进行响应的控制，而模式匹配正是通过样例类进行相应的匹配操作</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/10-scala%E6%A0%B7%E4%BE%8B%E7%B1%BB%E8%B7%9F%E6%A8%A1%E5%BC%8F%E5%8C%B9%E9%85%8D/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/9-scala%E5%8C%85%E7%9A%84%E5%BC%95%E5%85%A5%E8%B7%9F%E6%B5%8B%E8%AF%95/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="海海不想起床">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="haihai">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/9-scala%E5%8C%85%E7%9A%84%E5%BC%95%E5%85%A5%E8%B7%9F%E6%B5%8B%E8%AF%95/" class="post-title-link" itemprop="url">scala包的引入跟测试</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2020-09-22 20:57:35 / 修改时间：21:00:13" itemprop="dateCreated datePublished" datetime="2020-09-22T20:57:35+08:00">2020-09-22</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/scala/" itemprop="url" rel="index"><span itemprop="name">scala</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>包就跟c++中的namespace中一样，通过将不同的类与特质组合在一起，形成一个包，测试也是通过引入scala中官方的包进行的</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/9-scala%E5%8C%85%E7%9A%84%E5%BC%95%E5%85%A5%E8%B7%9F%E6%B5%8B%E8%AF%95/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/8-scala%E7%89%B9%E8%B4%A8/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="海海不想起床">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="haihai">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/8-scala%E7%89%B9%E8%B4%A8/" class="post-title-link" itemprop="url">scala特质</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2020-09-22 20:55:32 / 修改时间：21:09:06" itemprop="dateCreated datePublished" datetime="2020-09-22T20:55:32+08:00">2020-09-22</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/scala/" itemprop="url" rel="index"><span itemprop="name">scala</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>scala的特质是scala的最重要的特性之一，scala的扩展性也是由这个衍生而来，通过特质的混入实现方法的重用</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/8-scala%E7%89%B9%E8%B4%A8/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/7-scala%E7%BB%84%E5%90%88%E8%B7%9F%E7%BB%A7%E6%89%BF/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="海海不想起床">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="haihai">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/7-scala%E7%BB%84%E5%90%88%E8%B7%9F%E7%BB%A7%E6%89%BF/" class="post-title-link" itemprop="url">scala组合跟继承</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2020-09-22 20:48:00 / 修改时间：20:49:18" itemprop="dateCreated datePublished" datetime="2020-09-22T20:48:00+08:00">2020-09-22</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/scala/" itemprop="url" rel="index"><span itemprop="name">scala</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>主要介绍的是scala中类之间是如何进行继承的，他们继承之后初始化的关系如何等</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/7-scala%E7%BB%84%E5%90%88%E8%B7%9F%E7%BB%A7%E6%89%BF/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/6-scala%E6%8A%BD%E8%B1%A1%E6%8E%A7%E5%88%B6/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="海海不想起床">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="haihai">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/6-scala%E6%8A%BD%E8%B1%A1%E6%8E%A7%E5%88%B6/" class="post-title-link" itemprop="url">scala抽象控制</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2020-09-22 20:40:38 / 修改时间：20:47:33" itemprop="dateCreated datePublished" datetime="2020-09-22T20:40:38+08:00">2020-09-22</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/scala/" itemprop="url" rel="index"><span itemprop="name">scala</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>使用柯里化的方式，分开参数写参数列表，这样就可以先固定部分参数列表来产生新的函数，减少函数在实例化过程中需要填写的参数，配合隐式参数的使用，将极大减少代码量</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/6-scala%E6%8A%BD%E8%B1%A1%E6%8E%A7%E5%88%B6/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/5-scala%E5%87%BD%E6%95%B0%E8%B7%9F%E9%97%AD%E5%8C%85/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="海海不想起床">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="haihai">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/5-scala%E5%87%BD%E6%95%B0%E8%B7%9F%E9%97%AD%E5%8C%85/" class="post-title-link" itemprop="url">scala函数跟闭包</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2020-09-22 20:38:12 / 修改时间：20:43:01" itemprop="dateCreated datePublished" datetime="2020-09-22T20:38:12+08:00">2020-09-22</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/scala/" itemprop="url" rel="index"><span itemprop="name">scala</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>需要注意的是使用字面量函数以及符号<code>=&gt;</code>的使用，闭包好比作用域，用于确定变量的范围</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/5-scala%E5%87%BD%E6%95%B0%E8%B7%9F%E9%97%AD%E5%8C%85/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/4-scala%E5%86%85%E5%BB%BA%E6%8E%A7%E5%88%B6/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="海海不想起床">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="haihai">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/4-scala%E5%86%85%E5%BB%BA%E6%8E%A7%E5%88%B6/" class="post-title-link" itemprop="url">scala内建控制</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2020-09-22 20:36:04 / 修改时间：20:42:54" itemprop="dateCreated datePublished" datetime="2020-09-22T20:36:04+08:00">2020-09-22</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/scala/" itemprop="url" rel="index"><span itemprop="name">scala</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>内建控制主要是在if或者是for字句中加入控制语句，来实现过滤，条件筛选等操作</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/4-scala%E5%86%85%E5%BB%BA%E6%8E%A7%E5%88%B6/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-
-  
-  <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
-  </nav>
 
 
 
@@ -1117,6 +417,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#code-amp-Decoding"><span class="nav-number">1.</span> <span class="nav-text">code &amp; Decoding</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IdentityCode"><span class="nav-number">2.</span> <span class="nav-text">IdentityCode</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ParityCode"><span class="nav-number">3.</span> <span class="nav-text">ParityCode</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SECCode"><span class="nav-number">4.</span> <span class="nav-text">SECCode</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%A1%E7%AE%97%E5%86%97%E4%BD%99%E4%BD%8D%E6%95%B0"><span class="nav-number">4.1.</span> <span class="nav-text">计算冗余位数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A1%AE%E5%AE%9A%E5%86%97%E4%BD%99%E7%9A%84%E4%BD%8D%E7%BD%AE"><span class="nav-number">4.2.</span> <span class="nav-text">确定冗余的位置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%A1%E7%AE%97%E5%86%97%E4%BD%99%E4%BD%8D"><span class="nav-number">4.3.</span> <span class="nav-text">计算冗余位</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AF%B9%E5%BA%94%E4%BB%A3%E7%A0%81"><span class="nav-number">4.4.</span> <span class="nav-text">对应代码</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SECDEDCode"><span class="nav-number">5.</span> <span class="nav-text">SECDEDCode</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
