@@ -194,6 +194,81 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/09/27/chipyard/DiplomacyNode/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="海海不想起床">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="haihai">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/09/27/chipyard/DiplomacyNode/" class="post-title-link" itemprop="url">DiplomacyNode</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2020-09-27 19:35:19 / 修改时间：19:37:47" itemprop="dateCreated datePublished" datetime="2020-09-27T19:35:19+08:00">2020-09-27</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/chipyard/" itemprop="url" rel="index"><span itemprop="name">chipyard</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>Diplomacy Node是DOC中不同设备抽象成的节点，可以非常方便的在总线上添加设备，但是会有不同的节点用于支持不同的协议，下面就是关于不同节点的详细介绍</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/09/27/chipyard/DiplomacyNode/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://example.com/2020/09/27/chipyard/ECC%E7%BC%96%E7%A0%81/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -219,7 +294,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2020-09-27 19:32:37 / 修改时间：19:33:17" itemprop="dateCreated datePublished" datetime="2020-09-27T19:32:37+08:00">2020-09-27</time>
+              <time title="创建时间：2020-09-27 19:32:37 / 修改时间：19:37:36" itemprop="dateCreated datePublished" datetime="2020-09-27T19:32:37+08:00">2020-09-27</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -243,129 +318,14 @@
 
       
           <p>ECC编码即（Error Correcting Code/Error Checking and Correcting），是使用海明码等方式对数据进行编码，从而可以得到数据检测以及校验功能</p>
-<h2 id="code-amp-Decoding"><a href="#code-amp-Decoding" class="headerlink" title="code &amp; Decoding"></a>code &amp; Decoding</h2><p><strong>Decoding字段解释</strong></p>
-<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Decoding</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">uncorrected</span></span>: <span class="type">UInt</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">corrected</span></span>: <span class="type">UInt</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">correctable</span></span>: <span class="type">Bool</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">uncorrectable</span></span>: <span class="type">Bool</span> <span class="comment">// If true, correctable should be ignored</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">error</span> </span>= correctable || uncorrectable</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<table>
-<thead>
-<tr>
-<th align="center">name</th>
-<th align="center">description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">uncorrected: UInt</td>
-<td align="center">原始数据，未纠错的码</td>
-</tr>
-<tr>
-<td align="center">corrected: UInt</td>
-<td align="center">使用编码之后的数据</td>
-</tr>
-<tr>
-<td align="center">correctable: Bool</td>
-<td align="center">是够具有纠错能力</td>
-</tr>
-<tr>
-<td align="center">uncorrectable: Bool</td>
-<td align="center">检测是够出错，是够具有检测能力</td>
-</tr>
-<tr>
-<td align="center">error: Bool</td>
-<td align="center">是够有错，true表示有错</td>
-</tr>
-</tbody></table>
-<p><strong>Code字段解释</strong></p>
-<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Code</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">canDetect</span></span>: <span class="type">Boolean</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">canCorrect</span></span>: <span class="type">Boolean</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">width</span></span>(w0: <span class="type">Int</span>): <span class="type">Int</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/** Encode x to a codeword suitable for decode.</span></span><br><span class="line"><span class="comment">   *  If poison is true, the decoded value will report uncorrectable</span></span><br><span class="line"><span class="comment">   *  error despite uncorrected == corrected == x.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">encode</span></span>(x: <span class="type">UInt</span>, poison: <span class="type">Bool</span> = <span class="type">Bool</span>(<span class="literal">false</span>)): <span class="type">UInt</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">decode</span></span>(x: <span class="type">UInt</span>): <span class="type">Decoding</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/** Copy the bits in x to the right bit positions in an encoded word,</span></span><br><span class="line"><span class="comment">   *  so that x === decode(swizzle(x)).uncorrected; but don&#x27;t generate</span></span><br><span class="line"><span class="comment">   *  the other code bits, so decode(swizzle(x)).error might be true.</span></span><br><span class="line"><span class="comment">   *  For codes for which this operation is not trivial, throw an</span></span><br><span class="line"><span class="comment">   *  UnsupportedOperationException.  */</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">swizzle</span></span>(x: <span class="type">UInt</span>): <span class="type">UInt</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<table>
-<thead>
-<tr>
-<th align="center">name</th>
-<th align="center">description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">canDetect: Boolean</td>
-<td align="center">是否能进行检测错误</td>
-</tr>
-<tr>
-<td align="center">canCorrect: Boolean</td>
-<td align="center">是够能进行纠正错误</td>
-</tr>
-<tr>
-<td align="center">width(w0: Int): Int</td>
-<td align="center">位宽</td>
-</tr>
-<tr>
-<td align="center">encode(x: UInt, poison: Bool = Bool(false)): UInt</td>
-<td align="center">编码</td>
-</tr>
-<tr>
-<td align="center">decode(x: UInt): Decoding</td>
-<td align="center">解码，输出为Decoding</td>
-</tr>
-<tr>
-<td align="center">swizzle(x: UInt): UInt</td>
-<td align="center"></td>
-</tr>
-</tbody></table>
-<h2 id="IdentityCode"><a href="#IdentityCode" class="headerlink" title="IdentityCode"></a>IdentityCode</h2><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">IdentityCode</span> <span class="keyword">extends</span> <span class="title">Code</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">canDetect</span> </span>= <span class="literal">false</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">canCorrect</span> </span>= <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">width</span></span>(w0: <span class="type">Int</span>) = w0</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">encode</span></span>(x: <span class="type">UInt</span>, poison: <span class="type">Bool</span> = <span class="type">Bool</span>(<span class="literal">false</span>)) = &#123;</span><br><span class="line">    require (poison.isLit &amp;&amp; poison.litValue == <span class="number">0</span>, <span class="string">&quot;IdentityCode can not be poisoned&quot;</span>)</span><br><span class="line">    x</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">swizzle</span></span>(x: <span class="type">UInt</span>) = x</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">decode</span></span>(y: <span class="type">UInt</span>) = <span class="keyword">new</span> <span class="type">Decoding</span> &#123;</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">uncorrected</span> </span>= y</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">corrected</span> </span>= y</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">correctable</span> </span>= <span class="type">Bool</span>(<span class="literal">false</span>)</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">uncorrectable</span> </span>= <span class="type">Bool</span>(<span class="literal">false</span>)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>继承了Code，这是不使用编码方式，所以所有的选项都标记为false或者跟源码一致</p>
-<h2 id="ParityCode"><a href="#ParityCode" class="headerlink" title="ParityCode"></a>ParityCode</h2><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ParityCode</span> <span class="keyword">extends</span> <span class="title">Code</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">canDetect</span> </span>= <span class="literal">true</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">canCorrect</span> </span>= <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">width</span></span>(w0: <span class="type">Int</span>) = w0+<span class="number">1</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">encode</span></span>(x: <span class="type">UInt</span>, poison: <span class="type">Bool</span> = <span class="type">Bool</span>(<span class="literal">false</span>)) = <span class="type">Cat</span>(x.xorR ^ poison, x)</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">swizzle</span></span>(x: <span class="type">UInt</span>) = <span class="type">Cat</span>(<span class="literal">false</span>.<span class="type">B</span>, x)</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">decode</span></span>(y: <span class="type">UInt</span>) = <span class="keyword">new</span> <span class="type">Decoding</span> &#123;</span><br><span class="line">    <span class="keyword">val</span> uncorrected = y(y.getWidth<span class="number">-2</span>,<span class="number">0</span>)</span><br><span class="line">    <span class="keyword">val</span> corrected = uncorrected</span><br><span class="line">    <span class="keyword">val</span> correctable = <span class="type">Bool</span>(<span class="literal">false</span>)</span><br><span class="line">    <span class="keyword">val</span> uncorrectable = y.xorR</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>奇偶校验码，即，这里使用的是偶校验，检查源字符串中的1的个数，要是1的个数为奇数的话，补一个1使得1的个个数为偶数</p>
-<table>
-<thead>
-<tr>
-<th align="center">name</th>
-<th align="center">description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">校验方式</td>
-<td align="center">偶校验</td>
-</tr>
-<tr>
-<td align="center">canDetect</td>
-<td align="center">可以检错</td>
-</tr>
-<tr>
-<td align="center">canCorrect</td>
-<td align="center">不能纠错</td>
-</tr>
-<tr>
-<td align="center">width</td>
-<td align="center">比原码多一位</td>
-</tr>
-<tr>
-<td align="center">encode</td>
-<td align="center">最后一位编码0或者1</td>
-</tr>
-<tr>
-<td align="center">decode</td>
-<td align="center">返回Decoding</td>
-</tr>
-</tbody></table>
-<h2 id="SECCode"><a href="#SECCode" class="headerlink" title="SECCode"></a>SECCode</h2><p>汉明码是一种能够检测多达两个同时发生的位错误并纠正单个位错误的分组代码。它是由RW Hamming开发的，用于纠错。</p>
-<p>在这种编码方法中，源通过在消息中插入冗余位来对消息进行编码。这些冗余位是多余的位，它们会生成并插入到消息本身的特定位置，以实现错误检测和纠正。当目的地接收到此消息时，它将执行重新计算以检测错误并查找出现错误的位位置。</p>
-<p>具体分为三个步骤</p>
-<ul>
-<li>计算冗余位数</li>
-<li>确定冗余在的具体位置</li>
-<li>计算每个冗余位的值</li>
-</ul>
-<h3 id="计算冗余位数"><a href="#计算冗余位数" class="headerlink" title="计算冗余位数"></a>计算冗余位数</h3><p>若数据位有m位，则将r个冗余位加入数据中，则一共有（m+r+1）个状态，其中m+r表示bit位信息，多余的一位表示无错状态。而r位冗余最多可以表示2<sup>r</sup>个状态，所以2<sup>r</sup>个状态比如大于等于（m+r+1）<br>$$<br>2^r &gt;= m+r+1<br>$$<br>例如一个数据有7位，则m=7，带入公示中计算得到r=4，因此可以记做（11，4）编码</p>
-<h3 id="确定冗余的位置"><a href="#确定冗余的位置" class="headerlink" title="确定冗余的位置"></a>确定冗余的位置</h3><p>$r_n$表示第冗余所在的位置，比如$r_1$表示第一个冗余所在的位置，$r_2$表示第二个冗余所在的位置，以此类推，则冗余所在数据中具体的位置可以由一下公式计算得到<br>$$<br>r_n = 2^n -1<br>$$<br><img src="/picture/2010/positioning_redundant_bits.jpg" alt="img"></p>
-<h3 id="计算冗余位"><a href="#计算冗余位" class="headerlink" title="计算冗余位"></a>计算冗余位</h3><p>r会指示具体错误是哪一位，将$r_i$具体看作是数的编码，则$r_1$将会指示所有的最后一位为1的编码，如1、3、5、7、9等奇数，转换为二进制最后一位都是1，则都会使用奇偶校验的方法异或之后放到$r_1$中</p>
-<p>$r_2$指示第二位为1的编码，如2、3、6、7、10、11，这些位也将使用奇偶校验的方式之后填入$r_2$中，校验表可以如下图所示。</p>
-<p><img src="/picture/2010/image-20200926155848830.png" alt="image-20200926155848830"></p>
-<p>将对应的校验的数据按需奇偶校验，填入适当的位置，最终得到结果。</p>
-<h3 id="对应代码"><a href="#对应代码" class="headerlink" title="对应代码"></a>对应代码</h3><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">encode</span></span>(x: <span class="type">UInt</span>, poison: <span class="type">Bool</span> = <span class="type">Bool</span>(<span class="literal">false</span>)) = &#123;</span><br><span class="line">  <span class="keyword">val</span> k = x.getWidth</span><br><span class="line">  <span class="keyword">val</span> n = width(k)</span><br><span class="line">  <span class="keyword">val</span> (_, _, syndrome) = impl(n, k)</span><br><span class="line"></span><br><span class="line">  require ((poison.isLit &amp;&amp; poison.litValue == <span class="number">0</span>) || poisonous(n), <span class="string">s&quot;SEC code of length <span class="subst">$&#123;n&#125;</span> cannot be poisoned&quot;</span>)</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* By setting the entire syndrome on poison, the corrected bit falls off the end of the code */</span></span><br><span class="line">  <span class="keyword">val</span> syndromeUInt = <span class="type">Vec</span>.tabulate(n-k) &#123; j =&gt; (syndrome(j)(k<span class="number">-1</span>, <span class="number">0</span>) &amp; x).xorR ^ poison &#125;.asUInt</span><br><span class="line">  <span class="type">Cat</span>(syndromeUInt, x)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>编码方式，首先k是对应的数据位长度，使用<code>width</code>计算出需要的hamming码的长度，传入impl函数，impl返回的syndrome就是计算hamming码对应编码的函数，他是使用system code的编发方式，不同上面的<code>PPxPxxxPxxxxxxxP</code>，他通过数据的转换， 转换成对应的<code>xxxxxxxxxxxPPPPP</code>对应的形式。</p>
-<h2 id="SECDEDCode"><a href="#SECDEDCode" class="headerlink" title="SECDEDCode"></a>SECDEDCode</h2><p>Single Error Correction, Double Error Detection，即能纠正一位错误，并能检测出两位错误，留坑算法先不解读。</p>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/09/27/chipyard/ECC%E7%BC%96%E7%A0%81/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -986,85 +946,10 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/4-scala%E5%86%85%E5%BB%BA%E6%8E%A7%E5%88%B6/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="海海不想起床">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="haihai">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/4-scala%E5%86%85%E5%BB%BA%E6%8E%A7%E5%88%B6/" class="post-title-link" itemprop="url">scala内建控制</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2020-09-22 20:36:04 / 修改时间：20:42:54" itemprop="dateCreated datePublished" datetime="2020-09-22T20:36:04+08:00">2020-09-22</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/scala/" itemprop="url" rel="index"><span itemprop="name">scala</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>内建控制主要是在if或者是for字句中加入控制语句，来实现过滤，条件筛选等操作</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/4-scala%E5%86%85%E5%BB%BA%E6%8E%A7%E5%88%B6/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
   </nav>
 
 
@@ -1130,7 +1015,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">20</span>
+          <span class="site-state-item-count">21</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>

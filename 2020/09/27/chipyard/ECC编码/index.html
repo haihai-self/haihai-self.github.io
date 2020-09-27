@@ -20,17 +20,17 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="ECC编码即（Error Correcting Code&#x2F;Error Checking and Correcting），是使用海明码等方式对数据进行编码，从而可以得到数据检测以及校验功能 code &amp; DecodingDecoding字段解释 12345678abstract class Decoding&amp;#123;  def uncorrected: UInt  def correcte">
+  <meta name="description" content="ECC编码即（Error Correcting Code&#x2F;Error Checking and Correcting），是使用海明码等方式对数据进行编码，从而可以得到数据检测以及校验功能">
 <meta property="og:type" content="article">
 <meta property="og:title" content="ECC编码">
 <meta property="og:url" content="http://example.com/2020/09/27/chipyard/ECC%E7%BC%96%E7%A0%81/index.html">
 <meta property="og:site_name" content="haihai">
-<meta property="og:description" content="ECC编码即（Error Correcting Code&#x2F;Error Checking and Correcting），是使用海明码等方式对数据进行编码，从而可以得到数据检测以及校验功能 code &amp; DecodingDecoding字段解释 12345678abstract class Decoding&amp;#123;  def uncorrected: UInt  def correcte">
+<meta property="og:description" content="ECC编码即（Error Correcting Code&#x2F;Error Checking and Correcting），是使用海明码等方式对数据进行编码，从而可以得到数据检测以及校验功能">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/picture/2010/positioning_redundant_bits.jpg">
 <meta property="og:image" content="http://example.com/picture/2010/image-20200926155848830.png">
 <meta property="article:published_time" content="2020-09-27T11:32:37.000Z">
-<meta property="article:modified_time" content="2020-09-27T11:33:17.399Z">
+<meta property="article:modified_time" content="2020-09-27T11:37:36.161Z">
 <meta property="article:author" content="海海不想起床">
 <meta property="article:tag" content="chipyard">
 <meta name="twitter:card" content="summary">
@@ -184,7 +184,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2020-09-27 19:32:37 / 修改时间：19:33:17" itemprop="dateCreated datePublished" datetime="2020-09-27T19:32:37+08:00">2020-09-27</time>
+              <time title="创建时间：2020-09-27 19:32:37 / 修改时间：19:37:36" itemprop="dateCreated datePublished" datetime="2020-09-27T19:32:37+08:00">2020-09-27</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -215,6 +215,8 @@
 
       
         <p>ECC编码即（Error Correcting Code/Error Checking and Correcting），是使用海明码等方式对数据进行编码，从而可以得到数据检测以及校验功能</p>
+<a id="more"></a>
+
 <h2 id="code-amp-Decoding"><a href="#code-amp-Decoding" class="headerlink" title="code &amp; Decoding"></a>code &amp; Decoding</h2><p><strong>Decoding字段解释</strong></p>
 <figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Decoding</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">uncorrected</span></span>: <span class="type">UInt</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">corrected</span></span>: <span class="type">UInt</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">correctable</span></span>: <span class="type">Bool</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">uncorrectable</span></span>: <span class="type">Bool</span> <span class="comment">// If true, correctable should be ignored</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">error</span> </span>= correctable || uncorrectable</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -358,7 +360,10 @@
     <a href="/2020/09/26/chisel/Decoupled%E7%94%A8%E6%B3%95/" rel="prev" title="Decoupled用法">
       <i class="fa fa-chevron-left"></i> Decoupled用法
     </a></div>
-      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2020/09/27/chipyard/DiplomacyNode/" rel="next" title="DiplomacyNode">
+      DiplomacyNode <i class="fa fa-chevron-right"></i>
+    </a></div>
     </div>
       </footer>
     
@@ -431,7 +436,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">20</span>
+          <span class="site-state-item-count">21</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>

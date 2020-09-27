@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/hai-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/hai-16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Diplomacy Node是DOC中不同设备抽象成的节点，可以非常方便的在总线上添加设备，但是会有不同的节点用于支持不同的协议，下面就是关于不同节点的详细介绍">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DiplomacyNode">
+<meta property="og:url" content="http://example.com/2020/09/27/chipyard/DiplomacyNode/index.html">
+<meta property="og:site_name" content="haihai">
+<meta property="og:description" content="Diplomacy Node是DOC中不同设备抽象成的节点，可以非常方便的在总线上添加设备，但是会有不同的节点用于支持不同的协议，下面就是关于不同节点的详细介绍">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-09-27T11:35:19.000Z">
+<meta property="article:modified_time" content="2020-09-27T11:37:47.233Z">
+<meta property="article:author" content="海海不想起床">
+<meta property="article:tag" content="chipyard">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2020/09/27/chipyard/DiplomacyNode/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>DiplomacyNode | haihai</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">haihai</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/09/27/chipyard/DiplomacyNode/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="海海不想起床">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="haihai">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          DiplomacyNode
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2020-09-27 19:35:19 / 修改时间：19:37:47" itemprop="dateCreated datePublished" datetime="2020-09-27T19:35:19+08:00">2020-09-27</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/chipyard/" itemprop="url" rel="index"><span itemprop="name">chipyard</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Diplomacy Node是DOC中不同设备抽象成的节点，可以非常方便的在总线上添加设备，但是会有不同的节点用于支持不同的协议，下面就是关于不同节点的详细介绍</p>
+<a id="more"></a>
+<h1 id="Diplomacy-Node"><a href="#Diplomacy-Node" class="headerlink" title="Diplomacy Node"></a>Diplomacy Node</h1><p>Diplomacy将系统中不同的组件表现成有向无环图的节点，且节点有一些不同的类型</p>
+<h2 id="Client-Node"><a href="#Client-Node" class="headerlink" title="Client Node"></a>Client Node</h2><p>TileLink Client是通过在A通道上发送请求并在D通道上接收响应来启动TileLink事务的模块。如果实现了TL-C，则将会在B通道上接收到探针并在C通道上发出release信号，同时在E通道上授权确认。</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClient</span>(<span class="params">implicit p: <span class="type">Parameters</span></span>) <span class="keyword">extends</span> <span class="title">LazyModule</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> node = <span class="type">TLHelper</span>.makeClientNode(<span class="type">TLClientParameters</span>(</span><br><span class="line">    name = <span class="string">&quot;my-client&quot;</span>,</span><br><span class="line">    sourceId = <span class="type">IdRange</span>(<span class="number">0</span>, <span class="number">4</span>),</span><br><span class="line">    requestFifo = <span class="literal">true</span>,</span><br><span class="line">    visibility = <span class="type">Seq</span>(<span class="type">AddressSet</span>(<span class="number">0x10000</span>, <span class="number">0xffff</span>))))</span><br><span class="line"></span><br><span class="line">  <span class="keyword">lazy</span> <span class="keyword">val</span> module = <span class="keyword">new</span> <span class="type">LazyModuleImp</span>(<span class="keyword">this</span>) &#123;</span><br><span class="line">    <span class="keyword">val</span> (tl, edge) = node.out(<span class="number">0</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Rest of code here</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>name</p>
+<p>用于标识在Diplomacy中唯一的节点名称，string</p>
+</li>
+<li><p>sourceId</p>
+<p>指定client将使用的源标识符的范围，上述代码为(0, 4)表示的是同时可以发送四个源。</p>
+</li>
+<li><p>requestFifo</p>
+<p>client将请求支持它的下游管理器按照FIFO的顺序发送响应，默认值是false，这里设置为true</p>
+</li>
+<li><p>visibility</p>
+<p>指定client将访问的地址范围，默认是可以访问所有的地址，但是指定可访问的地址范围可以帮助下端的仲裁器进行优化。</p>
+</li>
+</ul>
+<p>在实现过程中，可以使用node.out来获取一对bundle/edge</p>
+<ul>
+<li><p>tl</p>
+<p>上述例子中，tl获取的是chisel的IObundle，他将会有2或者5个IO通道相对应（要是实现了TL-C将会有5个通道）</p>
+</li>
+<li><p>edge</p>
+<p>这是Diplomacy中的有向边，实现了很多有用的方法</p>
+</li>
+</ul>
+<h2 id="Manager-Node"><a href="#Manager-Node" class="headerlink" title="Manager Node"></a>Manager Node</h2><p>TileLink Manager将从通道A接收来之client的消息，并且从通道D发送响应。</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyManager</span>(<span class="params">implicit p: <span class="type">Parameters</span></span>) <span class="keyword">extends</span> <span class="title">LazyModule</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> device = <span class="keyword">new</span> <span class="type">SimpleDevice</span>(<span class="string">&quot;my-device&quot;</span>, <span class="type">Seq</span>(<span class="string">&quot;tutorial,my-device0&quot;</span>))</span><br><span class="line">  <span class="keyword">val</span> beatBytes = <span class="number">8</span></span><br><span class="line">  <span class="keyword">val</span> node = <span class="type">TLHelper</span>.makeManagerNode(beatBytes, <span class="type">TLManagerParameters</span>(</span><br><span class="line">    address = <span class="type">Seq</span>(<span class="type">AddressSet</span>(<span class="number">0x20000</span>, <span class="number">0xfff</span>)),</span><br><span class="line">    resources = device.reg,</span><br><span class="line">    regionType = <span class="type">RegionType</span>.<span class="type">UNCACHED</span>,</span><br><span class="line">    executable = <span class="literal">true</span>,</span><br><span class="line">    supportsArithmetic = <span class="type">TransferSizes</span>(<span class="number">1</span>, beatBytes),</span><br><span class="line">    supportsLogical = <span class="type">TransferSizes</span>(<span class="number">1</span>, beatBytes),</span><br><span class="line">    supportsGet = <span class="type">TransferSizes</span>(<span class="number">1</span>, beatBytes),</span><br><span class="line">    supportsPutFull = <span class="type">TransferSizes</span>(<span class="number">1</span>, beatBytes),</span><br><span class="line">    supportsPutPartial = <span class="type">TransferSizes</span>(<span class="number">1</span>, beatBytes),</span><br><span class="line">    supportsHint = <span class="type">TransferSizes</span>(<span class="number">1</span>, beatBytes),</span><br><span class="line">    fifoId = <span class="type">Some</span>(<span class="number">0</span>)))</span><br><span class="line"></span><br><span class="line">  <span class="keyword">lazy</span> <span class="keyword">val</span> module = <span class="keyword">new</span> <span class="type">LazyModuleImp</span>(<span class="keyword">this</span>) &#123;</span><br><span class="line">    <span class="keyword">val</span> (tl, edge) = node.in(<span class="number">0</span>)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>使用makeManagerNode创建节点，接收两个参数</p>
+<ul>
+<li><p>beatBytes</p>
+<p>表示的接口的宽度，以字节为单位。</p>
+</li>
+<li><p>TLManagerParameters</p>
+<p>TLManagerParameters唯一需要的参数是地址，该地址是该管理器将服务的地址范围的集合。</p>
+<ul>
+<li>第二个参数resources通常是从设备对象检索的，如果要将条目添加到BootROM中的DeviceTree中，以便Linux驱动程序可以读取它，则此参数是必需的。</li>
+<li>regionType，它提供有关管理器的缓存行为的一些信息。共有以下七个区域类型</li>
+<li>executable，确定是否允许CPU从该管理器中获取指令。默认情况下为false，大多数外设都将设为false</li>
+<li>接下来6个以supports开头的参数将确定可以从client接收参数的类型，其中TransferSizes将指定一次能接受消息的bytes数。</li>
+<li>fifoId，要是设置为None，将不保证可以顺序接受，要是设置了，将与相同区域的共享FIFO协议</li>
+</ul>
+</li>
+</ul>
+<h2 id="Register-Node"><a href="#Register-Node" class="headerlink" title="Register Node"></a>Register Node</h2><p>虽然可以直接指定管理器节点并编写所有逻辑来处理TileLink请求，但使用寄存器节点通常会容易得多。 这种类型的节点提供了regmap方法，该方法允许指定控制/状态寄存器并自动生成用于处理TileLink协议的逻辑。</p>
+<h2 id="Identity-Node"><a href="#Identity-Node" class="headerlink" title="Identity Node"></a>Identity Node</h2><p>Identity Node同时拥有输入输出IO，它只是将输入不变地连接到输出。 该节点主要用于将多个节点组合为具有多个边缘的单个节点。 例如，假设我们有两个lazy client module，每个mocule都有自己的客户端节点。</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClient1</span>(<span class="params">implicit p: <span class="type">Parameters</span></span>) <span class="keyword">extends</span> <span class="title">LazyModule</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> node = <span class="type">TLHelper</span>.makeClientNode(<span class="string">&quot;my-client1&quot;</span>, <span class="type">IdRange</span>(<span class="number">0</span>, <span class="number">1</span>))</span><br><span class="line"></span><br><span class="line">  <span class="keyword">lazy</span> <span class="keyword">val</span> module = <span class="keyword">new</span> <span class="type">LazyModuleImp</span>(<span class="keyword">this</span>) &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClient2</span>(<span class="params">implicit p: <span class="type">Parameters</span></span>) <span class="keyword">extends</span> <span class="title">LazyModule</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> node = <span class="type">TLHelper</span>.makeClientNode(<span class="string">&quot;my-client2&quot;</span>, <span class="type">IdRange</span>(<span class="number">0</span>, <span class="number">1</span>))</span><br><span class="line"></span><br><span class="line">  <span class="keyword">lazy</span> <span class="keyword">val</span> module = <span class="keyword">new</span> <span class="type">LazyModuleImp</span>(<span class="keyword">this</span>) &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>现在，我们在另一个惰性模块中实例化这两个client，并将它们的节点公开为单个节点。</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClientGroup</span>(<span class="params">implicit p: <span class="type">Parameters</span></span>) <span class="keyword">extends</span> <span class="title">LazyModule</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> client1 = <span class="type">LazyModule</span>(<span class="keyword">new</span> <span class="type">MyClient1</span>)</span><br><span class="line">  <span class="keyword">val</span> client2 = <span class="type">LazyModule</span>(<span class="keyword">new</span> <span class="type">MyClient2</span>)</span><br><span class="line">  <span class="keyword">val</span> node = <span class="type">TLIdentityNode</span>()</span><br><span class="line"></span><br><span class="line">  node := client1.node</span><br><span class="line">  node := client2.node</span><br><span class="line"></span><br><span class="line">  <span class="keyword">lazy</span> <span class="keyword">val</span> module = <span class="keyword">new</span> <span class="type">LazyModuleImp</span>(<span class="keyword">this</span>) &#123;</span><br><span class="line">    <span class="comment">// Nothing to do here</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Adapter-Node"><a href="#Adapter-Node" class="headerlink" title="Adapter Node"></a>Adapter Node</h2><p>像Identity Node一样，Adapter接受一定数量的输入并产生相同数量的输出。 但是，与标识节点不同，适配器节点不会简单地通过未更改的连接，它可以更改输入和输出之间的逻辑和物理接口。</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> node = <span class="type">TLAdapterNode</span>(</span><br><span class="line">  clientFn = &#123; cp =&gt;</span><br><span class="line">    <span class="comment">// ..</span></span><br><span class="line">  &#125;,</span><br><span class="line">  managerFn = &#123; mp =&gt;</span><br><span class="line">    <span class="comment">// ..</span></span><br><span class="line">  &#125;)</span><br></pre></td></tr></table></figure>
+
+<p>clientFn函数将输入的TLClientPortParameters作为参数，并为输出返回相应的参数。 managerFn将输出的TLManagerPortParameters作为参数，并为输入返回相应的参数。</p>
+<h2 id="Nexus-Node"><a href="#Nexus-Node" class="headerlink" title="Nexus Node"></a>Nexus Node</h2><p>Nexus Node与Adapter Node类似，但是他的输入接口跟输出接口不同</p>
+<h2 id="edge"><a href="#edge" class="headerlink" title="edge"></a>edge</h2><p>Diplomacy库提供了四个运算符，可用于在节点之间形成边。</p>
+<ul>
+<li><p>:=</p>
+<p>这是基本的连接操作符。它与Chisel单向连接器的语法相同，但并不等效，这是连接Diplomacy之间的节点而不是chisel之间的bundle束</p>
+</li>
+<li><p>:=*</p>
+<p>可以连接多个边，用于连接多个client node到nexus node或者adapter node即右边的节点，边的数量由client决定</p>
+</li>
+<li><p>:*=</p>
+<p>这也同样可以连接多个边，但是与上面不同的是这个边的数量由manager决定即左边的节点，用于连接nexus node 到多个manager节点。</p>
+</li>
+<li><p>:* = *</p>
+<p>它基于操作员的任意一侧具有已知数量的边来创建多个边，可以在生成器中使用，在生成器中，直到运行时才知道两侧的节点类型。</p>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/chipyard/" rel="tag"><i class="fa fa-tag"></i> chipyard</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/09/27/chipyard/ECC%E7%BC%96%E7%A0%81/" rel="prev" title="ECC编码">
+      <i class="fa fa-chevron-left"></i> ECC编码
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Diplomacy-Node"><span class="nav-number">1.</span> <span class="nav-text">Diplomacy Node</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Client-Node"><span class="nav-number">1.1.</span> <span class="nav-text">Client Node</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Manager-Node"><span class="nav-number">1.2.</span> <span class="nav-text">Manager Node</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Register-Node"><span class="nav-number">1.3.</span> <span class="nav-text">Register Node</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Identity-Node"><span class="nav-number">1.4.</span> <span class="nav-text">Identity Node</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Adapter-Node"><span class="nav-number">1.5.</span> <span class="nav-text">Adapter Node</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Nexus-Node"><span class="nav-number">1.6.</span> <span class="nav-text">Nexus Node</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#edge"><span class="nav-number">1.7.</span> <span class="nav-text">edge</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">海海不想起床</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">21</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/haihai-self" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;haihai-self" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">海海不想起床</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

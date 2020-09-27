@@ -871,6 +871,8 @@
     <title>ECC编码</title>
     <url>/2020/09/27/chipyard/ECC%E7%BC%96%E7%A0%81/</url>
     <content><![CDATA[<p>ECC编码即（Error Correcting Code/Error Checking and Correcting），是使用海明码等方式对数据进行编码，从而可以得到数据检测以及校验功能</p>
+<a id="more"></a>
+
 <h2 id="code-amp-Decoding"><a href="#code-amp-Decoding" class="headerlink" title="code &amp; Decoding"></a>code &amp; Decoding</h2><p><strong>Decoding字段解释</strong></p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Decoding</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">uncorrected</span></span>: <span class="type">UInt</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">corrected</span></span>: <span class="type">UInt</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">correctable</span></span>: <span class="type">Bool</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">uncorrectable</span></span>: <span class="type">Bool</span> <span class="comment">// If true, correctable should be ignored</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">error</span> </span>= correctable || uncorrectable</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -993,6 +995,92 @@
 
 <p>编码方式，首先k是对应的数据位长度，使用<code>width</code>计算出需要的hamming码的长度，传入impl函数，impl返回的syndrome就是计算hamming码对应编码的函数，他是使用system code的编发方式，不同上面的<code>PPxPxxxPxxxxxxxP</code>，他通过数据的转换， 转换成对应的<code>xxxxxxxxxxxPPPPP</code>对应的形式。</p>
 <h2 id="SECDEDCode"><a href="#SECDEDCode" class="headerlink" title="SECDEDCode"></a>SECDEDCode</h2><p>Single Error Correction, Double Error Detection，即能纠正一位错误，并能检测出两位错误，留坑算法先不解读。</p>
+]]></content>
+      <categories>
+        <category>chipyard</category>
+      </categories>
+      <tags>
+        <tag>chipyard</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>DiplomacyNode</title>
+    <url>/2020/09/27/chipyard/DiplomacyNode/</url>
+    <content><![CDATA[<p>Diplomacy Node是DOC中不同设备抽象成的节点，可以非常方便的在总线上添加设备，但是会有不同的节点用于支持不同的协议，下面就是关于不同节点的详细介绍</p>
+<a id="more"></a>
+<h1 id="Diplomacy-Node"><a href="#Diplomacy-Node" class="headerlink" title="Diplomacy Node"></a>Diplomacy Node</h1><p>Diplomacy将系统中不同的组件表现成有向无环图的节点，且节点有一些不同的类型</p>
+<h2 id="Client-Node"><a href="#Client-Node" class="headerlink" title="Client Node"></a>Client Node</h2><p>TileLink Client是通过在A通道上发送请求并在D通道上接收响应来启动TileLink事务的模块。如果实现了TL-C，则将会在B通道上接收到探针并在C通道上发出release信号，同时在E通道上授权确认。</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClient</span>(<span class="params">implicit p: <span class="type">Parameters</span></span>) <span class="keyword">extends</span> <span class="title">LazyModule</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> node = <span class="type">TLHelper</span>.makeClientNode(<span class="type">TLClientParameters</span>(</span><br><span class="line">    name = <span class="string">&quot;my-client&quot;</span>,</span><br><span class="line">    sourceId = <span class="type">IdRange</span>(<span class="number">0</span>, <span class="number">4</span>),</span><br><span class="line">    requestFifo = <span class="literal">true</span>,</span><br><span class="line">    visibility = <span class="type">Seq</span>(<span class="type">AddressSet</span>(<span class="number">0x10000</span>, <span class="number">0xffff</span>))))</span><br><span class="line"></span><br><span class="line">  <span class="keyword">lazy</span> <span class="keyword">val</span> module = <span class="keyword">new</span> <span class="type">LazyModuleImp</span>(<span class="keyword">this</span>) &#123;</span><br><span class="line">    <span class="keyword">val</span> (tl, edge) = node.out(<span class="number">0</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Rest of code here</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>name</p>
+<p>用于标识在Diplomacy中唯一的节点名称，string</p>
+</li>
+<li><p>sourceId</p>
+<p>指定client将使用的源标识符的范围，上述代码为(0, 4)表示的是同时可以发送四个源。</p>
+</li>
+<li><p>requestFifo</p>
+<p>client将请求支持它的下游管理器按照FIFO的顺序发送响应，默认值是false，这里设置为true</p>
+</li>
+<li><p>visibility</p>
+<p>指定client将访问的地址范围，默认是可以访问所有的地址，但是指定可访问的地址范围可以帮助下端的仲裁器进行优化。</p>
+</li>
+</ul>
+<p>在实现过程中，可以使用node.out来获取一对bundle/edge</p>
+<ul>
+<li><p>tl</p>
+<p>上述例子中，tl获取的是chisel的IObundle，他将会有2或者5个IO通道相对应（要是实现了TL-C将会有5个通道）</p>
+</li>
+<li><p>edge</p>
+<p>这是Diplomacy中的有向边，实现了很多有用的方法</p>
+</li>
+</ul>
+<h2 id="Manager-Node"><a href="#Manager-Node" class="headerlink" title="Manager Node"></a>Manager Node</h2><p>TileLink Manager将从通道A接收来之client的消息，并且从通道D发送响应。</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyManager</span>(<span class="params">implicit p: <span class="type">Parameters</span></span>) <span class="keyword">extends</span> <span class="title">LazyModule</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> device = <span class="keyword">new</span> <span class="type">SimpleDevice</span>(<span class="string">&quot;my-device&quot;</span>, <span class="type">Seq</span>(<span class="string">&quot;tutorial,my-device0&quot;</span>))</span><br><span class="line">  <span class="keyword">val</span> beatBytes = <span class="number">8</span></span><br><span class="line">  <span class="keyword">val</span> node = <span class="type">TLHelper</span>.makeManagerNode(beatBytes, <span class="type">TLManagerParameters</span>(</span><br><span class="line">    address = <span class="type">Seq</span>(<span class="type">AddressSet</span>(<span class="number">0x20000</span>, <span class="number">0xfff</span>)),</span><br><span class="line">    resources = device.reg,</span><br><span class="line">    regionType = <span class="type">RegionType</span>.<span class="type">UNCACHED</span>,</span><br><span class="line">    executable = <span class="literal">true</span>,</span><br><span class="line">    supportsArithmetic = <span class="type">TransferSizes</span>(<span class="number">1</span>, beatBytes),</span><br><span class="line">    supportsLogical = <span class="type">TransferSizes</span>(<span class="number">1</span>, beatBytes),</span><br><span class="line">    supportsGet = <span class="type">TransferSizes</span>(<span class="number">1</span>, beatBytes),</span><br><span class="line">    supportsPutFull = <span class="type">TransferSizes</span>(<span class="number">1</span>, beatBytes),</span><br><span class="line">    supportsPutPartial = <span class="type">TransferSizes</span>(<span class="number">1</span>, beatBytes),</span><br><span class="line">    supportsHint = <span class="type">TransferSizes</span>(<span class="number">1</span>, beatBytes),</span><br><span class="line">    fifoId = <span class="type">Some</span>(<span class="number">0</span>)))</span><br><span class="line"></span><br><span class="line">  <span class="keyword">lazy</span> <span class="keyword">val</span> module = <span class="keyword">new</span> <span class="type">LazyModuleImp</span>(<span class="keyword">this</span>) &#123;</span><br><span class="line">    <span class="keyword">val</span> (tl, edge) = node.in(<span class="number">0</span>)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>使用makeManagerNode创建节点，接收两个参数</p>
+<ul>
+<li><p>beatBytes</p>
+<p>表示的接口的宽度，以字节为单位。</p>
+</li>
+<li><p>TLManagerParameters</p>
+<p>TLManagerParameters唯一需要的参数是地址，该地址是该管理器将服务的地址范围的集合。</p>
+<ul>
+<li>第二个参数resources通常是从设备对象检索的，如果要将条目添加到BootROM中的DeviceTree中，以便Linux驱动程序可以读取它，则此参数是必需的。</li>
+<li>regionType，它提供有关管理器的缓存行为的一些信息。共有以下七个区域类型</li>
+<li>executable，确定是否允许CPU从该管理器中获取指令。默认情况下为false，大多数外设都将设为false</li>
+<li>接下来6个以supports开头的参数将确定可以从client接收参数的类型，其中TransferSizes将指定一次能接受消息的bytes数。</li>
+<li>fifoId，要是设置为None，将不保证可以顺序接受，要是设置了，将与相同区域的共享FIFO协议</li>
+</ul>
+</li>
+</ul>
+<h2 id="Register-Node"><a href="#Register-Node" class="headerlink" title="Register Node"></a>Register Node</h2><p>虽然可以直接指定管理器节点并编写所有逻辑来处理TileLink请求，但使用寄存器节点通常会容易得多。 这种类型的节点提供了regmap方法，该方法允许指定控制/状态寄存器并自动生成用于处理TileLink协议的逻辑。</p>
+<h2 id="Identity-Node"><a href="#Identity-Node" class="headerlink" title="Identity Node"></a>Identity Node</h2><p>Identity Node同时拥有输入输出IO，它只是将输入不变地连接到输出。 该节点主要用于将多个节点组合为具有多个边缘的单个节点。 例如，假设我们有两个lazy client module，每个mocule都有自己的客户端节点。</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClient1</span>(<span class="params">implicit p: <span class="type">Parameters</span></span>) <span class="keyword">extends</span> <span class="title">LazyModule</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> node = <span class="type">TLHelper</span>.makeClientNode(<span class="string">&quot;my-client1&quot;</span>, <span class="type">IdRange</span>(<span class="number">0</span>, <span class="number">1</span>))</span><br><span class="line"></span><br><span class="line">  <span class="keyword">lazy</span> <span class="keyword">val</span> module = <span class="keyword">new</span> <span class="type">LazyModuleImp</span>(<span class="keyword">this</span>) &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClient2</span>(<span class="params">implicit p: <span class="type">Parameters</span></span>) <span class="keyword">extends</span> <span class="title">LazyModule</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> node = <span class="type">TLHelper</span>.makeClientNode(<span class="string">&quot;my-client2&quot;</span>, <span class="type">IdRange</span>(<span class="number">0</span>, <span class="number">1</span>))</span><br><span class="line"></span><br><span class="line">  <span class="keyword">lazy</span> <span class="keyword">val</span> module = <span class="keyword">new</span> <span class="type">LazyModuleImp</span>(<span class="keyword">this</span>) &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>现在，我们在另一个惰性模块中实例化这两个client，并将它们的节点公开为单个节点。</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClientGroup</span>(<span class="params">implicit p: <span class="type">Parameters</span></span>) <span class="keyword">extends</span> <span class="title">LazyModule</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> client1 = <span class="type">LazyModule</span>(<span class="keyword">new</span> <span class="type">MyClient1</span>)</span><br><span class="line">  <span class="keyword">val</span> client2 = <span class="type">LazyModule</span>(<span class="keyword">new</span> <span class="type">MyClient2</span>)</span><br><span class="line">  <span class="keyword">val</span> node = <span class="type">TLIdentityNode</span>()</span><br><span class="line"></span><br><span class="line">  node := client1.node</span><br><span class="line">  node := client2.node</span><br><span class="line"></span><br><span class="line">  <span class="keyword">lazy</span> <span class="keyword">val</span> module = <span class="keyword">new</span> <span class="type">LazyModuleImp</span>(<span class="keyword">this</span>) &#123;</span><br><span class="line">    <span class="comment">// Nothing to do here</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Adapter-Node"><a href="#Adapter-Node" class="headerlink" title="Adapter Node"></a>Adapter Node</h2><p>像Identity Node一样，Adapter接受一定数量的输入并产生相同数量的输出。 但是，与标识节点不同，适配器节点不会简单地通过未更改的连接，它可以更改输入和输出之间的逻辑和物理接口。</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">val</span> node = <span class="type">TLAdapterNode</span>(</span><br><span class="line">  clientFn = &#123; cp =&gt;</span><br><span class="line">    <span class="comment">// ..</span></span><br><span class="line">  &#125;,</span><br><span class="line">  managerFn = &#123; mp =&gt;</span><br><span class="line">    <span class="comment">// ..</span></span><br><span class="line">  &#125;)</span><br></pre></td></tr></table></figure>
+
+<p>clientFn函数将输入的TLClientPortParameters作为参数，并为输出返回相应的参数。 managerFn将输出的TLManagerPortParameters作为参数，并为输入返回相应的参数。</p>
+<h2 id="Nexus-Node"><a href="#Nexus-Node" class="headerlink" title="Nexus Node"></a>Nexus Node</h2><p>Nexus Node与Adapter Node类似，但是他的输入接口跟输出接口不同</p>
+<h2 id="edge"><a href="#edge" class="headerlink" title="edge"></a>edge</h2><p>Diplomacy库提供了四个运算符，可用于在节点之间形成边。</p>
+<ul>
+<li><p>:=</p>
+<p>这是基本的连接操作符。它与Chisel单向连接器的语法相同，但并不等效，这是连接Diplomacy之间的节点而不是chisel之间的bundle束</p>
+</li>
+<li><p>:=*</p>
+<p>可以连接多个边，用于连接多个client node到nexus node或者adapter node即右边的节点，边的数量由client决定</p>
+</li>
+<li><p>:*=</p>
+<p>这也同样可以连接多个边，但是与上面不同的是这个边的数量由manager决定即左边的节点，用于连接nexus node 到多个manager节点。</p>
+</li>
+<li><p>:* = *</p>
+<p>它基于操作员的任意一侧具有已知数量的边来创建多个边，可以在生成器中使用，在生成器中，直到运行时才知道两侧的节点类型。</p>
+</li>
+</ul>
 ]]></content>
       <categories>
         <category>chipyard</category>
