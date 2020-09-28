@@ -1089,4 +1089,257 @@
         <tag>chipyard</tag>
       </tags>
   </entry>
+  <entry>
+    <title>使用列表</title>
+    <url>/2020/09/28/scala/scala%E7%BC%96%E7%A8%8B/11-%E4%BD%BF%E7%94%A8%E5%88%97%E8%A1%A8/</url>
+    <content><![CDATA[<p>列表是scala程序中最常使用的数据结构，这里记录一下列表的常用操作，以及设计原则。</p>
+<a id="more"></a>
+
+<h3 id="List基础操作"><a href="#List基础操作" class="headerlink" title="List基础操作"></a>List基础操作</h3><p><strong>列表字面量</strong></p>
+<p>列表跟数组非常相似，但是列表是不可变的，而数组是可变的。同时列表是链表结构，而数组则是平的。</p>
+<p>同时列表是同构的，即同一个列表的所有元素都必须相同，同时列表也是协变的，如列表中有两种类型的元素，分别为S跟T，如果S是T的字类型或者相反，则这个列表是合法的。</p>
+<p><strong>列表构建</strong></p>
+<p>所有列表的构建都来自两个基础的单元<code>Nil 跟 ::</code>，其中Nil表示空列表，而::表示元素追加，具体构建如下所示</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">val</span> fruit = <span class="string">&quot;apples&quot;</span> :: (<span class="string">&quot;oranges&quot;</span> :: (<span class="string">&quot;pears&quot;</span> :: <span class="type">Nil</span>))  <span class="comment">//与去掉括号含义一致</span></span><br><span class="line"><span class="keyword">val</span> empty = <span class="type">Nil</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>列表的基本操作</strong></p>
+<p>对列表的所有操作都可以用下面三项来描述</p>
+<ul>
+<li>head：返回列表的第一个元素</li>
+<li>tail：返回除列表第一个元素之外的所有元素</li>
+<li>isEmpty：返回列表是否为空</li>
+</ul>
+<p>其中List(…)表示匹配所有的元素</p>
+<h3 id="List的初阶方法"><a href="#List的初阶方法" class="headerlink" title="List的初阶方法"></a>List的初阶方法</h3><p>如果一个方法不接收任何函数作为入参，就被称为初阶方法</p>
+<table>
+<thead>
+<tr>
+<th align="center">name</th>
+<th align="center">description</th>
+<th align="center">example</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">::</td>
+<td align="center">使用元素构建列表</td>
+<td align="center">1 :: 2</td>
+</tr>
+<tr>
+<td align="center">:::</td>
+<td align="center">拼接两个列表</td>
+<td align="center">xs ::: ys</td>
+</tr>
+<tr>
+<td align="center">head</td>
+<td align="center">返回第一个元素</td>
+<td align="center">xs.head</td>
+</tr>
+<tr>
+<td align="center">tail</td>
+<td align="center">返回除第一个元素之外的剩余列表</td>
+<td align="center">xs.tail</td>
+</tr>
+<tr>
+<td align="center">init</td>
+<td align="center">返回除最后一个元素剩余部分</td>
+<td align="center">xs.init</td>
+</tr>
+<tr>
+<td align="center">last</td>
+<td align="center">返回最后一个元素</td>
+<td align="center">xs.last</td>
+</tr>
+<tr>
+<td align="center">isEmpty</td>
+<td align="center">判断列表是否为空，返回Bool</td>
+<td align="center">xs.isEmpty</td>
+</tr>
+<tr>
+<td align="center">reverse</td>
+<td align="center">列表反转</td>
+<td align="center">xs.reverse</td>
+</tr>
+<tr>
+<td align="center">drop</td>
+<td align="center">除去前n个元素，返回剩下的元素</td>
+<td align="center">xs.drop(n)</td>
+</tr>
+<tr>
+<td align="center">take</td>
+<td align="center">返回前n个元素</td>
+<td align="center">xs.take(n)</td>
+</tr>
+<tr>
+<td align="center">splitAt</td>
+<td align="center">在n处分割两个列表</td>
+<td align="center">xs.splitAt(2)</td>
+</tr>
+<tr>
+<td align="center">apply</td>
+<td align="center">选取元素</td>
+<td align="center">xs.apply(2)</td>
+</tr>
+<tr>
+<td align="center">indices</td>
+<td align="center">返回指定列表所有有效下标</td>
+<td align="center">xs.indices</td>
+</tr>
+<tr>
+<td align="center">flatten</td>
+<td align="center">将列表元素为列表的元素扁平化</td>
+<td align="center">xs.flatten</td>
+</tr>
+<tr>
+<td align="center">zip</td>
+<td align="center">接收两个列表，将两个列表元素进行两两组合，若长度不匹配，将不匹配的元素丢弃</td>
+<td align="center">xs.indice zip xs</td>
+</tr>
+<tr>
+<td align="center">zipWithIndex</td>
+<td align="center">将列表元素与下标进行zip</td>
+<td align="center">xs.zipWithIndex</td>
+</tr>
+<tr>
+<td align="center">unzip</td>
+<td align="center">与zip相反的操作</td>
+<td align="center">xs.unzip</td>
+</tr>
+<tr>
+<td align="center">toString</td>
+<td align="center">返回列表的标准字符串形式</td>
+<td align="center">xs.toString</td>
+</tr>
+<tr>
+<td align="center">mkString</td>
+<td align="center">列表的不同表现形式，pre显示在列表之前，step分隔，post最后</td>
+<td align="center">xs mkString(“[”, “,”, “]”)</td>
+</tr>
+<tr>
+<td align="center">iterator</td>
+<td align="center">通过迭代器访问列表元素</td>
+<td align="center">val it = xs.iterator</td>
+</tr>
+<tr>
+<td align="center">toArray</td>
+<td align="center">将List转换为Array</td>
+<td align="center">xs.toArray</td>
+</tr>
+<tr>
+<td align="center">copyToArray</td>
+<td align="center">将列表的元素复制到Array中，从start开始</td>
+<td align="center">xs copyToArray(arr, strat)</td>
+</tr>
+</tbody></table>
+<h3 id="List的高阶用法"><a href="#List的高阶用法" class="headerlink" title="List的高阶用法"></a>List的高阶用法</h3><p><strong>对列表做映射</strong></p>
+<ul>
+<li><p>map</p>
+<p>x map f这个操作将类型为List[T]的列表xsh和类型为T =&gt; U的函数f作为操作源，返回一个通过应用f到xs的每个元素后得到的列表，例如</p>
+<blockquote>
+<p>List(1, 2, 3) map(_ +1)</p>
+</blockquote>
+</li>
+<li><p>flatMap</p>
+<p>返回元素列表，即flat跟map一起使用，将返回一个列表，内部将不含有子列表</p>
+</li>
+<li><p>foreach</p>
+<p>要求右边是一个过程，即像c语言那样面向过程的编程</p>
+<blockquote>
+<p>List(1, 2, 3, 4, 5) foreach(sum += _)</p>
+</blockquote>
+</li>
+</ul>
+<p><strong>列表过滤</strong> </p>
+<ul>
+<li><p>filter</p>
+<p>xs filter p 两个操作数分别为类型为List[T]的xs和类型为T =&gt; Boolean的前提条件函数p。这个操作将xs中的所有p(x)为True的元素x交出</p>
+<blockquote>
+<p>List(1, 2, 3, 4, 5) filter (_ %2 ==0)</p>
+</blockquote>
+</li>
+<li><p>partition</p>
+<p>与filter类似，但是他同时交出两个列表，一个是p(x)为true的列表，另外一个是为false的列表</p>
+<blockquote>
+<p>xs partition p 等于 (xs filter p, xs filter !p)</p>
+</blockquote>
+</li>
+<li><p>find</p>
+<p>xs find p 返回的是xs中第一个满足条件p(x)为True的元素。</p>
+</li>
+<li><p>takeWhile</p>
+<p>xs takeWhile p 返回满足p的最长前缀</p>
+<blockquote>
+<p>List(1, 2, 3, -4, 5) takeWhile (_&gt; 0) //返回(1, 2, 3)</p>
+</blockquote>
+</li>
+<li><p>dropWhile</p>
+<p>除去最长前缀剩下的元素</p>
+</li>
+<li><p>span</p>
+<p>span将takeWhile与dropWhile合一，与partition类似，将返回两个列表</p>
+</li>
+</ul>
+<p><strong>对列表做前置条件检查</strong></p>
+<ul>
+<li><p>forall</p>
+<p>xs forall p将检查所有的元素是否都满足p，满足返回true，否则返回false</p>
+</li>
+<li><p>exit</p>
+<p>存在就返回true否则返回false</p>
+</li>
+</ul>
+<p><strong>列表折叠</strong></p>
+<ul>
+<li><p>左折叠</p>
+<p><code>(z /: xs)(op)</code>将以z为前缀，列表元素依次连续应用op</p>
+<blockquote>
+<p>(z :/ List(a, b, c))(op)    等于    op(op(op(z, a), b), c)</p>
+</blockquote>
+<p>产生一棵靠左的树</p>
+</li>
+<li><p>右折叠</p>
+<p><code>:\</code>产生一棵靠右的树</p>
+<blockquote>
+<p>(List(a, b, c):\z)(op)    等于    op(a, op(b, op(c, z)))</p>
+</blockquote>
+</li>
+</ul>
+<p><strong>列表排序</strong></p>
+<p>xs sortWith before将对xs列表进行排序，before是用来比较两个元素的函数</p>
+<blockquote>
+<p>List(1, -3, 4, 2, 6) sortWith(_ &lt; _)    应该是升序排序</p>
+</blockquote>
+<h3 id="列表对象方法"><a href="#列表对象方法" class="headerlink" title="列表对象方法"></a>列表对象方法</h3><p><strong>从元素创建列表</strong></p>
+<p>之前使用的诸如List(1, 2, 3, 4)这样的创建列表的方法，其实是调用伴生对象中的apply方法进行</p>
+<blockquote>
+<p>List(1, 2, 3, 4)    等于    List.apply(1, 2, 3, 4)</p>
+</blockquote>
+<p><strong>创建数值区间</strong></p>
+<p>List.range(begin, end, step=1)这个方法将创建一个左闭右开的区间，step是步长，默认是1</p>
+<blockquote>
+<p>List.range(1, 5)</p>
+</blockquote>
+<p><strong>创建相同的列表元素</strong></p>
+<p>List.fill(num)(val)这个方法将创建指定维度且填充相同的列表</p>
+<blockquote>
+<p>List.fill(2, 3)(1)    将会在内部创建两个子列表，每个列表的元素为3个</p>
+<p>//List(List(1, 1, 1), List(1, 1, 1))</p>
+</blockquote>
+<p><strong>表格化函数</strong></p>
+<p>与fill类似，但是他的第二个参数不再是单个元素，而是接收一个函数，元素值不在固定</p>
+<blockquote>
+<p>List.tabulate(5, 5)(_ * _)</p>
+</blockquote>
+<p><strong>拼接多个列表</strong></p>
+<p>List.concat将多个列表拼接在一起</p>
+<blockquote>
+<p>List.concat(List(‘a’, b), List(‘c’ , ‘d’), List(‘e’))  //返回List(‘a’, ‘b’, ‘c’, ‘d’, ‘e’)</p>
+</blockquote>
+]]></content>
+      <categories>
+        <category>scala</category>
+      </categories>
+      <tags>
+        <tag>scala编程</tag>
+      </tags>
+  </entry>
 </search>
