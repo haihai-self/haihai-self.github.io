@@ -211,8 +211,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>使用柯里化的方式，分开参数写参数列表，这样就可以先固定部分参数列表来产生新的函数，减少函数在实例化过程中需要填写的参数，配合隐式参数的使用，将极大减少代码量</p>
-<a id="more"></a>
+        <p>使用柯里化的方式，分开参数写参数列表，这样就可以先固定部分参数列表来产生新的函数，减少函数在实例化过程中需要填写的参数，配合隐式参数的使用，将极大减少代码量<br><a id="more"></a></p>
 <ul>
 <li><p><strong>减少代码重复</strong></p>
 <p>利用一等函数与占位符消除代码的重复</p>
@@ -229,10 +228,9 @@
 <li><p><strong>传名参数－传值参数</strong></p>
 <p>传值参数中表达式的值将先于函数被调用，而传名参数将会在函数中调用该名字的地方进行调用。其实就是一个参数求值先后的问题。</p>
 <figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">byNameAssert</span></span>(predicate: =&gt; <span class="type">Boolean</span>) = &#123;</span><br><span class="line">  <span class="keyword">if</span> (assertionsEnabled &amp;&amp; !predicate)  <span class="comment">//传名参数，运行到这里才会进行求值</span></span><br><span class="line">  	<span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">AssertionError</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">boolAssert</span></span>(predicate: <span class="type">Boolean</span>) = <span class="comment">//传值参数，其实在这里predicate就进行求值了</span></span><br><span class="line">	<span class="keyword">if</span> (assertionsEnabled &amp;&amp; !predicate)</span><br><span class="line">  	<span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">AssertionError</span></span><br></pre></td></tr></table></figure>
-
 </li>
 </ul>
-<h2 id=""><a href="#" class="headerlink" title=""></a></h2>
+<h2 id=""><a href="#" class="headerlink" title=" "></a> </h2>
     </div>
 
     
@@ -315,7 +313,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text"></span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text"> </span></a></li></ol></div>
       </div>
       <!--/noindex-->
 

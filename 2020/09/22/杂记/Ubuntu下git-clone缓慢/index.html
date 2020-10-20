@@ -212,24 +212,19 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p><code>git clone</code>缓慢的主要原因是国内<code>DNS</code>无法自动转跳到<code>github.global.ssl.fastly.net</code>，该域名被限制导致，通过在<code>/etc/hosts</code>加上对应的地址可以解决这个问题</p>
-<a id="more"></a>
-
+        <p><code>git clone</code>缓慢的主要原因是国内<code>DNS</code>无法自动转跳到<code>github.global.ssl.fastly.net</code>，该域名被限制导致，通过在<code>/etc/hosts</code>加上对应的地址可以解决这个问题<br><a id="more"></a></p>
 <ul>
 <li><p>查询<code>github.global.ssl.fastly.net</code>对应域名的地址，在<code>shell</code>下输入</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nslookup github.global.ssl.fastly.Net</span><br></pre></td></tr></table></figure>
-
 <p>查询到对应的<code>ip</code>如：<code>151.101.77.194</code></p>
 </li>
 <li><p>查询<code>github.com</code>对应的域名</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nslookup github.com </span><br></pre></td></tr></table></figure>
-
 <p>查询到对应的<code>ip</code>如：<code>13.229.188.59</code></p>
 </li>
 </ul>
 <p>最后在<code>hosts</code>文件尾加上两行如下所示</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">151.101.77.194 http://global-ssl.fastly.net</span><br><span class="line">13.229.188.59  http://github.com</span><br></pre></td></tr></table></figure>
-
 
     </div>
 

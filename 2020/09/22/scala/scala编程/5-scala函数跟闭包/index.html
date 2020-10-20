@@ -211,16 +211,13 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>需要注意的是使用字面量函数以及符号<code>=&gt;</code>的使用，闭包好比作用域，用于确定变量的范围</p>
-<a id="more"></a>
+        <p>需要注意的是使用字面量函数以及符号<code>=&gt;</code>的使用，闭包好比作用域，用于确定变量的范围<br><a id="more"></a></p>
 <ul>
 <li><p>函数字面量**</p>
 <p>函数字面量存在于源码中，在运行时编译成类，并在运行时实例化为函数值，所以函数值对象形式存在于运行时</p>
 <figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(x: <span class="type">Int</span>) =&gt; x + <span class="number">1</span></span><br></pre></td></tr></table></figure>
-
 <p>上述例子时函数字面量，左侧时参数列表，右侧是操作，多条语句的话，使用<code>&#123;&#125;</code>进行组合，<code>=&gt;</code>的意思表示将左侧的内容转换为右侧的内容。</p>
 <figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">someNumbers.filter(x =&gt; x &gt; <span class="number">0</span>)</span><br></pre></td></tr></table></figure>
-
 <p>接受一个函数做为入参，并对列表中的每个元素调用这个函数。同时由于知道了<code>someNumbers</code>是整数，所以x必定是整数，不用再申明类型</p>
 </li>
 <li><p><strong>占位符语法</strong></p>
@@ -230,7 +227,6 @@
 <li><p><strong>部分应用函数</strong></p>
 <p>可以用<code>_</code>代替独立的参数列表，但是要与主函数之间加上空格。</p>
 <figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">sum</span></span>(a: <span class="type">Int</span>, b: <span class="type">Int</span>, c: <span class="type">Int</span>): <span class="type">Int</span> = a + b + c</span><br><span class="line"><span class="keyword">val</span> a = sum _  <span class="comment">//_ 表示的是三个参数的参数列表 可以通过a(1, 2, 3)调用</span></span><br><span class="line"><span class="keyword">val</span> b = sum(<span class="number">1</span>, _: <span class="type">Int</span>, <span class="number">3</span>)  <span class="comment">//可以调用b(2)</span></span><br><span class="line">someNumbers.foreach(println _)</span><br><span class="line">someNumbers.foreach(println)</span><br></pre></td></tr></table></figure>
-
 <p>最后的这两种形式，可以再明确需要函数的地方给出。</p>
 </li>
 <li><p><strong>闭包</strong></p>
@@ -250,7 +246,6 @@
 <li><p><strong>尾递归</strong></p>
 <p>在函数的尾部自己调用自己，这样的话就是尾递归，尾递归会自动的优化成<code>while</code>循环的形式，减少栈的开销。但是只能对那些直接尾递归的函数进行优化，要是间接的调用尾递归并不会进行优化</p>
 <figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">isEven</span></span>(x: <span class="type">Int</span>): <span class="type">Boolean</span> = </span><br><span class="line">	<span class="keyword">if</span> (x == <span class="number">0</span>) <span class="literal">true</span> <span class="keyword">else</span> isOdd(x - <span class="number">1</span>)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">isodd</span></span>(x: <span class="type">Int</span>): <span class="type">Boolean</span> = </span><br><span class="line">	<span class="keyword">if</span> (x == <span class="number">0</span>) <span class="literal">false</span> <span class="keyword">else</span> isEven(x - <span class="number">1</span>)  <span class="comment">//这样的相互递归不会优化，最后一步调用的是另外的一个函数值，并不会进行优化</span></span><br></pre></td></tr></table></figure>
-
 </li>
 </ul>
 

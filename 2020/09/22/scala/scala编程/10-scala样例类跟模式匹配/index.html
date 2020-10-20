@@ -211,9 +211,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>样例类也是scala使用频率很高的语法，通过case进行创建，进行响应的控制，而模式匹配正是通过样例类进行相应的匹配操作</p>
-<a id="more"></a>
-
+        <p>样例类也是scala使用频率很高的语法，通过case进行创建，进行响应的控制，而模式匹配正是通过样例类进行相应的匹配操作<br><a id="more"></a></p>
 <ul>
 <li><p><strong>样例类</strong></p>
 <p>笼统来说，就是将想要匹配的类加上一个<code>case</code>关键字。</p>
@@ -247,7 +245,6 @@
 <li><p><strong>变量模式</strong></p>
 <p>变量模式可以匹配任何对象，这点跟通配模式相同，但是变量模式会将匹配的对象绑定到变量上，这样就可以使用这个变量进行下一步的处理</p>
 <figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="number">0</span> =&gt; <span class="string">&quot;zero&quot;</span></span><br><span class="line">  <span class="keyword">case</span> somethingElse =&gt; <span class="string">&quot;not zero&quot;</span> + somethingElse  <span class="comment">//这里将somethingElse用作一些处理，但是这还是局部变量</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p><code>scala</code>中一般会将<strong>小写</strong>开头的字面量当做<strong>变量匹配</strong>，要是想要继续使用小写开头字面量当做常量的话可以使用<code>this.pi, obj.pi</code>等进行处理</p>
 </li>
 <li><p><strong>构造方法模式</strong></p>
@@ -265,7 +262,6 @@
 <li><p><strong>带类型的模式</strong></p>
 <p>使用该模式来替代类型测试跟类型转换</p>
 <figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> s: <span class="type">String</span> =&gt; s.length</span><br><span class="line">  <span class="keyword">case</span> m:<span class="type">Map</span>[_, _] =&gt; m.size</span><br><span class="line">  <span class="keyword">case</span> _ =&gt; <span class="number">-1</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//不好的类型转换跟测试</span></span><br><span class="line"><span class="keyword">if</span>(x.isInstanceOf[<span class="type">String</span>])&#123;  <span class="comment">//类型判断</span></span><br><span class="line">  <span class="keyword">val</span> s = x.asInstanceOf[<span class="type">String</span>]  <span class="comment">//类型转换</span></span><br><span class="line">  s.length</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <ul>
 <li><p>擦除类型</p>
 <p>无法检查<code>Map中Int到Int</code>的映射，因为采用的都是一个叫做擦除式泛型，但是数组是例外</p>

@@ -3,12 +3,10 @@
   <entry>
     <title>DiplomacyNode</title>
     <url>/2020/09/27/chipyard/DiplomacyNode/</url>
-    <content><![CDATA[<p>Diplomacy Node是DOC中不同设备抽象成的节点，可以非常方便的在总线上添加设备，但是会有不同的节点用于支持不同的协议，下面就是关于不同节点的详细介绍</p>
-<a id="more"></a>
+    <content><![CDATA[<p>Diplomacy Node是DOC中不同设备抽象成的节点，可以非常方便的在总线上添加设备，但是会有不同的节点用于支持不同的协议，下面就是关于不同节点的详细介绍<br><a id="more"></a></p>
 <h1 id="Diplomacy-Node"><a href="#Diplomacy-Node" class="headerlink" title="Diplomacy Node"></a>Diplomacy Node</h1><p>Diplomacy将系统中不同的组件表现成有向无环图的节点，且节点有一些不同的类型</p>
 <h2 id="Client-Node"><a href="#Client-Node" class="headerlink" title="Client Node"></a>Client Node</h2><p>TileLink Client是通过在A通道上发送请求并在D通道上接收响应来启动TileLink事务的模块。如果实现了TL-C，则将会在B通道上接收到探针并在C通道上发出release信号，同时在E通道上授权确认。</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClient</span>(<span class="params">implicit p: <span class="type">Parameters</span></span>) <span class="keyword">extends</span> <span class="title">LazyModule</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> node = <span class="type">TLHelper</span>.makeClientNode(<span class="type">TLClientParameters</span>(</span><br><span class="line">    name = <span class="string">&quot;my-client&quot;</span>,</span><br><span class="line">    sourceId = <span class="type">IdRange</span>(<span class="number">0</span>, <span class="number">4</span>),</span><br><span class="line">    requestFifo = <span class="literal">true</span>,</span><br><span class="line">    visibility = <span class="type">Seq</span>(<span class="type">AddressSet</span>(<span class="number">0x10000</span>, <span class="number">0xffff</span>))))</span><br><span class="line"></span><br><span class="line">  <span class="keyword">lazy</span> <span class="keyword">val</span> module = <span class="keyword">new</span> <span class="type">LazyModuleImp</span>(<span class="keyword">this</span>) &#123;</span><br><span class="line">    <span class="keyword">val</span> (tl, edge) = node.out(<span class="number">0</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Rest of code here</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <ul>
 <li><p>name</p>
 <p>用于标识在Diplomacy中唯一的节点名称，string</p>
@@ -34,7 +32,6 @@
 </ul>
 <h2 id="Manager-Node"><a href="#Manager-Node" class="headerlink" title="Manager Node"></a>Manager Node</h2><p>TileLink Manager将从通道A接收来之client的消息，并且从通道D发送响应。</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyManager</span>(<span class="params">implicit p: <span class="type">Parameters</span></span>) <span class="keyword">extends</span> <span class="title">LazyModule</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> device = <span class="keyword">new</span> <span class="type">SimpleDevice</span>(<span class="string">&quot;my-device&quot;</span>, <span class="type">Seq</span>(<span class="string">&quot;tutorial,my-device0&quot;</span>))</span><br><span class="line">  <span class="keyword">val</span> beatBytes = <span class="number">8</span></span><br><span class="line">  <span class="keyword">val</span> node = <span class="type">TLHelper</span>.makeManagerNode(beatBytes, <span class="type">TLManagerParameters</span>(</span><br><span class="line">    address = <span class="type">Seq</span>(<span class="type">AddressSet</span>(<span class="number">0x20000</span>, <span class="number">0xfff</span>)),</span><br><span class="line">    resources = device.reg,</span><br><span class="line">    regionType = <span class="type">RegionType</span>.<span class="type">UNCACHED</span>,</span><br><span class="line">    executable = <span class="literal">true</span>,</span><br><span class="line">    supportsArithmetic = <span class="type">TransferSizes</span>(<span class="number">1</span>, beatBytes),</span><br><span class="line">    supportsLogical = <span class="type">TransferSizes</span>(<span class="number">1</span>, beatBytes),</span><br><span class="line">    supportsGet = <span class="type">TransferSizes</span>(<span class="number">1</span>, beatBytes),</span><br><span class="line">    supportsPutFull = <span class="type">TransferSizes</span>(<span class="number">1</span>, beatBytes),</span><br><span class="line">    supportsPutPartial = <span class="type">TransferSizes</span>(<span class="number">1</span>, beatBytes),</span><br><span class="line">    supportsHint = <span class="type">TransferSizes</span>(<span class="number">1</span>, beatBytes),</span><br><span class="line">    fifoId = <span class="type">Some</span>(<span class="number">0</span>)))</span><br><span class="line"></span><br><span class="line">  <span class="keyword">lazy</span> <span class="keyword">val</span> module = <span class="keyword">new</span> <span class="type">LazyModuleImp</span>(<span class="keyword">this</span>) &#123;</span><br><span class="line">    <span class="keyword">val</span> (tl, edge) = node.in(<span class="number">0</span>)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>使用makeManagerNode创建节点，接收两个参数</p>
 <ul>
 <li><p>beatBytes</p>
@@ -54,13 +51,10 @@
 <h2 id="Register-Node"><a href="#Register-Node" class="headerlink" title="Register Node"></a>Register Node</h2><p>虽然可以直接指定管理器节点并编写所有逻辑来处理TileLink请求，但使用寄存器节点通常会容易得多。 这种类型的节点提供了regmap方法，该方法允许指定控制/状态寄存器并自动生成用于处理TileLink协议的逻辑。</p>
 <h2 id="Identity-Node"><a href="#Identity-Node" class="headerlink" title="Identity Node"></a>Identity Node</h2><p>Identity Node同时拥有输入输出IO，它只是将输入不变地连接到输出。 该节点主要用于将多个节点组合为具有多个边缘的单个节点。 例如，假设我们有两个lazy client module，每个mocule都有自己的客户端节点。</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClient1</span>(<span class="params">implicit p: <span class="type">Parameters</span></span>) <span class="keyword">extends</span> <span class="title">LazyModule</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> node = <span class="type">TLHelper</span>.makeClientNode(<span class="string">&quot;my-client1&quot;</span>, <span class="type">IdRange</span>(<span class="number">0</span>, <span class="number">1</span>))</span><br><span class="line"></span><br><span class="line">  <span class="keyword">lazy</span> <span class="keyword">val</span> module = <span class="keyword">new</span> <span class="type">LazyModuleImp</span>(<span class="keyword">this</span>) &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClient2</span>(<span class="params">implicit p: <span class="type">Parameters</span></span>) <span class="keyword">extends</span> <span class="title">LazyModule</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> node = <span class="type">TLHelper</span>.makeClientNode(<span class="string">&quot;my-client2&quot;</span>, <span class="type">IdRange</span>(<span class="number">0</span>, <span class="number">1</span>))</span><br><span class="line"></span><br><span class="line">  <span class="keyword">lazy</span> <span class="keyword">val</span> module = <span class="keyword">new</span> <span class="type">LazyModuleImp</span>(<span class="keyword">this</span>) &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>现在，我们在另一个惰性模块中实例化这两个client，并将它们的节点公开为单个节点。</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClientGroup</span>(<span class="params">implicit p: <span class="type">Parameters</span></span>) <span class="keyword">extends</span> <span class="title">LazyModule</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> client1 = <span class="type">LazyModule</span>(<span class="keyword">new</span> <span class="type">MyClient1</span>)</span><br><span class="line">  <span class="keyword">val</span> client2 = <span class="type">LazyModule</span>(<span class="keyword">new</span> <span class="type">MyClient2</span>)</span><br><span class="line">  <span class="keyword">val</span> node = <span class="type">TLIdentityNode</span>()</span><br><span class="line"></span><br><span class="line">  node := client1.node</span><br><span class="line">  node := client2.node</span><br><span class="line"></span><br><span class="line">  <span class="keyword">lazy</span> <span class="keyword">val</span> module = <span class="keyword">new</span> <span class="type">LazyModuleImp</span>(<span class="keyword">this</span>) &#123;</span><br><span class="line">    <span class="comment">// Nothing to do here</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <h2 id="Adapter-Node"><a href="#Adapter-Node" class="headerlink" title="Adapter Node"></a>Adapter Node</h2><p>像Identity Node一样，Adapter接受一定数量的输入并产生相同数量的输出。 但是，与标识节点不同，适配器节点不会简单地通过未更改的连接，它可以更改输入和输出之间的逻辑和物理接口。</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">val</span> node = <span class="type">TLAdapterNode</span>(</span><br><span class="line">  clientFn = &#123; cp =&gt;</span><br><span class="line">    <span class="comment">// ..</span></span><br><span class="line">  &#125;,</span><br><span class="line">  managerFn = &#123; mp =&gt;</span><br><span class="line">    <span class="comment">// ..</span></span><br><span class="line">  &#125;)</span><br></pre></td></tr></table></figure>
-
 <p>clientFn函数将输入的TLClientPortParameters作为参数，并为输出返回相应的参数。 managerFn将输出的TLManagerPortParameters作为参数，并为输入返回相应的参数。</p>
 <h2 id="Nexus-Node"><a href="#Nexus-Node" class="headerlink" title="Nexus Node"></a>Nexus Node</h2><p>Nexus Node与Adapter Node类似，但是他的输入接口跟输出接口不同</p>
 <h2 id="edge"><a href="#edge" class="headerlink" title="edge"></a>edge</h2><p>Diplomacy库提供了四个运算符，可用于在节点之间形成边。</p>
@@ -74,7 +68,7 @@
 <li><p>:*=</p>
 <p>这也同样可以连接多个边，但是与上面不同的是这个边的数量由manager决定即左边的节点，用于连接nexus node 到多个manager节点。</p>
 </li>
-<li><p>:* = *</p>
+<li><p>:<em> = </em></p>
 <p>它基于操作员的任意一侧具有已知数量的边来创建多个边，可以在生成器中使用，在生成器中，直到运行时才知道两侧的节点类型。</p>
 </li>
 </ul>
@@ -89,113 +83,118 @@
   <entry>
     <title>ECC编码</title>
     <url>/2020/09/27/chipyard/ECC%E7%BC%96%E7%A0%81/</url>
-    <content><![CDATA[<p>ECC编码即（Error Correcting Code/Error Checking and Correcting），是使用海明码等方式对数据进行编码，从而可以得到数据检测以及校验功能</p>
-<a id="more"></a>
-
+    <content><![CDATA[<p>ECC编码即（Error Correcting Code/Error Checking and Correcting），是使用海明码等方式对数据进行编码，从而可以得到数据检测以及校验功能<br><a id="more"></a></p>
 <h2 id="code-amp-Decoding"><a href="#code-amp-Decoding" class="headerlink" title="code &amp; Decoding"></a>code &amp; Decoding</h2><p><strong>Decoding字段解释</strong></p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Decoding</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">uncorrected</span></span>: <span class="type">UInt</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">corrected</span></span>: <span class="type">UInt</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">correctable</span></span>: <span class="type">Bool</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">uncorrectable</span></span>: <span class="type">Bool</span> <span class="comment">// If true, correctable should be ignored</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">error</span> </span>= correctable || uncorrectable</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
+<div class="table-container">
 <table>
 <thead>
 <tr>
-<th align="center">name</th>
-<th align="center">description</th>
+<th style="text-align:center">name</th>
+<th style="text-align:center">description</th>
 </tr>
 </thead>
-<tbody><tr>
-<td align="center">uncorrected: UInt</td>
-<td align="center">原始数据，未纠错的码</td>
+<tbody>
+<tr>
+<td style="text-align:center">uncorrected: UInt</td>
+<td style="text-align:center">原始数据，未纠错的码</td>
 </tr>
 <tr>
-<td align="center">corrected: UInt</td>
-<td align="center">使用编码之后的数据</td>
+<td style="text-align:center">corrected: UInt</td>
+<td style="text-align:center">使用编码之后的数据</td>
 </tr>
 <tr>
-<td align="center">correctable: Bool</td>
-<td align="center">是够具有纠错能力</td>
+<td style="text-align:center">correctable: Bool</td>
+<td style="text-align:center">是够具有纠错能力</td>
 </tr>
 <tr>
-<td align="center">uncorrectable: Bool</td>
-<td align="center">检测是够出错，是够具有检测能力</td>
+<td style="text-align:center">uncorrectable: Bool</td>
+<td style="text-align:center">检测是够出错，是够具有检测能力</td>
 </tr>
 <tr>
-<td align="center">error: Bool</td>
-<td align="center">是够有错，true表示有错</td>
+<td style="text-align:center">error: Bool</td>
+<td style="text-align:center">是够有错，true表示有错</td>
 </tr>
-</tbody></table>
+</tbody>
+</table>
+</div>
 <p><strong>Code字段解释</strong></p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Code</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">canDetect</span></span>: <span class="type">Boolean</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">canCorrect</span></span>: <span class="type">Boolean</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">width</span></span>(w0: <span class="type">Int</span>): <span class="type">Int</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/** Encode x to a codeword suitable for decode.</span></span><br><span class="line"><span class="comment">   *  If poison is true, the decoded value will report uncorrectable</span></span><br><span class="line"><span class="comment">   *  error despite uncorrected == corrected == x.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">encode</span></span>(x: <span class="type">UInt</span>, poison: <span class="type">Bool</span> = <span class="type">Bool</span>(<span class="literal">false</span>)): <span class="type">UInt</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">decode</span></span>(x: <span class="type">UInt</span>): <span class="type">Decoding</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/** Copy the bits in x to the right bit positions in an encoded word,</span></span><br><span class="line"><span class="comment">   *  so that x === decode(swizzle(x)).uncorrected; but don&#x27;t generate</span></span><br><span class="line"><span class="comment">   *  the other code bits, so decode(swizzle(x)).error might be true.</span></span><br><span class="line"><span class="comment">   *  For codes for which this operation is not trivial, throw an</span></span><br><span class="line"><span class="comment">   *  UnsupportedOperationException.  */</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">swizzle</span></span>(x: <span class="type">UInt</span>): <span class="type">UInt</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
+<div class="table-container">
 <table>
 <thead>
 <tr>
-<th align="center">name</th>
-<th align="center">description</th>
+<th style="text-align:center">name</th>
+<th style="text-align:center">description</th>
 </tr>
 </thead>
-<tbody><tr>
-<td align="center">canDetect: Boolean</td>
-<td align="center">是否能进行检测错误</td>
+<tbody>
+<tr>
+<td style="text-align:center">canDetect: Boolean</td>
+<td style="text-align:center">是否能进行检测错误</td>
 </tr>
 <tr>
-<td align="center">canCorrect: Boolean</td>
-<td align="center">是够能进行纠正错误</td>
+<td style="text-align:center">canCorrect: Boolean</td>
+<td style="text-align:center">是够能进行纠正错误</td>
 </tr>
 <tr>
-<td align="center">width(w0: Int): Int</td>
-<td align="center">位宽</td>
+<td style="text-align:center">width(w0: Int): Int</td>
+<td style="text-align:center">位宽</td>
 </tr>
 <tr>
-<td align="center">encode(x: UInt, poison: Bool = Bool(false)): UInt</td>
-<td align="center">编码</td>
+<td style="text-align:center">encode(x: UInt, poison: Bool = Bool(false)): UInt</td>
+<td style="text-align:center">编码</td>
 </tr>
 <tr>
-<td align="center">decode(x: UInt): Decoding</td>
-<td align="center">解码，输出为Decoding</td>
+<td style="text-align:center">decode(x: UInt): Decoding</td>
+<td style="text-align:center">解码，输出为Decoding</td>
 </tr>
 <tr>
-<td align="center">swizzle(x: UInt): UInt</td>
-<td align="center"></td>
+<td style="text-align:center">swizzle(x: UInt): UInt</td>
 </tr>
-</tbody></table>
+</tbody>
+</table>
+</div>
 <h2 id="IdentityCode"><a href="#IdentityCode" class="headerlink" title="IdentityCode"></a>IdentityCode</h2><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">IdentityCode</span> <span class="keyword">extends</span> <span class="title">Code</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">canDetect</span> </span>= <span class="literal">false</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">canCorrect</span> </span>= <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">width</span></span>(w0: <span class="type">Int</span>) = w0</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">encode</span></span>(x: <span class="type">UInt</span>, poison: <span class="type">Bool</span> = <span class="type">Bool</span>(<span class="literal">false</span>)) = &#123;</span><br><span class="line">    require (poison.isLit &amp;&amp; poison.litValue == <span class="number">0</span>, <span class="string">&quot;IdentityCode can not be poisoned&quot;</span>)</span><br><span class="line">    x</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">swizzle</span></span>(x: <span class="type">UInt</span>) = x</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">decode</span></span>(y: <span class="type">UInt</span>) = <span class="keyword">new</span> <span class="type">Decoding</span> &#123;</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">uncorrected</span> </span>= y</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">corrected</span> </span>= y</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">correctable</span> </span>= <span class="type">Bool</span>(<span class="literal">false</span>)</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">uncorrectable</span> </span>= <span class="type">Bool</span>(<span class="literal">false</span>)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>继承了Code，这是不使用编码方式，所以所有的选项都标记为false或者跟源码一致</p>
 <h2 id="ParityCode"><a href="#ParityCode" class="headerlink" title="ParityCode"></a>ParityCode</h2><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ParityCode</span> <span class="keyword">extends</span> <span class="title">Code</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">canDetect</span> </span>= <span class="literal">true</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">canCorrect</span> </span>= <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">width</span></span>(w0: <span class="type">Int</span>) = w0+<span class="number">1</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">encode</span></span>(x: <span class="type">UInt</span>, poison: <span class="type">Bool</span> = <span class="type">Bool</span>(<span class="literal">false</span>)) = <span class="type">Cat</span>(x.xorR ^ poison, x)</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">swizzle</span></span>(x: <span class="type">UInt</span>) = <span class="type">Cat</span>(<span class="literal">false</span>.<span class="type">B</span>, x)</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">decode</span></span>(y: <span class="type">UInt</span>) = <span class="keyword">new</span> <span class="type">Decoding</span> &#123;</span><br><span class="line">    <span class="keyword">val</span> uncorrected = y(y.getWidth<span class="number">-2</span>,<span class="number">0</span>)</span><br><span class="line">    <span class="keyword">val</span> corrected = uncorrected</span><br><span class="line">    <span class="keyword">val</span> correctable = <span class="type">Bool</span>(<span class="literal">false</span>)</span><br><span class="line">    <span class="keyword">val</span> uncorrectable = y.xorR</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>奇偶校验码，即，这里使用的是偶校验，检查源字符串中的1的个数，要是1的个数为奇数的话，补一个1使得1的个个数为偶数</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
-<th align="center">name</th>
-<th align="center">description</th>
+<th style="text-align:center">name</th>
+<th style="text-align:center">description</th>
 </tr>
 </thead>
-<tbody><tr>
-<td align="center">校验方式</td>
-<td align="center">偶校验</td>
+<tbody>
+<tr>
+<td style="text-align:center">校验方式</td>
+<td style="text-align:center">偶校验</td>
 </tr>
 <tr>
-<td align="center">canDetect</td>
-<td align="center">可以检错</td>
+<td style="text-align:center">canDetect</td>
+<td style="text-align:center">可以检错</td>
 </tr>
 <tr>
-<td align="center">canCorrect</td>
-<td align="center">不能纠错</td>
+<td style="text-align:center">canCorrect</td>
+<td style="text-align:center">不能纠错</td>
 </tr>
 <tr>
-<td align="center">width</td>
-<td align="center">比原码多一位</td>
+<td style="text-align:center">width</td>
+<td style="text-align:center">比原码多一位</td>
 </tr>
 <tr>
-<td align="center">encode</td>
-<td align="center">最后一位编码0或者1</td>
+<td style="text-align:center">encode</td>
+<td style="text-align:center">最后一位编码0或者1</td>
 </tr>
 <tr>
-<td align="center">decode</td>
-<td align="center">返回Decoding</td>
+<td style="text-align:center">decode</td>
+<td style="text-align:center">返回Decoding</td>
 </tr>
-</tbody></table>
+</tbody>
+</table>
+</div>
 <h2 id="SECCode"><a href="#SECCode" class="headerlink" title="SECCode"></a>SECCode</h2><p>汉明码是一种能够检测多达两个同时发生的位错误并纠正单个位错误的分组代码。它是由RW Hamming开发的，用于纠错。</p>
 <p>在这种编码方法中，源通过在消息中插入冗余位来对消息进行编码。这些冗余位是多余的位，它们会生成并插入到消息本身的特定位置，以实现错误检测和纠正。当目的地接收到此消息时，它将执行重新计算以检测错误并查找出现错误的位位置。</p>
 <p>具体分为三个步骤</p>
@@ -204,14 +203,17 @@
 <li>确定冗余在的具体位置</li>
 <li>计算每个冗余位的值</li>
 </ul>
-<h3 id="计算冗余位数"><a href="#计算冗余位数" class="headerlink" title="计算冗余位数"></a>计算冗余位数</h3><p>若数据位有m位，则将r个冗余位加入数据中，则一共有（m+r+1）个状态，其中m+r表示bit位信息，多余的一位表示无错状态。而r位冗余最多可以表示2<sup>r</sup>个状态，所以2<sup>r</sup>个状态比如大于等于（m+r+1）<br>$$<br>2^r &gt;= m+r+1<br>$$<br>例如一个数据有7位，则m=7，带入公示中计算得到r=4，因此可以记做（11，4）编码</p>
-<h3 id="确定冗余的位置"><a href="#确定冗余的位置" class="headerlink" title="确定冗余的位置"></a>确定冗余的位置</h3><p>$r_n$表示第冗余所在的位置，比如$r_1$表示第一个冗余所在的位置，$r_2$表示第二个冗余所在的位置，以此类推，则冗余所在数据中具体的位置可以由一下公式计算得到<br>$$<br>r_n = 2^n -1<br>$$<br><img src="/picture/2010/positioning_redundant_bits.jpg" alt="img"></p>
+<h3 id="计算冗余位数"><a href="#计算冗余位数" class="headerlink" title="计算冗余位数"></a>计算冗余位数</h3><p>若数据位有m位，则将r个冗余位加入数据中，则一共有（m+r+1）个状态，其中m+r表示bit位信息，多余的一位表示无错状态。而r位冗余最多可以表示2<sup>r</sup>个状态，所以2<sup>r</sup>个状态比如大于等于（m+r+1）</p>
+<script type="math/tex; mode=display">
+2^r >= m+r+1</script><p>例如一个数据有7位，则m=7，带入公示中计算得到r=4，因此可以记做（11，4）编码</p>
+<h3 id="确定冗余的位置"><a href="#确定冗余的位置" class="headerlink" title="确定冗余的位置"></a>确定冗余的位置</h3><p>$r_n$表示第冗余所在的位置，比如$r_1$表示第一个冗余所在的位置，$r_2$表示第二个冗余所在的位置，以此类推，则冗余所在数据中具体的位置可以由一下公式计算得到</p>
+<script type="math/tex; mode=display">
+r_n = 2^n -1</script><p><img src="/picture/2010/positioning_redundant_bits.jpg" alt="img"></p>
 <h3 id="计算冗余位"><a href="#计算冗余位" class="headerlink" title="计算冗余位"></a>计算冗余位</h3><p>r会指示具体错误是哪一位，将$r_i$具体看作是数的编码，则$r_1$将会指示所有的最后一位为1的编码，如1、3、5、7、9等奇数，转换为二进制最后一位都是1，则都会使用奇偶校验的方法异或之后放到$r_1$中</p>
 <p>$r_2$指示第二位为1的编码，如2、3、6、7、10、11，这些位也将使用奇偶校验的方式之后填入$r_2$中，校验表可以如下图所示。</p>
 <p><img src="/picture/2010/image-20200926155848830.png" alt="image-20200926155848830"></p>
 <p>将对应的校验的数据按需奇偶校验，填入适当的位置，最终得到结果。</p>
 <h3 id="对应代码"><a href="#对应代码" class="headerlink" title="对应代码"></a>对应代码</h3><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">encode</span></span>(x: <span class="type">UInt</span>, poison: <span class="type">Bool</span> = <span class="type">Bool</span>(<span class="literal">false</span>)) = &#123;</span><br><span class="line">  <span class="keyword">val</span> k = x.getWidth</span><br><span class="line">  <span class="keyword">val</span> n = width(k)</span><br><span class="line">  <span class="keyword">val</span> (_, _, syndrome) = impl(n, k)</span><br><span class="line"></span><br><span class="line">  require ((poison.isLit &amp;&amp; poison.litValue == <span class="number">0</span>) || poisonous(n), <span class="string">s&quot;SEC code of length <span class="subst">$&#123;n&#125;</span> cannot be poisoned&quot;</span>)</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* By setting the entire syndrome on poison, the corrected bit falls off the end of the code */</span></span><br><span class="line">  <span class="keyword">val</span> syndromeUInt = <span class="type">Vec</span>.tabulate(n-k) &#123; j =&gt; (syndrome(j)(k<span class="number">-1</span>, <span class="number">0</span>) &amp; x).xorR ^ poison &#125;.asUInt</span><br><span class="line">  <span class="type">Cat</span>(syndromeUInt, x)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>编码方式，首先k是对应的数据位长度，使用<code>width</code>计算出需要的hamming码的长度，传入impl函数，impl返回的syndrome就是计算hamming码对应编码的函数，他是使用system code的编发方式，不同上面的<code>PPxPxxxPxxxxxxxP</code>，他通过数据的转换， 转换成对应的<code>xxxxxxxxxxxPPPPP</code>对应的形式。</p>
 <h2 id="SECDEDCode"><a href="#SECDEDCode" class="headerlink" title="SECDEDCode"></a>SECDEDCode</h2><p>Single Error Correction, Double Error Detection，即能纠正一位错误，并能检测出两位错误，留坑算法先不解读。</p>
 ]]></content>
@@ -227,7 +229,6 @@
     <url>/2020/09/22/chipyard/config/</url>
     <content><![CDATA[<p>config是chipyard中的配置查找模块，实现了具体的查询逻辑</p>
 <a id="more"></a>
-
 <p>在文件</p>
 <blockquote>
 <p>generators/rocket-chip/api-config-chipsalliance/design/craft/src/config/Config.scala中。</p>
@@ -238,28 +239,22 @@
 </blockquote>
 <p>以上的所有类中，暴露给外界的接口为Parameter的子类Config，其他的不是私有类就是抽象类，不能给外界继承。该package的主要目的是为了查找</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">BaseConfig</span> <span class="keyword">extends</span> <span class="title">Config</span>(<span class="params"></span></span></span><br><span class="line"><span class="class"><span class="params">  new <span class="type">WithDefaultMemPort</span>(</span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithDefaultMMIOPort</span>(<span class="params"></span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithDefaultSlavePort</span>(<span class="params"></span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithTimebase</span>(<span class="params"><span class="type">BigInt</span>(1000000</span>)) <span class="title">++</span> <span class="title">//</span> 1 <span class="title">MHz</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithDTS</span>(<span class="params">&quot;freechips,rocketchip-unknown&quot;, <span class="type">Nil</span></span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithNExtTopInterrupts</span>(<span class="params">2</span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">BaseSubsystemConfig</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="class">)</span></span><br></pre></td></tr></table></figure>
-
 <p>可以看到BaseConfig继承了Config类，使用了其中的<code>++</code>方法构造View链，在使用其中的内部查找方法，返回View。</p>
 <h2 id="Field"><a href="#Field" class="headerlink" title="Field"></a>Field</h2><p>View中的主要数据结构，为待查找的对象</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Field</span>[<span class="type">T</span>] <span class="title">private</span> (<span class="params">val default: <span class="type">Option</span>[<span class="type">T</span>]</span>)</span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">this</span></span>() = <span class="keyword">this</span>(<span class="type">None</span>)</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">this</span></span>(<span class="keyword">default</span>: <span class="type">T</span>) = <span class="keyword">this</span>(<span class="type">Some</span>(<span class="keyword">default</span>))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>接收一个Option的值，其中有两个辅助构造方法，无参的构造方法返回None，有参数的构造方法返回对应的值。</p>
 <h2 id="View"><a href="#View" class="headerlink" title="View"></a>View</h2><p>为配置视图，通过View才能看到配置，进行查找。</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">View</span> </span>&#123;</span><br><span class="line">  <span class="keyword">final</span> <span class="function"><span class="keyword">def</span> <span class="title">apply</span></span>[<span class="type">T</span>](pname: <span class="type">Field</span>[<span class="type">T</span>]): <span class="type">T</span> = apply(pname, <span class="keyword">this</span>)</span><br><span class="line">  <span class="keyword">final</span> <span class="function"><span class="keyword">def</span> <span class="title">apply</span></span>[<span class="type">T</span>](pname: <span class="type">Field</span>[<span class="type">T</span>], site: <span class="type">View</span>): <span class="type">T</span> = &#123;</span><br><span class="line">    <span class="keyword">val</span> out = find(pname, site)</span><br><span class="line">    require (out.isDefined, <span class="string">s&quot;Key <span class="subst">$&#123;pname&#125;</span> is not defined in Parameters&quot;</span>)</span><br><span class="line">    out.get</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">final</span> <span class="function"><span class="keyword">def</span> <span class="title">lift</span></span>[<span class="type">T</span>](pname: <span class="type">Field</span>[<span class="type">T</span>]): <span class="type">Option</span>[<span class="type">T</span>] = lift(pname, <span class="keyword">this</span>)</span><br><span class="line">  <span class="keyword">final</span> <span class="function"><span class="keyword">def</span> <span class="title">lift</span></span>[<span class="type">T</span>](pname: <span class="type">Field</span>[<span class="type">T</span>], site: <span class="type">View</span>): <span class="type">Option</span>[<span class="type">T</span>] = find(pname, site).map(_.asInstanceOf[<span class="type">T</span>])</span><br><span class="line"></span><br><span class="line">  <span class="keyword">protected</span>[config] <span class="function"><span class="keyword">def</span> <span class="title">find</span></span>[<span class="type">T</span>](pname: <span class="type">Field</span>[<span class="type">T</span>], site: <span class="type">View</span>): <span class="type">Option</span>[<span class="type">T</span>]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>定义了两个apply方法，其中第一个只接收待查找的对象，第二个接收待查找的对象跟需要查找的View，但是第一个apply会调用第二个apply方法，待查找的对象为本身this。</p>
 <p>第二个apply方法会调用内部的find方法，find接收待查找对象跟需要查找的 View，返回一个Option的值，在View中定义的find为抽象类，具体实现是在他的子类中。</p>
 <h3 id="TerminalView"><a href="#TerminalView" class="headerlink" title="TerminalView"></a>TerminalView</h3><p>为View的三个子类之一，实现了find方法。</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">TerminalView</span> <span class="keyword">extends</span> <span class="title">View</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">find</span></span>[<span class="type">T</span>](pname: <span class="type">Field</span>[<span class="type">T</span>], site: <span class="type">View</span>): <span class="type">Option</span>[<span class="type">T</span>] = pname.<span class="keyword">default</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>表示的是要是在链表中找不到对应的View的话，返回default的值，而最后的Filed必然是调用空的构造函数，所以最终查找不到将会返回None</p>
 <h3 id="ChainView"><a href="#ChainView" class="headerlink" title="ChainView"></a>ChainView</h3><p>这是想把两个View结合在一起。</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">ChainView</span>(<span class="params">head: <span class="type">Parameters</span>, tail: <span class="type">View</span></span>) <span class="keyword">extends</span> <span class="title">View</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">find</span></span>[<span class="type">T</span>](pname: <span class="type">Field</span>[<span class="type">T</span>], site: <span class="type">View</span>) = head.chain(site, tail, pname)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>接收一个parameters与一个View，实现了find方法，find方法就是调用parameters中的chain方法</p>
 <h3 id="Parameters"><a href="#Parameters" class="headerlink" title="Parameters"></a>Parameters</h3><p>Parameters为View的子类，实现了find方法.</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Parameters</span> <span class="keyword">extends</span> <span class="title">View</span> </span>&#123;</span><br><span class="line">  <span class="keyword">final</span> <span class="function"><span class="keyword">def</span> <span class="title">++</span> </span>(x: <span class="type">Parameters</span>): <span class="type">Parameters</span> =</span><br><span class="line">    <span class="keyword">new</span> <span class="type">ChainParameters</span>(<span class="keyword">this</span>, x)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">final</span> <span class="function"><span class="keyword">def</span> <span class="title">alter</span></span>(f: (<span class="type">View</span>, <span class="type">View</span>, <span class="type">View</span>) =&gt; <span class="type">PartialFunction</span>[<span class="type">Any</span>,<span class="type">Any</span>]): <span class="type">Parameters</span> =</span><br><span class="line">    <span class="type">Parameters</span>(f) ++ <span class="keyword">this</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">final</span> <span class="function"><span class="keyword">def</span> <span class="title">alterPartial</span></span>(f: <span class="type">PartialFunction</span>[<span class="type">Any</span>,<span class="type">Any</span>]): <span class="type">Parameters</span> =</span><br><span class="line">    <span class="type">Parameters</span>((_,_,_) =&gt; f) ++ <span class="keyword">this</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">final</span> <span class="function"><span class="keyword">def</span> <span class="title">alterMap</span></span>(m: <span class="type">Map</span>[<span class="type">Any</span>,<span class="type">Any</span>]): <span class="type">Parameters</span> =</span><br><span class="line">    <span class="keyword">new</span> <span class="type">MapParameters</span>(m) ++ <span class="keyword">this</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">protected</span>[config] <span class="function"><span class="keyword">def</span> <span class="title">chain</span></span>[<span class="type">T</span>](site: <span class="type">View</span>, tail: <span class="type">View</span>, pname: <span class="type">Field</span>[<span class="type">T</span>]): <span class="type">Option</span>[<span class="type">T</span>]</span><br><span class="line">  <span class="keyword">protected</span>[config] <span class="function"><span class="keyword">def</span> <span class="title">find</span></span>[<span class="type">T</span>](pname: <span class="type">Field</span>[<span class="type">T</span>], site: <span class="type">View</span>) = chain(site, <span class="keyword">new</span> <span class="type">TerminalView</span>, pname)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">object</span> <span class="title">Parameters</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">empty</span></span>: <span class="type">Parameters</span> = <span class="keyword">new</span> <span class="type">EmptyParameters</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">apply</span></span>(f: (<span class="type">View</span>, <span class="type">View</span>, <span class="type">View</span>) =&gt; <span class="type">PartialFunction</span>[<span class="type">Any</span>,<span class="type">Any</span>]): <span class="type">Parameters</span> = <span class="keyword">new</span> <span class="type">PartialParameters</span>(f)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <ul>
 <li>chain是一个抽象方法为一个链式查找逻辑，其中site表示当前要查找的Veiw，tail表示下一个要查找的View，pname为需要查找的对象。</li>
 <li>find将查找逻辑代理给chain方法，所以具体的查找逻辑最终还是在Parameters的子类当中。</li>
@@ -275,10 +270,8 @@
 <p>最后parameters的调用方法如下所示</p>
 <p><img src="/picture/2010/image-20200915105005563.png" alt="image-20200915105005563"></p>
 <h4 id="EmptyParameters"><a href="#EmptyParameters" class="headerlink" title="EmptyParameters"></a>EmptyParameters</h4><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">EmptyParameters</span> <span class="keyword">extends</span> <span class="title">Parameters</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">chain</span></span>[<span class="type">T</span>](site: <span class="type">View</span>, tail: <span class="type">View</span>, pname: <span class="type">Field</span>[<span class="type">T</span>]) = tail.find(pname, site)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>在没有配置项的情况下，直接在下一个View中进行查找，调用tail的find方法。</p>
 <h4 id="PartialParameter"><a href="#PartialParameter" class="headerlink" title="PartialParameter"></a>PartialParameter</h4><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">PartialParameters</span>(<span class="params">f: (<span class="type">View</span>, <span class="type">View</span>, <span class="type">View</span></span>) <span class="title">=&gt;</span> <span class="title">PartialFunction</span>[<span class="type">Any</span>,<span class="type">Any</span>]) <span class="keyword">extends</span> <span class="title">Parameters</span> </span>&#123;</span><br><span class="line">  <span class="keyword">protected</span>[config] <span class="function"><span class="keyword">def</span> <span class="title">chain</span></span>[<span class="type">T</span>](site: <span class="type">View</span>, tail: <span class="type">View</span>, pname: <span class="type">Field</span>[<span class="type">T</span>]) = &#123;</span><br><span class="line">    <span class="keyword">val</span> g = f(site, <span class="keyword">this</span>, tail)</span><br><span class="line">    <span class="keyword">if</span> (g.isDefinedAt(pname)) <span class="type">Some</span>(g.apply(pname).asInstanceOf[<span class="type">T</span>]) <span class="keyword">else</span> tail.find(pname, site)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>该函数参数为一个成员函数，类型为(View, View, View) =&gt; PartialFunction(Any, Any)</p>
 <ul>
 <li>接收三个类型为View的参数</li>
@@ -286,25 +279,20 @@
 </ul>
 <p>实现的chain方法的查找逻辑是首先生成一个匹配函数g，g是一个PartialFunction，使用isDefineAt方法查找是否匹配当前View，若不匹配，在下一个View中查找</p>
 <h4 id="MapParameters"><a href="#MapParameters" class="headerlink" title="MapParameters"></a>MapParameters</h4><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">MapParameters</span>(<span class="params">map: <span class="type">Map</span>[<span class="type">Any</span>, <span class="type">Any</span>]</span>) <span class="keyword">extends</span> <span class="title">Parameters</span> </span>&#123;</span><br><span class="line">  <span class="keyword">protected</span>[config] <span class="function"><span class="keyword">def</span> <span class="title">chain</span></span>[<span class="type">T</span>](site: <span class="type">View</span>, tail: <span class="type">View</span>, pname: <span class="type">Field</span>[<span class="type">T</span>]) = &#123;</span><br><span class="line">    <span class="keyword">val</span> g = map.get(pname)</span><br><span class="line">    <span class="keyword">if</span> (g.isDefined) <span class="type">Some</span>(g.get.asInstanceOf[<span class="type">T</span>]) <span class="keyword">else</span> tail.find(pname, site)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>这个跟上一个类似，但是使用的是Map查找而不是PartialFunction，若当前View存在返回，不匹配的话将在下一个View中查找。</p>
 <h4 id="ChainParameters"><a href="#ChainParameters" class="headerlink" title="ChainParameters"></a>ChainParameters</h4><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">ChainView</span>(<span class="params">head: <span class="type">Parameters</span>, tail: <span class="type">View</span></span>) <span class="keyword">extends</span> <span class="title">View</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">find</span></span>[<span class="type">T</span>](pname: <span class="type">Field</span>[<span class="type">T</span>], site: <span class="type">View</span>) = head.chain(site, tail, pname)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>该函数接收两个参数的Parameters，他将两个Parameter连接起来，首先在x中进行查找，再在y中进行查找。</p>
 <h4 id="Config"><a href="#Config" class="headerlink" title="Config"></a>Config</h4><p>最后是暴露给外界的查找接口Config</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Config</span>(<span class="params">p: <span class="type">Parameters</span></span>) <span class="keyword">extends</span> <span class="title">Parameters</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">this</span></span>(f: (<span class="type">View</span>, <span class="type">View</span>, <span class="type">View</span>) =&gt; <span class="type">PartialFunction</span>[<span class="type">Any</span>,<span class="type">Any</span>]) = <span class="keyword">this</span>(<span class="type">Parameters</span>(f))</span><br><span class="line"></span><br><span class="line">  <span class="keyword">protected</span>[config] <span class="function"><span class="keyword">def</span> <span class="title">chain</span></span>[<span class="type">T</span>](site: <span class="type">View</span>, tail: <span class="type">View</span>, pname: <span class="type">Field</span>[<span class="type">T</span>]) = p.chain(site, tail, pname)</span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">toString</span> </span>= <span class="keyword">this</span>.getClass.getSimpleName</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">toInstance</span> </span>= <span class="keyword">this</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>有两种构造方法，第一种是字节传入一个Parameters，这种方法会直接调用chain方法进行查找，另外一个辅助构造方法接收三个参数的View，这将调用Parameter的伴生对象中的apply方法进行查找，与alterPartial类似。</p>
 <h2 id="使用规范"><a href="#使用规范" class="headerlink" title="使用规范"></a>使用规范</h2><ul>
 <li><p>直接调用Parameters的伴生对象中的apple方法</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">BaseSubsystemConfig</span> <span class="keyword">extends</span> <span class="title">Config</span> (<span class="params">(site, here, up</span>) <span class="title">=&gt;</span> </span>&#123;</span><br><span class="line">  <span class="comment">// Tile parameters</span></span><br><span class="line">  <span class="keyword">case</span> <span class="type">PgLevels</span> =&gt; <span class="keyword">if</span> (site(<span class="type">XLen</span>) == <span class="number">64</span>) <span class="number">3</span> <span class="comment">/* Sv39 */</span> <span class="keyword">else</span> <span class="number">2</span> <span class="comment">/* Sv32 */</span></span><br><span class="line">  <span class="keyword">case</span> <span class="type">XLen</span> =&gt; <span class="number">64</span> <span class="comment">// Applies to all cores</span></span><br><span class="line">  <span class="keyword">case</span> <span class="type">MaxHartIdBits</span> =&gt; log2Up(site(<span class="type">RocketTilesKey</span>).size)</span><br><span class="line">  <span class="comment">// Interconnect parameters</span></span><br><span class="line">  <span class="keyword">case</span> <span class="type">SystemBusKey</span> =&gt; <span class="type">SystemBusParams</span>(</span><br><span class="line">    beatBytes = site(<span class="type">XLen</span>)/<span class="number">8</span>,</span><br><span class="line">    blockBytes = site(<span class="type">CacheBlockBytes</span>))</span><br><span class="line">  <span class="keyword">case</span> <span class="type">ControlBusKey</span> =&gt; <span class="type">PeripheryBusParams</span>(</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
-
 <p>由于apply方法返回的是一个PartialFunction，所以使用可以使用case方法判断查询到了具体的哪个对象</p>
 </li>
 <li><p>添加配置</p>
 <p>Config类继承了Parameters中的<code>++</code>方法，所以可以直接使用该方法来添加View</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">BaseConfig</span> <span class="keyword">extends</span> <span class="title">Config</span>(<span class="params"></span></span></span><br><span class="line"><span class="class"><span class="params">  new <span class="type">WithDefaultMemPort</span>(</span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithDefaultMMIOPort</span>(<span class="params"></span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithDefaultSlavePort</span>(<span class="params"></span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithTimebase</span>(<span class="params"><span class="type">BigInt</span>(1000000</span>)) <span class="title">++</span> <span class="title">//</span> 1 <span class="title">MHz</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithDTS</span>(<span class="params">&quot;freechips,rocketchip-unknown&quot;, <span class="type">Nil</span></span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">WithNExtTopInterrupts</span>(<span class="params">2</span>) <span class="title">++</span></span></span><br><span class="line"><span class="class">  <span class="title">new</span> <span class="title">BaseSubsystemConfig</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="class">)</span></span><br></pre></td></tr></table></figure>
-
 </li>
 </ul>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>config中实现了查找的逻辑，与外部的调用site，here，up相对应，实现了两种查找方法，一种是递归动态的查找，使用的是PartialFunction技术，一种是静态的查找，直接使用Map中的映射进行。</p>
@@ -319,15 +307,11 @@
   <entry>
     <title>Decoupled用法</title>
     <url>/2020/09/26/chisel/Decoupled%E7%94%A8%E6%B3%95/</url>
-    <content><![CDATA[<p>Decoupled 即为接口包装一层valid 和 ready ，<code>decoupled 默认方向为输出</code>，如果需要输入，可以加.flip, Decoupled 可以直接调用Bundle或者Bits，Bundle 内的端口也应该用bits定义</p>
-<a id="more"></a>
-
+    <content><![CDATA[<p>Decoupled 即为接口包装一层valid 和 ready ，<code>decoupled 默认方向为输出</code>，如果需要输入，可以加.flip, Decoupled 可以直接调用Bundle或者Bits，Bundle 内的端口也应该用bits定义<br><a id="more"></a></p>
 <p>Example1:</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">testIO</span> <span class="keyword">extends</span> <span class="title">Bundle</span> </span>&#123;</span><br><span class="line"><span class="keyword">val</span> a = <span class="type">Bits</span>(<span class="number">3.</span><span class="type">W</span>)</span><br><span class="line"><span class="keyword">val</span> b = <span class="type">Bits</span>(<span class="number">2.</span><span class="type">W</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">testmodule</span> <span class="keyword">extends</span> <span class="title">Module</span></span>&#123;</span><br><span class="line"><span class="keyword">val</span> io = <span class="type">IO</span>( <span class="keyword">new</span> <span class="type">Bundle</span>&#123;</span><br><span class="line">   <span class="keyword">val</span> test = <span class="type">Decoupled</span>(<span class="keyword">new</span> testIO)</span><br><span class="line"></span><br><span class="line">&#125;)</span><br><span class="line">io.test.valid := io.test.ready</span><br><span class="line">io.test.bits.a := <span class="number">1.</span><span class="type">U</span></span><br><span class="line">io.test.bits.b := <span class="number">1.</span><span class="type">U</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line">println(getVerilog(<span class="keyword">new</span> testmodule))</span><br></pre></td></tr></table></figure>
-
 <p>生成的verilog为</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">module cmd5Helpertestmodule(</span><br><span class="line">  input        clock,</span><br><span class="line">  input        reset,</span><br><span class="line">  input        io_test_ready,</span><br><span class="line">  output       io_test_valid,</span><br><span class="line">  output [<span class="number">2</span>:<span class="number">0</span>] io_test_bits_a,</span><br><span class="line">  output [<span class="number">1</span>:<span class="number">0</span>] io_test_bits_b</span><br><span class="line">);</span><br><span class="line">  assign io_test_valid = io_test_ready;</span><br><span class="line">  assign io_test_bits_a = <span class="number">3</span><span class="symbol">&#x27;h1</span>; </span><br><span class="line">  assign io_test_bits_b = <span class="number">2</span><span class="symbol">&#x27;h1</span>; </span><br><span class="line">endmodule</span><br></pre></td></tr></table></figure>
-
 ]]></content>
       <categories>
         <category>chisel</category>
@@ -339,9 +323,7 @@
   <entry>
     <title>不同reg的用法</title>
     <url>/2020/09/25/chisel/%E4%B8%8D%E5%90%8Creg%E7%9A%84%E7%94%A8%E6%B3%95/</url>
-    <content><![CDATA[<p><code>reg</code>是寄存器，会使得数据传输延时一个节拍，在时序电路中常用</p>
-<a id="more"></a>
-
+    <content><![CDATA[<p><code>reg</code>是寄存器，会使得数据传输延时一个节拍，在时序电路中常用<br><a id="more"></a></p>
 <h2 id="Reg"><a href="#Reg" class="headerlink" title="Reg"></a>Reg</h2><p>函数原型</p>
 <blockquote>
 <p>def apply[T &lt;: [Data]] (t: T = null, next: T = null, init: T = null)(<em>implicit</em> sourceInfo: SourceInfo, compileOptions: [CompileOptions]): T</p>
@@ -379,7 +361,6 @@
 </li>
 <li><p>可以使用寄存器类型进行统一申明</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyBundle</span> <span class="keyword">extends</span> <span class="title">Bundle</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> unknown = <span class="type">UInt</span>()</span><br><span class="line">  <span class="keyword">val</span> known   = <span class="type">UInt</span>(<span class="number">8.</span><span class="type">W</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">val</span> w1 = <span class="type">Reg</span>(<span class="keyword">new</span> <span class="type">MyBundle</span>)</span><br><span class="line"><span class="keyword">val</span> w2 = <span class="type">RegInit</span>(w1)</span><br><span class="line"><span class="comment">// Width of w2.unknown is inferred</span></span><br><span class="line"><span class="comment">// Width of w2.known is set to 8</span></span><br></pre></td></tr></table></figure>
-
 </li>
 </ul>
 <h2 id="RegNext"><a href="#RegNext" class="headerlink" title="RegNext"></a>RegNext</h2><p>函数原型</p>
@@ -404,7 +385,6 @@
 </li>
 <li><p>可是使用Bundle进行自动的推断初始化</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyBundle</span> <span class="keyword">extends</span> <span class="title">Bundle</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> x = <span class="type">UInt</span>(<span class="number">4.</span><span class="type">W</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">val</span> foo = <span class="type">Wire</span>(<span class="keyword">new</span> <span class="type">MyBundle</span>)     <span class="comment">// the width of foo.x is 4</span></span><br><span class="line"><span class="keyword">val</span> bar = <span class="type">RegNext</span>(foo)           <span class="comment">// the width of bar.x is 4</span></span><br></pre></td></tr></table></figure>
-
 </li>
 </ul>
 <h2 id="RegEnable"><a href="#RegEnable" class="headerlink" title="RegEnable"></a>RegEnable</h2><p>函数原型</p>
@@ -426,7 +406,6 @@
 </ul>
 <p><strong>使用方法</strong></p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">val</span> regWithEnableAndReset = <span class="type">RegEnable</span>(nextVal, <span class="number">0.</span><span class="type">U</span>, ena)  <span class="comment">//使用第一个函数原型进行初始化</span></span><br><span class="line"><span class="keyword">val</span> regWithEnable = <span class="type">RegEnable</span>(nextVal, ena)  <span class="comment">//使用第二个函数原型进行初始户</span></span><br></pre></td></tr></table></figure>
-
 <h2 id="ShiftRegister"><a href="#ShiftRegister" class="headerlink" title="ShiftRegister"></a>ShiftRegister</h2><p>这是延时寄存器</p>
 <p>函数原型</p>
 <blockquote>
@@ -449,7 +428,6 @@
 </ul>
 <p><strong>使用方法</strong></p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">val</span> regDelayTwoReset = <span class="type">ShiftRegister</span>(nextVal, <span class="number">2</span>, <span class="number">0.</span><span class="type">U</span>, ena) <span class="comment">//使用第一个函数原型进行初始化</span></span><br><span class="line"><span class="keyword">val</span> regDelayTwo = <span class="type">ShiftRegister</span>(nextVal, <span class="number">2</span>, ena)  <span class="comment">//使用第二个函数原型进行初始化</span></span><br></pre></td></tr></table></figure>
-
 ]]></content>
       <categories>
         <category>chisel</category>
@@ -461,12 +439,25 @@
   <entry>
     <title>mrmr算法</title>
     <url>/2020/10/20/machineLearning/mrmr%E7%AE%97%E6%B3%95/</url>
-    <content><![CDATA[<p>mrmr算法是特征选择算法，通过筛选出与结果最相关且特征之间最小冗余的特征进行特征选择， 其基础是利用互信息。</p>
-<a id="more"></a>
+    <content><![CDATA[<p>mrmr算法是特征选择算法，通过筛选出与结果最相关且特征之间最小冗余的特征进行特征选择， 其基础是利用互信息。<br><a id="more"></a></p>
 <h2 id="互信息的理解"><a href="#互信息的理解" class="headerlink" title="互信息的理解"></a>互信息的理解</h2><p>若两个变量独立，则有$P(X, Y)=P(X)P(Y)$，这个公式说明已知X，将不会对Y的分布造成任何的影响，即$P(Y)=P(Y|X)$，独立性反应了给定$X$之后，会不会对$Y$带来额外的信息，但是这只能表示两个随机变量是否有关，并不能刻画他们之间的大小关系，因此引入了互信息的概念。</p>
-<p>互信息仅仅能刻画两个随机变量之间的关系，还可以反应他们之间关系的强弱，定义互信息如下所示。<br>$$<br>I(X;Y)=\sum_{x,y}p(x,y)log\frac{p(x,y)}{p(x)p(y)}<br>$$<br>其中$I(X;Y)=H(Y)-H(Y|X)$，，可以读作$Y$的不确定度，减去$X$确定之后$Y$剩余的不确定度，即表示信息不确定的减少，表示的是信息的增益，其中$H(Y)$是$Y$的熵，定义为<br>$$<br>H(Y)=-\sum_{y}\log{p(y)} p(y)​<br>$$<br>衡量的是$Y$的不确定度，即是说，$Y$分布得越离散，$H(Y)$的值越高，而$H(Y|X)$则表示在已知$X$的情况下，$Y$的不确定度。</p>
+<p>互信息仅仅能刻画两个随机变量之间的关系，还可以反应他们之间关系的强弱，定义互信息如下所示。</p>
+<script type="math/tex; mode=display">
+I(X;Y)=\sum_{x,y}p(x,y)log\frac{p(x,y)}{p(x)p(y)}</script><p>其中$I(X;Y)=H(Y)-H(Y|X)$，，可以读作$Y$的不确定度，减去$X$确定之后$Y$剩余的不确定度，即表示信息不确定的减少，表示的是信息的增益，其中$H(Y)$是$Y$的熵，定义为</p>
+<script type="math/tex; mode=display">
+H(Y)=-\sum_{y}\log{p(y)} p(y)​</script><p>衡量的是$Y$的不确定度，即是说，$Y$分布得越离散，$H(Y)$的值越高，而$H(Y|X)$则表示在已知$X$的情况下，$Y$的不确定度。</p>
 <p><strong>而$I(X;Y)$则表示由$X$引入而使$Y$的不确定度减小的量</strong>，因而如果$X,Y$关系越密切，$I(X;Y)$越大，$I(X;Y)$最大的取值是$H(Y)$，也就是说，$X,Y$完全相关，由于$X$的引入，$Y$的熵由原来的$H(Y)$减小了$I(X;Y)=H(Y)$，变成了0，也就是说如果$X$确定，那么$Y$就完全确定了。而当$X,Y$独立时，$I(X;Y)=0$引入$X$，并未给$Y$的确定带来任何好处。</p>
-<p>详细推导过程如下所示<br>$$<br>\begin{aligned}<br>I(X ; Y) &amp;=\sum_{x, y} p(x, y) \log \frac{p(x, y)}{p(x) p(y)} \<br>&amp;=\sum_{x, y} p(x, y) \log \frac{p(x, y)}{p(x)}-\sum_{x, y} p(x, y) \log p(y) \<br>&amp;=\sum_{x, y} p(x) p(y \mid x) \log p(y \mid x)-\sum_{x, y} p(x, y) \log p(y) \<br>&amp;=\sum_{x} p(x)\left(\sum_{y} p(y \mid x) \log p(y \mid x)\right)-\sum_{y} \log p(y)\left(\sum_{x} p(x, y)\right) \<br>&amp;=-\sum_{x} p(x) H(Y \mid X=x)-\sum_{y} \log p(y) p(y) \<br>&amp;=-H(Y \mid X)+H(Y) \<br>&amp;=H(Y)-H(Y \mid X)<br>\end{aligned}<br>$$<br>总结$I(X;Y)$的性质</p>
+<p>详细推导过程如下所示</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+I(X ; Y) &=\sum_{x, y} p(x, y) \log \frac{p(x, y)}{p(x) p(y)} \\
+&=\sum_{x, y} p(x, y) \log \frac{p(x, y)}{p(x)}-\sum_{x, y} p(x, y) \log p(y) \\
+&=\sum_{x, y} p(x) p(y \mid x) \log p(y \mid x)-\sum_{x, y} p(x, y) \log p(y) \\
+&=\sum_{x} p(x)\left(\sum_{y} p(y \mid x) \log p(y \mid x)\right)-\sum_{y} \log p(y)\left(\sum_{x} p(x, y)\right) \\
+&=-\sum_{x} p(x) H(Y \mid X=x)-\sum_{y} \log p(y) p(y) \\
+&=-H(Y \mid X)+H(Y) \\
+&=H(Y)-H(Y \mid X)
+\end{aligned}</script><p>总结$I(X;Y)$的性质</p>
 <ul>
 <li>$I(X;Y)⩾0$</li>
 <li>$H(X)−H(X|Y)=I(X;Y)=I(Y;X)=H(Y)−H(Y|X)$</li>
@@ -474,10 +465,16 @@
 <li>当$X,Y$知道一个就能推断另一个时，$I(X;Y)=H(X)=H(Y)$，即信息增益为1</li>
 </ul>
 <h2 id="mRMR算法"><a href="#mRMR算法" class="headerlink" title="mRMR算法"></a>mRMR算法</h2><p>这是特征选择的一种算法，Max Relevance and Min Redundancy，是在原始的特征集合中找到与最终输出结果相关性最大(Max Relevance)，但彼此特征之间的相关性最小的一组特征(Min Redundacy)</p>
-<p>得到的结果将会满足最大相关性<br>$$<br>\max D(S, c), D=\frac{1}{|S|} \sum_{x_{i} \in S} I\left(x_{i} ; c\right)<br>$$<br>其中采用所有特征$x_i$与分类$c$之间互信息的平均来近似$D(S,c)$。</p>
-<p>通过Max-Relevance选择的特征可能具有冗余，这些特征之间的依赖性非常大。当两个特征互相冗余，当去掉其中一个的时候，分类结果并不会有非常大的变化。因此Min-Redundancy方式可以用来剔除掉冗余特征<br>$$<br>\min R(S), R=\frac{1}{|S|^{2}} \sum_{x_{i}, x_{i} \in S} I\left(x_{i}, x_{j}\right)<br>$$<br>将最大相关性D与最小冗余度R结合起来，我们称其为minimal-redundancy-maximum-relevancy(mRMR)。我们定义算子$\Phi(D, R)$来结合D与R，考虑最简单的结合方式<br>$$<br>\max \Phi(D, R), \Phi=D-R<br>$$<br>实际中将使用增量搜索的方式获取近似解，假设已经得到$S_{m-1}$特征子集，需要在剩余的$X-S_{m-1}$的特征子集中选出第m个特征子集，通过最大化$\Phi()$来进行特征选择，即最大化<br>$$<br>\max <em>{x</em>{j} \in X-S_{m-1}}\left[I\left(x_{j} ; c\right)-\frac{1}{m-1} \sum_{x_{i} \in S_{m-1}} I\left(x_{i} ; x_{j}\right)\right]<br>$$</p>
-<figure class="highlight matlab"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="params">[fea]</span> = <span class="title">mrmr_mid_d</span><span class="params">(d, f, K)</span></span></span><br><span class="line"><span class="comment">% function [fea] = mrmr_mid_d(d, f, K)</span></span><br><span class="line"><span class="comment">% d-输入N*M矩阵，N个采样值，M个特征，特征向量</span></span><br><span class="line"><span class="comment">% f-输入的N*1向量，分类结果</span></span><br><span class="line"><span class="comment">% K-选择的葛铮的个数</span></span><br><span class="line"><span class="comment">% </span></span><br><span class="line"><span class="comment">% MID scheme according to MRMR</span></span><br><span class="line"><span class="comment">%</span></span><br><span class="line"><span class="comment">% By Hanchuan Peng</span></span><br><span class="line"><span class="comment">% April 16, 2003</span></span><br><span class="line"><span class="comment">%</span></span><br><span class="line"></span><br><span class="line">bdisp=<span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">nd = <span class="built_in">size</span>(d,<span class="number">2</span>); <span class="comment">%特征个数</span></span><br><span class="line">nc = <span class="built_in">size</span>(d,<span class="number">1</span>); <span class="comment">%样本个数</span></span><br><span class="line"></span><br><span class="line">t1=cputime;</span><br><span class="line"><span class="keyword">for</span> <span class="built_in">i</span>=<span class="number">1</span>:nd, </span><br><span class="line">   t(<span class="built_in">i</span>) = mutualinfo(d(:,<span class="built_in">i</span>), f); <span class="comment">%计算每个特征跟分类之间的互信息</span></span><br><span class="line"><span class="keyword">end</span>; </span><br><span class="line">fprintf(<span class="string">&#x27;calculate the marginal dmi costs %5.1fs.\n&#x27;</span>, cputime-t1);</span><br><span class="line"></span><br><span class="line">[tmp, idxs] = <span class="built_in">sort</span>(-t); <span class="comment">%按照计算的互信息降序排列，tmp存储的是降序排列的值，idxs为原来对应的序号</span></span><br><span class="line"></span><br><span class="line">fea_base = idxs(<span class="number">1</span>:K); <span class="comment">%取前k个特征</span></span><br><span class="line"></span><br><span class="line">fea(<span class="number">1</span>) = idxs(<span class="number">1</span>); <span class="comment">%互信息最大的特征</span></span><br><span class="line"></span><br><span class="line">KMAX = <span class="built_in">min</span>(<span class="number">1000</span>,nd); <span class="comment">%最大的特征数是500</span></span><br><span class="line"></span><br><span class="line">idxleft = idxs(<span class="number">2</span>:KMAX); <span class="comment">%剩余的特征</span></span><br><span class="line"></span><br><span class="line">k=<span class="number">1</span>;</span><br><span class="line"><span class="keyword">if</span> bdisp==<span class="number">1</span>,</span><br><span class="line">fprintf(<span class="string">&#x27;k=1 cost_time=(N/A) cur_fea=%d #left_cand=%d\n&#x27;</span>, ...</span><br><span class="line">      fea(k), <span class="built_in">length</span>(idxleft));</span><br><span class="line"><span class="keyword">end</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> k=<span class="number">2</span>:K, <span class="comment">%除去互信息最大的特征之后，还需要选取K-1个特征</span></span><br><span class="line">   t1=cputime;</span><br><span class="line">   ncand = <span class="built_in">length</span>(idxleft); <span class="comment">%剩余特征长度</span></span><br><span class="line">   curlastfea = <span class="built_in">length</span>(fea); <span class="comment">%已选特征长度</span></span><br><span class="line">   <span class="keyword">for</span> <span class="built_in">i</span>=<span class="number">1</span>:ncand, <span class="comment">%对每个剩余的特征，计算其互信息</span></span><br><span class="line">      t_mi(<span class="built_in">i</span>) = mutualinfo(d(:,idxleft(<span class="built_in">i</span>)), f);  <span class="comment">%计算与分类结果的互信息</span></span><br><span class="line">      mi_array(idxleft(<span class="built_in">i</span>),curlastfea) = getmultimi(d(:,fea(curlastfea)), d(:,idxleft(<span class="built_in">i</span>))); <span class="comment">%</span></span><br><span class="line">      c_mi(<span class="built_in">i</span>) = <span class="built_in">mean</span>(mi_array(idxleft(<span class="built_in">i</span>), :)); </span><br><span class="line">   <span class="keyword">end</span>;</span><br><span class="line"></span><br><span class="line">   [tmp, fea(k)] = <span class="built_in">max</span>(t_mi(<span class="number">1</span>:ncand) - c_mi(<span class="number">1</span>:ncand));</span><br><span class="line"></span><br><span class="line">   tmpidx = fea(k); fea(k) = idxleft(tmpidx); idxleft(tmpidx) = [];</span><br><span class="line"></span><br><span class="line">   <span class="keyword">if</span> bdisp==<span class="number">1</span>,</span><br><span class="line">   fprintf(<span class="string">&#x27;k=%d cost_time=%5.4f cur_fea=%d #left_cand=%d\n&#x27;</span>, ...</span><br><span class="line">      k, cputime-t1, fea(k), <span class="built_in">length</span>(idxleft));</span><br><span class="line">   <span class="keyword">end</span>;</span><br><span class="line"><span class="keyword">end</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">%===================================== </span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">c</span> = <span class="title">getmultimi</span><span class="params">(da, dt)</span> </span></span><br><span class="line"><span class="keyword">for</span> <span class="built_in">i</span>=<span class="number">1</span>:<span class="built_in">size</span>(da,<span class="number">2</span>), </span><br><span class="line">   c(<span class="built_in">i</span>) = mutualinfo(da(:,<span class="built_in">i</span>), dt);</span><br><span class="line"><span class="keyword">end</span>; </span><br><span class="line">    </span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
+<p>得到的结果将会满足最大相关性</p>
+<script type="math/tex; mode=display">
+\max D(S, c), D=\frac{1}{|S|} \sum_{x_{i} \in S} I\left(x_{i} ; c\right)</script><p>其中采用所有特征$x_i$与分类$c$之间互信息的平均来近似$D(S,c)$。</p>
+<p>通过Max-Relevance选择的特征可能具有冗余，这些特征之间的依赖性非常大。当两个特征互相冗余，当去掉其中一个的时候，分类结果并不会有非常大的变化。因此Min-Redundancy方式可以用来剔除掉冗余特征</p>
+<script type="math/tex; mode=display">
+\min R(S), R=\frac{1}{|S|^{2}} \sum_{x_{i}, x_{i} \in S} I\left(x_{i}, x_{j}\right)</script><p>将最大相关性D与最小冗余度R结合起来，我们称其为minimal-redundancy-maximum-relevancy(mRMR)。我们定义算子$\Phi(D, R)$来结合D与R，考虑最简单的结合方式</p>
+<script type="math/tex; mode=display">
+\max \Phi(D, R), \Phi=D-R</script><p>实际中将使用增量搜索的方式获取近似解，假设已经得到$S<em>{m-1}$特征子集，需要在剩余的$X-S</em>{m-1}$的特征子集中选出第m个特征子集，通过最大化$\Phi()$来进行特征选择，即最大化</p>
+<script type="math/tex; mode=display">
+\max _{x_{j} \in X-S_{m-1}}\left[I\left(x_{j} ; c\right)-\frac{1}{m-1} \sum_{x_{i} \in S_{m-1}} I\left(x_{i} ; x_{j}\right)\right]</script><figure class="highlight matlab"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="params">[fea]</span> = <span class="title">mrmr_mid_d</span><span class="params">(d, f, K)</span></span></span><br><span class="line"><span class="comment">% function [fea] = mrmr_mid_d(d, f, K)</span></span><br><span class="line"><span class="comment">% d-输入N*M矩阵，N个采样值，M个特征，特征向量</span></span><br><span class="line"><span class="comment">% f-输入的N*1向量，分类结果</span></span><br><span class="line"><span class="comment">% K-选择的葛铮的个数</span></span><br><span class="line"><span class="comment">% </span></span><br><span class="line"><span class="comment">% MID scheme according to MRMR</span></span><br><span class="line"><span class="comment">%</span></span><br><span class="line"><span class="comment">% By Hanchuan Peng</span></span><br><span class="line"><span class="comment">% April 16, 2003</span></span><br><span class="line"><span class="comment">%</span></span><br><span class="line"></span><br><span class="line">bdisp=<span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">nd = <span class="built_in">size</span>(d,<span class="number">2</span>); <span class="comment">%特征个数</span></span><br><span class="line">nc = <span class="built_in">size</span>(d,<span class="number">1</span>); <span class="comment">%样本个数</span></span><br><span class="line"></span><br><span class="line">t1=cputime;</span><br><span class="line"><span class="keyword">for</span> <span class="built_in">i</span>=<span class="number">1</span>:nd, </span><br><span class="line">   t(<span class="built_in">i</span>) = mutualinfo(d(:,<span class="built_in">i</span>), f); <span class="comment">%计算每个特征跟分类之间的互信息</span></span><br><span class="line"><span class="keyword">end</span>; </span><br><span class="line">fprintf(<span class="string">&#x27;calculate the marginal dmi costs %5.1fs.\n&#x27;</span>, cputime-t1);</span><br><span class="line"></span><br><span class="line">[tmp, idxs] = <span class="built_in">sort</span>(-t); <span class="comment">%按照计算的互信息降序排列，tmp存储的是降序排列的值，idxs为原来对应的序号</span></span><br><span class="line"></span><br><span class="line">fea_base = idxs(<span class="number">1</span>:K); <span class="comment">%取前k个特征</span></span><br><span class="line"></span><br><span class="line">fea(<span class="number">1</span>) = idxs(<span class="number">1</span>); <span class="comment">%互信息最大的特征</span></span><br><span class="line"></span><br><span class="line">KMAX = <span class="built_in">min</span>(<span class="number">1000</span>,nd); <span class="comment">%最大的特征数是500</span></span><br><span class="line"></span><br><span class="line">idxleft = idxs(<span class="number">2</span>:KMAX); <span class="comment">%剩余的特征</span></span><br><span class="line"></span><br><span class="line">k=<span class="number">1</span>;</span><br><span class="line"><span class="keyword">if</span> bdisp==<span class="number">1</span>,</span><br><span class="line">fprintf(<span class="string">&#x27;k=1 cost_time=(N/A) cur_fea=%d #left_cand=%d\n&#x27;</span>, ...</span><br><span class="line">      fea(k), <span class="built_in">length</span>(idxleft));</span><br><span class="line"><span class="keyword">end</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> k=<span class="number">2</span>:K, <span class="comment">%除去互信息最大的特征之后，还需要选取K-1个特征</span></span><br><span class="line">   t1=cputime;</span><br><span class="line">   ncand = <span class="built_in">length</span>(idxleft); <span class="comment">%剩余特征长度</span></span><br><span class="line">   curlastfea = <span class="built_in">length</span>(fea); <span class="comment">%已选特征长度</span></span><br><span class="line">   <span class="keyword">for</span> <span class="built_in">i</span>=<span class="number">1</span>:ncand, <span class="comment">%对每个剩余的特征，计算其互信息</span></span><br><span class="line">      t_mi(<span class="built_in">i</span>) = mutualinfo(d(:,idxleft(<span class="built_in">i</span>)), f);  <span class="comment">%计算与分类结果的互信息</span></span><br><span class="line">      mi_array(idxleft(<span class="built_in">i</span>),curlastfea) = getmultimi(d(:,fea(curlastfea)), d(:,idxleft(<span class="built_in">i</span>))); <span class="comment">%</span></span><br><span class="line">      c_mi(<span class="built_in">i</span>) = <span class="built_in">mean</span>(mi_array(idxleft(<span class="built_in">i</span>), :)); </span><br><span class="line">   <span class="keyword">end</span>;</span><br><span class="line"></span><br><span class="line">   [tmp, fea(k)] = <span class="built_in">max</span>(t_mi(<span class="number">1</span>:ncand) - c_mi(<span class="number">1</span>:ncand));</span><br><span class="line"></span><br><span class="line">   tmpidx = fea(k); fea(k) = idxleft(tmpidx); idxleft(tmpidx) = [];</span><br><span class="line"></span><br><span class="line">   <span class="keyword">if</span> bdisp==<span class="number">1</span>,</span><br><span class="line">   fprintf(<span class="string">&#x27;k=%d cost_time=%5.4f cur_fea=%d #left_cand=%d\n&#x27;</span>, ...</span><br><span class="line">      k, cputime-t1, fea(k), <span class="built_in">length</span>(idxleft));</span><br><span class="line">   <span class="keyword">end</span>;</span><br><span class="line"><span class="keyword">end</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">%===================================== </span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">c</span> = <span class="title">getmultimi</span><span class="params">(da, dt)</span> </span></span><br><span class="line"><span class="keyword">for</span> <span class="built_in">i</span>=<span class="number">1</span>:<span class="built_in">size</span>(da,<span class="number">2</span>), </span><br><span class="line">   c(<span class="built_in">i</span>) = mutualinfo(da(:,<span class="built_in">i</span>), dt);</span><br><span class="line"><span class="keyword">end</span>; </span><br><span class="line">    </span><br><span class="line"></span><br></pre></td></tr></table></figure>
 ]]></content>
       <categories>
         <category>机器学习</category>
@@ -489,8 +486,7 @@
   <entry>
     <title>Ubuntu下gcc版本管理</title>
     <url>/2020/09/20/%E6%9D%82%E8%AE%B0/Ubuntu%E4%B8%8Bgcc%E7%89%88%E6%9C%AC%E7%AE%A1%E7%90%86/</url>
-    <content><![CDATA[<p>直接使用<code>build essential</code>安装的<code>gcc/g++</code>在一些比较早期的项目编译的时候会出现版本不支持的情况下需要对版本版本进行升降级，网络上看到直接使用<code>rm</code>命令确实是够好笑的，之前也上过当，这里记录一下靠谱的方法。</p>
-<a id="more"></a>
+    <content><![CDATA[<p>直接使用<code>build essential</code>安装的<code>gcc/g++</code>在一些比较早期的项目编译的时候会出现版本不支持的情况下需要对版本版本进行升降级，网络上看到直接使用<code>rm</code>命令确实是够好笑的，之前也上过当，这里记录一下靠谱的方法。<br><a id="more"></a></p>
 <ul>
 <li><p>使用<code>sudo apt-get install</code>安装多个版本的<code>gcc</code></p>
 </li>
@@ -521,24 +517,19 @@
   <entry>
     <title>Ubuntu下git-clone缓慢</title>
     <url>/2020/09/22/%E6%9D%82%E8%AE%B0/Ubuntu%E4%B8%8Bgit-clone%E7%BC%93%E6%85%A2/</url>
-    <content><![CDATA[<p><code>git clone</code>缓慢的主要原因是国内<code>DNS</code>无法自动转跳到<code>github.global.ssl.fastly.net</code>，该域名被限制导致，通过在<code>/etc/hosts</code>加上对应的地址可以解决这个问题</p>
-<a id="more"></a>
-
+    <content><![CDATA[<p><code>git clone</code>缓慢的主要原因是国内<code>DNS</code>无法自动转跳到<code>github.global.ssl.fastly.net</code>，该域名被限制导致，通过在<code>/etc/hosts</code>加上对应的地址可以解决这个问题<br><a id="more"></a></p>
 <ul>
 <li><p>查询<code>github.global.ssl.fastly.net</code>对应域名的地址，在<code>shell</code>下输入</p>
 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">nslookup github.global.ssl.fastly.Net</span><br></pre></td></tr></table></figure>
-
 <p>查询到对应的<code>ip</code>如：<code>151.101.77.194</code></p>
 </li>
 <li><p>查询<code>github.com</code>对应的域名</p>
 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">nslookup github.com </span><br></pre></td></tr></table></figure>
-
 <p>查询到对应的<code>ip</code>如：<code>13.229.188.59</code></p>
 </li>
 </ul>
 <p>最后在<code>hosts</code>文件尾加上两行如下所示</p>
 <figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">151.101.77.194 http://global-ssl.fastly.net</span><br><span class="line">13.229.188.59  http://github.com</span><br></pre></td></tr></table></figure>
-
 ]]></content>
       <categories>
         <category>杂记</category>
@@ -551,9 +542,7 @@
   <entry>
     <title>typora安装新主题</title>
     <url>/2020/09/22/%E6%9D%82%E8%AE%B0/typora%E5%AE%89%E8%A3%85%E6%96%B0%E4%B8%BB%E9%A2%98/</url>
-    <content><![CDATA[<p>在文件选项中找到偏好设置中的外观设置，点击<code>获取主题</code>，下载喜欢的主题，在打开主题中的<code>打开主题文件夹</code>，会打开对应的文件夹，再将对应的文件复制到文件夹中即可。</p>
-<a id="more"></a>
-<p><img src="/picture/2010/typora%E4%B8%BB%E9%A2%98.png" alt="typora主题"></p>
+    <content><![CDATA[<p>在文件选项中找到偏好设置中的外观设置，点击<code>获取主题</code>，下载喜欢的主题，在打开主题中的<code>打开主题文件夹</code>，会打开对应的文件夹，再将对应的文件复制到文件夹中即可。<br><a id="more"></a><br><img src="/picture/2010/typora主题.png" alt="typora主题"></p>
 ]]></content>
       <categories>
         <category>杂记</category>
@@ -565,14 +554,10 @@
   <entry>
     <title>ubuntu20.01搜狗输入法安装</title>
     <url>/2020/09/22/%E6%9D%82%E8%AE%B0/ubuntu20-01%E6%90%9C%E7%8B%97%E8%BE%93%E5%85%A5%E6%B3%95%E5%AE%89%E8%A3%85/</url>
-    <content><![CDATA[<p>在<a href="https://pinyin.sogou.com/linux/?r=pinyin">官网</a>下载对应的<code>deb</code>安装包，直接使用<code>dpkg</code>进行安装，会发现出现错误提示安装失败，因为搜狗输入法使用的是<code>fcitx</code>框架，对应的框架没有安装完成所以无法安装成功。</p>
-<a id="more"></a>
-
+    <content><![CDATA[<p>在<a href="https://pinyin.sogou.com/linux/?r=pinyin">官网</a>下载对应的<code>deb</code>安装包，直接使用<code>dpkg</code>进行安装，会发现出现错误提示安装失败，因为搜狗输入法使用的是<code>fcitx</code>框架，对应的框架没有安装完成所以无法安装成功。<br><a id="more"></a></p>
 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo dpkg -i sogoupinyin_2.3.2.07_amd64.deb</span><br></pre></td></tr></table></figure>
-
 <p>在出现错误之后，使用如下命令安装<code>fcitx</code></p>
 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo apt-get install --fix-broken</span><br></pre></td></tr></table></figure>
-
 <p>在重新使用<code>dpkg</code>命令进行安装</p>
 <p>安装成功之后，在右上角的配置栏中找到搜狗输入法，添加到第一项，同时按照自己的习惯配置激活按钮即可。</p>
 ]]></content>
@@ -586,8 +571,7 @@
   <entry>
     <title>为什么scala</title>
     <url>/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/1-%E4%B8%BA%E4%BB%80%E4%B9%88scala/</url>
-    <content><![CDATA[<p>scala不是一门纯粹的面向对象的语言，他强调函数式编程，函数式编程的两大核心理念是函数是一等的，以及程序中应该将值直接映射到输出，尽量的减少在函数中对程序的副作用。</p>
-<a id="more"></a>
+    <content><![CDATA[<p>scala不是一门纯粹的面向对象的语言，他强调函数式编程，函数式编程的两大核心理念是函数是一等的，以及程序中应该将值直接映射到输出，尽量的减少在函数中对程序的副作用。<br><a id="more"></a></p>
 <ul>
 <li><p>一等函数</p>
 <p>函数可以做为别的函数的参数、返回值，赋值给变量</p>
@@ -599,18 +583,14 @@
 <p><strong>变量定义</strong>：变量分为两种，一周是val类型，一种是var类型，val类型一旦被初始化就不能修改其值，var类型在整个生命周期之内都可以被重新赋值。</p>
 <p><strong>函数定义</strong>：def开始，接下来是函数名，之后吃参数列表，紧跟一个冒号，之后是返回类型，接下来是等号，花括号之内是函数体</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"> <span class="function"><span class="keyword">def</span> <span class="title">max</span></span>(x: int, y:<span class="type">Int</span>): <span class="type">Int</span> = &#123;</span><br><span class="line">  <span class="keyword">if</span>(x &gt; y)</span><br><span class="line">    x</span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">    y</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p><strong>函数字面量</strong>：用圆括号括起来一组带名字的参数，一个又箭头和函数体</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">(x: <span class="type">Int</span>, y: <span class="type">Int</span>) =&gt; x + y</span><br></pre></td></tr></table></figure>
-
 <p><strong>foreach,跟for遍历</strong></p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">args.foreach(arg =&gt; println(arg))</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span>(arg &lt;- args)</span><br><span class="line">	println(arg)</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span>(i &lt;- <span class="number">0</span> to <span class="number">2</span>)</span><br><span class="line">	println(i)</span><br><span class="line"><span class="comment">//for括号中，左边是变量，右边是数组</span></span><br></pre></td></tr></table></figure>
-
 <p>方法调用：在scala中并没有操作符重载，1 + 2被解释成(1).+(2)调用Int的+方法</p>
 <p><strong>从文件读取文本行</strong>：</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> scala.io.<span class="type">Source</span></span><br><span class="line"><span class="keyword">if</span>(args.length &gt; <span class="number">0</span>)&#123;</span><br><span class="line">  <span class="keyword">for</span>(line &lt;- <span class="type">Source</span>.fromFile(args(<span class="number">0</span>)).getLines())</span><br><span class="line">    println(line.length + <span class="string">&quot; &quot;</span> + line)</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">else</span> </span><br><span class="line">  <span class="type">Console</span>.err.println(<span class="string">&quot;please enter filename&quot;</span>)</span><br></pre></td></tr></table></figure>
-
-<h2 id=""><a href="#" class="headerlink" title=""></a></h2>]]></content>
+<h2 id=""><a href="#" class="headerlink" title=" "></a> </h2>]]></content>
       <categories>
         <category>scala</category>
       </categories>
@@ -621,9 +601,7 @@
   <entry>
     <title>scala样例类跟模式匹配</title>
     <url>/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/10-scala%E6%A0%B7%E4%BE%8B%E7%B1%BB%E8%B7%9F%E6%A8%A1%E5%BC%8F%E5%8C%B9%E9%85%8D/</url>
-    <content><![CDATA[<p>样例类也是scala使用频率很高的语法，通过case进行创建，进行响应的控制，而模式匹配正是通过样例类进行相应的匹配操作</p>
-<a id="more"></a>
-
+    <content><![CDATA[<p>样例类也是scala使用频率很高的语法，通过case进行创建，进行响应的控制，而模式匹配正是通过样例类进行相应的匹配操作<br><a id="more"></a></p>
 <ul>
 <li><p><strong>样例类</strong></p>
 <p>笼统来说，就是将想要匹配的类加上一个<code>case</code>关键字。</p>
@@ -657,7 +635,6 @@
 <li><p><strong>变量模式</strong></p>
 <p>变量模式可以匹配任何对象，这点跟通配模式相同，但是变量模式会将匹配的对象绑定到变量上，这样就可以使用这个变量进行下一步的处理</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="number">0</span> =&gt; <span class="string">&quot;zero&quot;</span></span><br><span class="line">  <span class="keyword">case</span> somethingElse =&gt; <span class="string">&quot;not zero&quot;</span> + somethingElse  <span class="comment">//这里将somethingElse用作一些处理，但是这还是局部变量</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p><code>scala</code>中一般会将<strong>小写</strong>开头的字面量当做<strong>变量匹配</strong>，要是想要继续使用小写开头字面量当做常量的话可以使用<code>this.pi, obj.pi</code>等进行处理</p>
 </li>
 <li><p><strong>构造方法模式</strong></p>
@@ -675,7 +652,6 @@
 <li><p><strong>带类型的模式</strong></p>
 <p>使用该模式来替代类型测试跟类型转换</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">expr <span class="keyword">match</span>&#123;</span><br><span class="line">  <span class="keyword">case</span> s: <span class="type">String</span> =&gt; s.length</span><br><span class="line">  <span class="keyword">case</span> m:<span class="type">Map</span>[_, _] =&gt; m.size</span><br><span class="line">  <span class="keyword">case</span> _ =&gt; <span class="number">-1</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//不好的类型转换跟测试</span></span><br><span class="line"><span class="keyword">if</span>(x.isInstanceOf[<span class="type">String</span>])&#123;  <span class="comment">//类型判断</span></span><br><span class="line">  <span class="keyword">val</span> s = x.asInstanceOf[<span class="type">String</span>]  <span class="comment">//类型转换</span></span><br><span class="line">  s.length</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <ul>
 <li><p>擦除类型</p>
 <p>无法检查<code>Map中Int到Int</code>的映射，因为采用的都是一个叫做擦除式泛型，但是数组是例外</p>
@@ -720,16 +696,13 @@
   <entry>
     <title>使用列表</title>
     <url>/2020/09/28/scala/scala%E7%BC%96%E7%A8%8B/11-%E4%BD%BF%E7%94%A8%E5%88%97%E8%A1%A8/</url>
-    <content><![CDATA[<p>列表是scala程序中最常使用的数据结构，这里记录一下列表的常用操作，以及设计原则。</p>
-<a id="more"></a>
-
+    <content><![CDATA[<p>列表是scala程序中最常使用的数据结构，这里记录一下列表的常用操作，以及设计原则。<br><a id="more"></a></p>
 <h3 id="List基础操作"><a href="#List基础操作" class="headerlink" title="List基础操作"></a>List基础操作</h3><p><strong>列表字面量</strong></p>
 <p>列表跟数组非常相似，但是列表是不可变的，而数组是可变的。同时列表是链表结构，而数组则是平的。</p>
 <p>同时列表是同构的，即同一个列表的所有元素都必须相同，同时列表也是协变的，如列表中有两种类型的元素，分别为S跟T，如果S是T的字类型或者相反，则这个列表是合法的。</p>
 <p><strong>列表构建</strong></p>
 <p>所有列表的构建都来自两个基础的单元<code>Nil 跟 ::</code>，其中Nil表示空列表，而::表示元素追加，具体构建如下所示</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">val</span> fruit = <span class="string">&quot;apples&quot;</span> :: (<span class="string">&quot;oranges&quot;</span> :: (<span class="string">&quot;pears&quot;</span> :: <span class="type">Nil</span>))  <span class="comment">//与去掉括号含义一致</span></span><br><span class="line"><span class="keyword">val</span> empty = <span class="type">Nil</span></span><br></pre></td></tr></table></figure>
-
 <p><strong>列表的基本操作</strong></p>
 <p>对列表的所有操作都可以用下面三项来描述</p>
 <ul>
@@ -739,125 +712,129 @@
 </ul>
 <p>其中List(…)表示匹配所有的元素</p>
 <h3 id="List的初阶方法"><a href="#List的初阶方法" class="headerlink" title="List的初阶方法"></a>List的初阶方法</h3><p>如果一个方法不接收任何函数作为入参，就被称为初阶方法</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
-<th align="center">name</th>
-<th align="center">description</th>
-<th align="center">example</th>
+<th style="text-align:center">name</th>
+<th style="text-align:center">description</th>
+<th style="text-align:center">example</th>
 </tr>
 </thead>
-<tbody><tr>
-<td align="center">::</td>
-<td align="center">使用元素构建列表</td>
-<td align="center">1 :: 2</td>
+<tbody>
+<tr>
+<td style="text-align:center">::</td>
+<td style="text-align:center">使用元素构建列表</td>
+<td style="text-align:center">1 :: 2</td>
 </tr>
 <tr>
-<td align="center">:::</td>
-<td align="center">拼接两个列表</td>
-<td align="center">xs ::: ys</td>
+<td style="text-align:center">:::</td>
+<td style="text-align:center">拼接两个列表</td>
+<td style="text-align:center">xs ::: ys</td>
 </tr>
 <tr>
-<td align="center">head</td>
-<td align="center">返回第一个元素</td>
-<td align="center">xs.head</td>
+<td style="text-align:center">head</td>
+<td style="text-align:center">返回第一个元素</td>
+<td style="text-align:center">xs.head</td>
 </tr>
 <tr>
-<td align="center">tail</td>
-<td align="center">返回除第一个元素之外的剩余列表</td>
-<td align="center">xs.tail</td>
+<td style="text-align:center">tail</td>
+<td style="text-align:center">返回除第一个元素之外的剩余列表</td>
+<td style="text-align:center">xs.tail</td>
 </tr>
 <tr>
-<td align="center">init</td>
-<td align="center">返回除最后一个元素剩余部分</td>
-<td align="center">xs.init</td>
+<td style="text-align:center">init</td>
+<td style="text-align:center">返回除最后一个元素剩余部分</td>
+<td style="text-align:center">xs.init</td>
 </tr>
 <tr>
-<td align="center">last</td>
-<td align="center">返回最后一个元素</td>
-<td align="center">xs.last</td>
+<td style="text-align:center">last</td>
+<td style="text-align:center">返回最后一个元素</td>
+<td style="text-align:center">xs.last</td>
 </tr>
 <tr>
-<td align="center">isEmpty</td>
-<td align="center">判断列表是否为空，返回Bool</td>
-<td align="center">xs.isEmpty</td>
+<td style="text-align:center">isEmpty</td>
+<td style="text-align:center">判断列表是否为空，返回Bool</td>
+<td style="text-align:center">xs.isEmpty</td>
 </tr>
 <tr>
-<td align="center">reverse</td>
-<td align="center">列表反转</td>
-<td align="center">xs.reverse</td>
+<td style="text-align:center">reverse</td>
+<td style="text-align:center">列表反转</td>
+<td style="text-align:center">xs.reverse</td>
 </tr>
 <tr>
-<td align="center">drop</td>
-<td align="center">除去前n个元素，返回剩下的元素</td>
-<td align="center">xs.drop(n)</td>
+<td style="text-align:center">drop</td>
+<td style="text-align:center">除去前n个元素，返回剩下的元素</td>
+<td style="text-align:center">xs.drop(n)</td>
 </tr>
 <tr>
-<td align="center">take</td>
-<td align="center">返回前n个元素</td>
-<td align="center">xs.take(n)</td>
+<td style="text-align:center">take</td>
+<td style="text-align:center">返回前n个元素</td>
+<td style="text-align:center">xs.take(n)</td>
 </tr>
 <tr>
-<td align="center">splitAt</td>
-<td align="center">在n处分割两个列表</td>
-<td align="center">xs.splitAt(2)</td>
+<td style="text-align:center">splitAt</td>
+<td style="text-align:center">在n处分割两个列表</td>
+<td style="text-align:center">xs.splitAt(2)</td>
 </tr>
 <tr>
-<td align="center">apply</td>
-<td align="center">选取元素</td>
-<td align="center">xs.apply(2)</td>
+<td style="text-align:center">apply</td>
+<td style="text-align:center">选取元素</td>
+<td style="text-align:center">xs.apply(2)</td>
 </tr>
 <tr>
-<td align="center">indices</td>
-<td align="center">返回指定列表所有有效下标</td>
-<td align="center">xs.indices</td>
+<td style="text-align:center">indices</td>
+<td style="text-align:center">返回指定列表所有有效下标</td>
+<td style="text-align:center">xs.indices</td>
 </tr>
 <tr>
-<td align="center">flatten</td>
-<td align="center">将列表元素为列表的元素扁平化</td>
-<td align="center">xs.flatten</td>
+<td style="text-align:center">flatten</td>
+<td style="text-align:center">将列表元素为列表的元素扁平化</td>
+<td style="text-align:center">xs.flatten</td>
 </tr>
 <tr>
-<td align="center">zip</td>
-<td align="center">接收两个列表，将两个列表元素进行两两组合，若长度不匹配，将不匹配的元素丢弃</td>
-<td align="center">xs.indice zip xs</td>
+<td style="text-align:center">zip</td>
+<td style="text-align:center">接收两个列表，将两个列表元素进行两两组合，若长度不匹配，将不匹配的元素丢弃</td>
+<td style="text-align:center">xs.indice zip xs</td>
 </tr>
 <tr>
-<td align="center">zipWithIndex</td>
-<td align="center">将列表元素与下标进行zip</td>
-<td align="center">xs.zipWithIndex</td>
+<td style="text-align:center">zipWithIndex</td>
+<td style="text-align:center">将列表元素与下标进行zip</td>
+<td style="text-align:center">xs.zipWithIndex</td>
 </tr>
 <tr>
-<td align="center">unzip</td>
-<td align="center">与zip相反的操作</td>
-<td align="center">xs.unzip</td>
+<td style="text-align:center">unzip</td>
+<td style="text-align:center">与zip相反的操作</td>
+<td style="text-align:center">xs.unzip</td>
 </tr>
 <tr>
-<td align="center">toString</td>
-<td align="center">返回列表的标准字符串形式</td>
-<td align="center">xs.toString</td>
+<td style="text-align:center">toString</td>
+<td style="text-align:center">返回列表的标准字符串形式</td>
+<td style="text-align:center">xs.toString</td>
 </tr>
 <tr>
-<td align="center">mkString</td>
-<td align="center">列表的不同表现形式，pre显示在列表之前，step分隔，post最后</td>
-<td align="center">xs mkString(“[”, “,”, “]”)</td>
+<td style="text-align:center">mkString</td>
+<td style="text-align:center">列表的不同表现形式，pre显示在列表之前，step分隔，post最后</td>
+<td style="text-align:center">xs mkString(“[”, “,”, “]”)</td>
 </tr>
 <tr>
-<td align="center">iterator</td>
-<td align="center">通过迭代器访问列表元素</td>
-<td align="center">val it = xs.iterator</td>
+<td style="text-align:center">iterator</td>
+<td style="text-align:center">通过迭代器访问列表元素</td>
+<td style="text-align:center">val it = xs.iterator</td>
 </tr>
 <tr>
-<td align="center">toArray</td>
-<td align="center">将List转换为Array</td>
-<td align="center">xs.toArray</td>
+<td style="text-align:center">toArray</td>
+<td style="text-align:center">将List转换为Array</td>
+<td style="text-align:center">xs.toArray</td>
 </tr>
 <tr>
-<td align="center">copyToArray</td>
-<td align="center">将列表的元素复制到Array中，从start开始</td>
-<td align="center">xs copyToArray(arr, strat)</td>
+<td style="text-align:center">copyToArray</td>
+<td style="text-align:center">将列表的元素复制到Array中，从start开始</td>
+<td style="text-align:center">xs copyToArray(arr, strat)</td>
 </tr>
-</tbody></table>
+</tbody>
+</table>
+</div>
 <h3 id="List的高阶用法"><a href="#List的高阶用法" class="headerlink" title="List的高阶用法"></a>List的高阶用法</h3><p><strong>对列表做映射</strong></p>
 <ul>
 <li><p>map</p>
@@ -934,7 +911,7 @@
 <p><strong>列表排序</strong></p>
 <p>xs sortWith before将对xs列表进行排序，before是用来比较两个元素的函数</p>
 <blockquote>
-<p>List(1, -3, 4, 2, 6) sortWith(_ &lt; _)    应该是升序排序</p>
+<p>List(1, -3, 4, 2, 6) sortWith(<em> &lt; </em>)    应该是升序排序</p>
 </blockquote>
 <h3 id="列表对象方法"><a href="#列表对象方法" class="headerlink" title="列表对象方法"></a>列表对象方法</h3><p><strong>从元素创建列表</strong></p>
 <p>之前使用的诸如List(1, 2, 3, 4)这样的创建列表的方法，其实是调用伴生对象中的apply方法进行</p>
@@ -955,7 +932,7 @@
 <p><strong>表格化函数</strong></p>
 <p>与fill类似，但是他的第二个参数不再是单个元素，而是接收一个函数，元素值不在固定</p>
 <blockquote>
-<p>List.tabulate(5, 5)(_ * _)</p>
+<p>List.tabulate(5, 5)(<em> * </em>)</p>
 </blockquote>
 <p><strong>拼接多个列表</strong></p>
 <p>List.concat将多个列表拼接在一起</p>
@@ -973,20 +950,15 @@
   <entry>
     <title>scala类跟基础操作</title>
     <url>/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/2-scala%E7%B1%BB%E8%B7%9F%E5%9F%BA%E7%A1%80%E6%93%8D%E4%BD%9C/</url>
-    <content><![CDATA[<p>类跟其他面向对象的语言其实是一样的，但是要注意的是单例对象，基础操作将介绍一些scala中基本的术语</p>
-<a id="more"></a>
-
+    <content><![CDATA[<p>类跟其他面向对象的语言其实是一样的，但是要注意的是单例对象，基础操作将介绍一些scala中基本的术语<br><a id="more"></a></p>
 <h2 id="类和对象"><a href="#类和对象" class="headerlink" title="类和对象"></a>类和对象</h2><p><strong>类的定义</strong></p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ClassName</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">&#125; <span class="comment">//类的A定义</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">val</span> a = <span class="keyword">new</span> <span class="type">ClassName</span>() <span class="comment">//实例化</span></span><br><span class="line"></span><br><span class="line">a.method <span class="comment">//调用字段方法</span></span><br></pre></td></tr></table></figure>
-
 <p>若是定义的返回值位uint，其作用就是强调函数的副作用，要是没有<code>return</code>语句，将会将函数中最后的结果做为返回值</p>
 <p><strong>单例对象</strong></p>
 <p>当有同名类时，单例对象位伴生对象，可以访问<code>伴生类</code>的所有成员变量，其可以存放静态方法，类中不能有静态方法</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">object</span> <span class="title">ObjectName</span></span>&#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>若无<code>伴生类</code>则位孤立对象，其中可以用maim方法</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">object</span> <span class="title">Summer</span></span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">main</span></span>(args: <span class="type">Array</span>[<span class="type">String</span>]) = &#123;</span><br><span class="line">    <span class="keyword">for</span>(arg &lt;- args)</span><br><span class="line">      println(<span class="string">&quot;hello world&quot;</span>)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
 <p>直接使用scala命令进行编译，时间会比较长，因为他会遍历jar所有的包，使用<code>fsc</code>进行编译，第一次时间比较长，之后会创建一个<code>守护进程</code>若是程序没有改动，则时间上会很快</p>
 <h2 id="基础类型跟操作"><a href="#基础类型跟操作" class="headerlink" title="基础类型跟操作"></a>基础类型跟操作</h2><ul>
 <li><p><strong>字面量</strong>：是表达源码中一个固定值的方法</p>
@@ -1020,29 +992,21 @@
   <entry>
     <title>scala函数式对象</title>
     <url>/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/3-scala%E5%87%BD%E6%95%B0%E5%BC%8F%E5%AF%B9%E8%B1%A1/</url>
-    <content><![CDATA[<p>如果一个类没有定义体，并不需要给出花括号，因为没有显示的构造方法，若需要检查一些前置条件的话，需要用到<code>require</code>这个方法</p>
-<a id="more"></a>
-
+    <content><![CDATA[<p>如果一个类没有定义体，并不需要给出花括号，因为没有显示的构造方法，若需要检查一些前置条件的话，需要用到<code>require</code>这个方法<br><a id="more"></a></p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Rational</span>(<span class="params">n: <span class="type">Int</span>, d: <span class="type">Int</span></span>)</span>&#123;</span><br><span class="line">	require(d != <span class="number">0</span>)  <span class="comment">//检查分母不能为0</span></span><br><span class="line">	<span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">toString</span> </span>= n + <span class="string">&quot;/&quot;</span> + d <span class="comment">//没有参数的话可以直接写 =</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p><code>n, d</code>做为类参数，scala编译器会自动采集到这两个参数，并创建一个主构造方法，同时接受这两个参数。</p>
 <p>重写<code>toString</code>方法：因为编写一个类之后，新建他会打印初该类的一些默认信息，要是没有从写<code>toString</code>方法的话会导致打印的只是地址</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Rational</span>(<span class="params">n: <span class="type">Int</span>, d: <span class="type">Int</span></span>)</span>&#123;</span><br><span class="line">	<span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">toString</span> </span>= n + <span class="string">&quot;/&quot;</span> + d</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p><strong>辅助构造方法</strong>：相当于多态，以<code>def this</code>打头，但是辅助构造放法必须调用<code>主构造方法</code>或者调用同一个类中的<code>另外一个构造方法</code>，但这个构造方法最终还是会调用主构造方法，主构造方法是类的单一入口，因为只有主构造方法才能调用<code>超类</code></p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Rational</span>(<span class="params">n: <span class="type">Int</span>, d: <span class="type">Int</span></span>)</span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">def</span> <span class="title">this</span></span>(n: <span class="type">Int</span>) = <span class="keyword">this</span>(n, <span class="number">1</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p><strong>变量定义</strong>：先申明为<code>val或var</code>之后定义标识符，最后定义类型，若是val需要给出初始化参数（正常情况下），但是要是标识符以下划线结尾，需要再标识符与冒号之间加上<code>空格</code></p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">val</span> n: <span class="type">Int</span> = <span class="number">1</span></span><br><span class="line"><span class="keyword">val</span> n_ : <span class="type">Int</span> = <span class="number">1</span></span><br></pre></td></tr></table></figure>
-
-<p><strong>隐式转换</strong>：重载了操作符之后就可以进行运算了，比如 r * 2这样的方法没问题，操作符的左结核性会调用r对应的 * 方法，但是使用2 * r 这样的方法并不行，因为Int类型并没有定义 * r的方法，若想调用，需要加入隐式转换</p>
+<p><strong>隐式转换</strong>：重载了操作符之后就可以进行运算了，比如 r <em> 2这样的方法没问题，操作符的左结核性会调用r对应的 </em> 方法，但是使用2 <em> r 这样的方法并不行，因为Int类型并没有定义 </em> r的方法，若想调用，需要加入隐式转换</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">implicit</span> <span class="function"><span class="keyword">def</span> <span class="title">intToRational</span></span>(x: <span class="type">Int</span>) = <span class="keyword">new</span> <span class="type">Rational</span>(x)</span><br></pre></td></tr></table></figure>
-
 <p>该方法将int转换为Rational类型，之后在调用Rational的 * 方法 </p>
 <p>Rational程序例子：</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Rational</span>(<span class="params">d: <span class="type">Int</span>, n: <span class="type">Int</span></span>)</span>&#123;</span><br><span class="line">  require(d != <span class="number">0</span>)</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">val</span> g = gcd(n.abs, d.abs)</span><br><span class="line">  <span class="keyword">val</span> numer = n / g</span><br><span class="line">  <span class="keyword">val</span> denom = d / g</span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">this</span></span>(n: <span class="type">Int</span>) = <span class="keyword">this</span>(n, <span class="number">1</span>)</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">+</span> </span>(that: <span class="type">Rational</span>): <span class="type">Rational</span> = </span><br><span class="line">    <span class="keyword">new</span> <span class="type">Rational</span>(</span><br><span class="line">      numer * that.denom + that.numer * denom,</span><br><span class="line">      denom * that.denom</span><br><span class="line">      )</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">+</span> </span>(i: <span class="type">Int</span>):<span class="type">Rational</span> = </span><br><span class="line">    <span class="keyword">new</span> <span class="type">Rational</span>(numer + i * denom, denom)</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">-</span> </span>(that: <span class="type">Rational</span>): <span class="type">Rational</span> = </span><br><span class="line">    <span class="keyword">new</span> <span class="type">Rational</span>(numer * that.denom - that.numer * denom,</span><br><span class="line">      denom * that.denom)</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">-</span> </span>(i: <span class="type">Int</span>): <span class="type">Rational</span> = </span><br><span class="line">    <span class="keyword">new</span> <span class="type">Rational</span>(numer - i * denom, denom)</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">*</span> </span>(that: <span class="type">Rational</span>): <span class="type">Rational</span> =</span><br><span class="line">    <span class="keyword">new</span> <span class="type">Rational</span>(numer * that.numer, denom * that.denom)</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">*</span> </span>(i: <span class="type">Int</span>): <span class="type">Rational</span> = </span><br><span class="line">    <span class="keyword">new</span> <span class="type">Rational</span>(numer * i, denom)</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">/</span> </span>(that: <span class="type">Rational</span>): <span class="type">Rational</span> = </span><br><span class="line">    <span class="keyword">new</span> <span class="type">Rational</span>(numer * that.denom, denom * that.numer)</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">/</span> </span>(i: <span class="type">Int</span>): <span class="type">Rational</span> =</span><br><span class="line">    <span class="keyword">new</span> <span class="type">Rational</span>(numer, denom * i)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">toString</span> </span>= numer + <span class="string">&quot;/&quot;</span> + denom</span><br><span class="line">  <span class="keyword">private</span> <span class="function"><span class="keyword">def</span> <span class="title">gcd</span></span>(a: <span class="type">Int</span>, b: <span class="type">Int</span>): <span class="type">Int</span> =</span><br><span class="line">    <span class="keyword">if</span>(b == <span class="number">0</span>) a <span class="keyword">else</span> gcd(b, a % b)</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id=""><a href="#" class="headerlink" title=""></a></h2>]]></content>
+<h2 id=""><a href="#" class="headerlink" title=" "></a> </h2>]]></content>
       <categories>
         <category>scala</category>
       </categories>
@@ -1053,9 +1017,7 @@
   <entry>
     <title>scala内建控制</title>
     <url>/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/4-scala%E5%86%85%E5%BB%BA%E6%8E%A7%E5%88%B6/</url>
-    <content><![CDATA[<p>内建控制主要是在if或者是for字句中加入控制语句，来实现过滤，条件筛选等操作</p>
-<a id="more"></a>
-
+    <content><![CDATA[<p>内建控制主要是在if或者是for字句中加入控制语句，来实现过滤，条件筛选等操作<br><a id="more"></a></p>
 <ul>
 <li><p><strong>if表达式</strong></p>
 <p>首先测试条件，根据条件是否满足来执行两个不同代码分支中的一个</p>
@@ -1063,12 +1025,10 @@
 </li>
 <li><p><strong>for循环</strong></p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">for</span> (file &lt;- filesName)</span><br><span class="line">	println(file)</span><br></pre></td></tr></table></figure>
-
 <p>像<code>file &lt;- filesName</code>这样的语法是生成器，遍历filsname中的所有元素</p>
 </li>
 <li><p><strong>过滤</strong></p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">for</span> (file &lt;- filesName <span class="keyword">if</span> file.getName.endWith(<span class="string">&quot;.scala&quot;</span>))</span><br><span class="line">	println(file)</span><br></pre></td></tr></table></figure>
-
 <p>使用if子句进行过滤</p>
 </li>
 <li><p><strong>嵌套循环</strong></p>
@@ -1099,16 +1059,13 @@
   <entry>
     <title>scala函数跟闭包</title>
     <url>/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/5-scala%E5%87%BD%E6%95%B0%E8%B7%9F%E9%97%AD%E5%8C%85/</url>
-    <content><![CDATA[<p>需要注意的是使用字面量函数以及符号<code>=&gt;</code>的使用，闭包好比作用域，用于确定变量的范围</p>
-<a id="more"></a>
+    <content><![CDATA[<p>需要注意的是使用字面量函数以及符号<code>=&gt;</code>的使用，闭包好比作用域，用于确定变量的范围<br><a id="more"></a></p>
 <ul>
 <li><p>函数字面量**</p>
 <p>函数字面量存在于源码中，在运行时编译成类，并在运行时实例化为函数值，所以函数值对象形式存在于运行时</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">(x: <span class="type">Int</span>) =&gt; x + <span class="number">1</span></span><br></pre></td></tr></table></figure>
-
 <p>上述例子时函数字面量，左侧时参数列表，右侧是操作，多条语句的话，使用<code>&#123;&#125;</code>进行组合，<code>=&gt;</code>的意思表示将左侧的内容转换为右侧的内容。</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">someNumbers.filter(x =&gt; x &gt; <span class="number">0</span>)</span><br></pre></td></tr></table></figure>
-
 <p>接受一个函数做为入参，并对列表中的每个元素调用这个函数。同时由于知道了<code>someNumbers</code>是整数，所以x必定是整数，不用再申明类型</p>
 </li>
 <li><p><strong>占位符语法</strong></p>
@@ -1118,7 +1075,6 @@
 <li><p><strong>部分应用函数</strong></p>
 <p>可以用<code>_</code>代替独立的参数列表，但是要与主函数之间加上空格。</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">sum</span></span>(a: <span class="type">Int</span>, b: <span class="type">Int</span>, c: <span class="type">Int</span>): <span class="type">Int</span> = a + b + c</span><br><span class="line"><span class="keyword">val</span> a = sum _  <span class="comment">//_ 表示的是三个参数的参数列表 可以通过a(1, 2, 3)调用</span></span><br><span class="line"><span class="keyword">val</span> b = sum(<span class="number">1</span>, _: <span class="type">Int</span>, <span class="number">3</span>)  <span class="comment">//可以调用b(2)</span></span><br><span class="line">someNumbers.foreach(println _)</span><br><span class="line">someNumbers.foreach(println)</span><br></pre></td></tr></table></figure>
-
 <p>最后的这两种形式，可以再明确需要函数的地方给出。</p>
 </li>
 <li><p><strong>闭包</strong></p>
@@ -1138,7 +1094,6 @@
 <li><p><strong>尾递归</strong></p>
 <p>在函数的尾部自己调用自己，这样的话就是尾递归，尾递归会自动的优化成<code>while</code>循环的形式，减少栈的开销。但是只能对那些直接尾递归的函数进行优化，要是间接的调用尾递归并不会进行优化</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">isEven</span></span>(x: <span class="type">Int</span>): <span class="type">Boolean</span> = </span><br><span class="line">	<span class="keyword">if</span> (x == <span class="number">0</span>) <span class="literal">true</span> <span class="keyword">else</span> isOdd(x - <span class="number">1</span>)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">isodd</span></span>(x: <span class="type">Int</span>): <span class="type">Boolean</span> = </span><br><span class="line">	<span class="keyword">if</span> (x == <span class="number">0</span>) <span class="literal">false</span> <span class="keyword">else</span> isEven(x - <span class="number">1</span>)  <span class="comment">//这样的相互递归不会优化，最后一步调用的是另外的一个函数值，并不会进行优化</span></span><br></pre></td></tr></table></figure>
-
 </li>
 </ul>
 ]]></content>
@@ -1152,8 +1107,7 @@
   <entry>
     <title>scala抽象控制</title>
     <url>/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/6-scala%E6%8A%BD%E8%B1%A1%E6%8E%A7%E5%88%B6/</url>
-    <content><![CDATA[<p>使用柯里化的方式，分开参数写参数列表，这样就可以先固定部分参数列表来产生新的函数，减少函数在实例化过程中需要填写的参数，配合隐式参数的使用，将极大减少代码量</p>
-<a id="more"></a>
+    <content><![CDATA[<p>使用柯里化的方式，分开参数写参数列表，这样就可以先固定部分参数列表来产生新的函数，减少函数在实例化过程中需要填写的参数，配合隐式参数的使用，将极大减少代码量<br><a id="more"></a></p>
 <ul>
 <li><p><strong>减少代码重复</strong></p>
 <p>利用一等函数与占位符消除代码的重复</p>
@@ -1170,10 +1124,9 @@
 <li><p><strong>传名参数－传值参数</strong></p>
 <p>传值参数中表达式的值将先于函数被调用，而传名参数将会在函数中调用该名字的地方进行调用。其实就是一个参数求值先后的问题。</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">byNameAssert</span></span>(predicate: =&gt; <span class="type">Boolean</span>) = &#123;</span><br><span class="line">  <span class="keyword">if</span> (assertionsEnabled &amp;&amp; !predicate)  <span class="comment">//传名参数，运行到这里才会进行求值</span></span><br><span class="line">  	<span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">AssertionError</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">boolAssert</span></span>(predicate: <span class="type">Boolean</span>) = <span class="comment">//传值参数，其实在这里predicate就进行求值了</span></span><br><span class="line">	<span class="keyword">if</span> (assertionsEnabled &amp;&amp; !predicate)</span><br><span class="line">  	<span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">AssertionError</span></span><br></pre></td></tr></table></figure>
-
 </li>
 </ul>
-<h2 id=""><a href="#" class="headerlink" title=""></a></h2>]]></content>
+<h2 id=""><a href="#" class="headerlink" title=" "></a> </h2>]]></content>
       <categories>
         <category>scala</category>
       </categories>
@@ -1184,8 +1137,7 @@
   <entry>
     <title>scala组合跟继承</title>
     <url>/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/7-scala%E7%BB%84%E5%90%88%E8%B7%9F%E7%BB%A7%E6%89%BF/</url>
-    <content><![CDATA[<p>主要介绍的是scala中类之间是如何进行继承的，他们继承之后初始化的关系如何等</p>
-<a id="more"></a>
+    <content><![CDATA[<p>主要介绍的是scala中类之间是如何进行继承的，他们继承之后初始化的关系如何等<br><a id="more"></a></p>
 <ul>
 <li><p><strong>抽象成员</strong></p>
 <p>申明为一个没有实现方法的成员，包含其的类为抽象类，具体需要在<code>class</code>之前加上<code>abstract</code></p>
@@ -1226,8 +1178,7 @@
   <entry>
     <title>scala特质</title>
     <url>/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/8-scala%E7%89%B9%E8%B4%A8/</url>
-    <content><![CDATA[<p>scala的特质是scala的最重要的特性之一，scala的扩展性也是由这个衍生而来，通过特质的混入实现方法的重用</p>
-<a id="more"></a>
+    <content><![CDATA[<p>scala的特质是scala的最重要的特性之一，scala的扩展性也是由这个衍生而来，通过特质的混入实现方法的重用<br><a id="more"></a></p>
 <ul>
 <li><p><strong>简述</strong></p>
 <p>使用关键字<code>trait</code>进行特质的使用，同时可以使用<code>extends</code>跟<code>with</code>将特质混入到类中，其中使用<code>extends</code>进行特质的混入会隐式的继承特质中的超类，但是在特质中，不能有任何的类参数（传入类的主构造方法的参数），且与<code>super</code>是进行的动态绑定</p>
@@ -1240,7 +1191,6 @@
 <li><p><strong>作为可叠加修改的特质</strong></p>
 <p>就是特质可以为类提供可叠加的修改，及特质修改类的方法，而且允许你将你这些修改叠加起来。且叠加的优先级重要程度是越靠近右边的方法最先被调用，如果方法调用<code>super</code>则最左侧的方法最先被调用。</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">IntQueue</span></span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">get</span></span>(): <span class="type">Int</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">put</span></span>(x: <span class="type">Int</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">BasicIntQueue</span> <span class="keyword">extends</span> <span class="title">IntQueue</span></span>&#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">val</span> buf = <span class="keyword">new</span> <span class="type">ArrayBuffer</span>[<span class="type">Int</span>]</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">get</span></span>() = buf.remove(<span class="number">0</span>)</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">put</span></span>(x: <span class="type">Int</span>) = &#123; buf += x&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">trait</span> <span class="title">Doubling</span> <span class="keyword">extends</span> <span class="title">IntQueue</span></span>&#123;</span><br><span class="line">  <span class="keyword">abstract</span> <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">put</span></span>(x: <span class="type">Int</span>) = &#123;<span class="keyword">super</span>.put(<span class="number">2</span> * x)&#125;  <span class="comment">//对于可叠加的特质，特地申明为abstract override</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">trait</span> <span class="title">Incrementing</span> <span class="keyword">extends</span> <span class="title">IntQueue</span></span>&#123;</span><br><span class="line">  <span class="keyword">abstract</span> <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">put</span></span>(x: <span class="type">Int</span>) = &#123;<span class="keyword">super</span>.put(x + <span class="number">1</span>)&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">trait</span> <span class="title">Filtering</span> <span class="keyword">extends</span> <span class="title">IntQueue</span></span>&#123;</span><br><span class="line">  <span class="keyword">abstract</span> <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">put</span> </span>(x: <span class="type">Int</span>) = &#123;</span><br><span class="line">    <span class="keyword">if</span>(x &gt;= <span class="number">0</span>) <span class="keyword">super</span>.put(x)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">val</span> queue = (<span class="keyword">new</span> <span class="type">BasicIntQueue</span> <span class="keyword">with</span> <span class="type">Filtering</span> <span class="keyword">with</span> <span class="type">Incrementing</span>)  <span class="comment">//先调increasing 在调filter</span></span><br></pre></td></tr></table></figure>
-
 <p>如果是在类中调用了super方法，将会调用最近的一个方法，如果除了最后一个方法之外，所有方法都super，那最终结果就是叠加到一个的行为（叠加）</p>
 </li>
 </ul>
@@ -1255,13 +1205,11 @@
   <entry>
     <title>scala包的引入跟测试</title>
     <url>/2020/09/22/scala/scala%E7%BC%96%E7%A8%8B/9-scala%E5%8C%85%E7%9A%84%E5%BC%95%E5%85%A5%E8%B7%9F%E6%B5%8B%E8%AF%95/</url>
-    <content><![CDATA[<p>包就跟c++中的namespace中一样，通过将不同的类与特质组合在一起，形成一个包，测试也是通过引入scala中官方的包进行的</p>
-<a id="more"></a>
+    <content><![CDATA[<p>包就跟c++中的namespace中一样，通过将不同的类与特质组合在一起，形成一个包，测试也是通过引入scala中官方的包进行的<br><a id="more"></a></p>
 <h2 id="包和引入"><a href="#包和引入" class="headerlink" title="包和引入"></a>包和引入</h2><ul>
 <li><p><strong>打包</strong></p>
 <p>使用<code>package</code>关键字进行打包</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> bobsrockets&#123;</span><br><span class="line">  <span class="keyword">package</span> navigation&#123;</span><br><span class="line">    </span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>顶层包通过<code>__root__</code>进行引入</p>
 </li>
 <li><p><strong>引入</strong></p>
@@ -1271,7 +1219,6 @@
 <li><p><strong>包对象</strong></p>
 <p>每个包都会有一个对象，任何被放在包对象里的定义都会被当做这个包本身成员</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> <span class="class"><span class="keyword">object</span> <span class="title">bobsdelights</span></span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">showFruit</span></span>(fruit: <span class="type">Fruit</span>) = &#123;</span><br><span class="line">    <span class="keyword">import</span> furit._</span><br><span class="line">    println(name + <span class="string">&quot;s are &quot;</span> + colro)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">package</span> printmenu</span><br><span class="line"><span class="keyword">import</span> bobsdelights.showFruit <span class="comment">//直接当做成员来使用</span></span><br></pre></td></tr></table></figure>
-
 </li>
 </ul>
 <h2 id="断言跟测试"><a href="#断言跟测试" class="headerlink" title="断言跟测试"></a>断言跟测试</h2><ul>
@@ -1282,19 +1229,15 @@
 <p><code>ScalaTest</code>的核心概念是套件<code>suite</code>，即测试集合。所谓测试，可以是任何带有名称，可以启动，并且要么成功，要么成功，要么失败。</p>
 <p><code>ScalaTest</code>提供了风格特质<code>(style trait)</code>，这些特质扩展了<code>suite</code>并提供了不同的测试风格。</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> org.scalatest.<span class="type">FunSuite</span></span><br><span class="line"><span class="keyword">import</span> <span class="type">Element</span>.elem</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ElementSuite</span> <span class="keyword">extends</span> <span class="title">FunSuite</span></span>&#123;</span><br><span class="line">  test(<span class="string">&quot;elem result shuld have passed width&quot;</span>)&#123;  <span class="comment">//圆括号内表示的是测试名称</span></span><br><span class="line">    <span class="keyword">val</span> ele = elem(&#x27;x&#x27;, <span class="number">2</span>, <span class="number">3</span>)</span><br><span class="line">    assert(ele.width == <span class="number">2</span>)  <span class="comment">//测试内容</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>还可以强调预期结果与实际结果的差</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">assertResult(<span class="number">2</span>)&#123;</span><br><span class="line">  ele.width</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>如果想检查摸个方法抛出某个预期的异常可以用<code>assertThrows</code></p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">assertThrowe[<span class="type">IllegalArgumentException</span>]&#123;</span><br><span class="line">  elem(&#x27;x&#x27;, <span class="number">-2</span>, <span class="number">3</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">val</span> caught = </span><br><span class="line">	intercept[<span class="type">ArithmeticException</span>]&#123;</span><br><span class="line">    <span class="number">1</span> / <span class="number">0</span></span><br><span class="line">  &#125;</span><br><span class="line">assert(caught.getMessage == <span class="string">&quot;/ by zero&quot;</span>)</span><br></pre></td></tr></table></figure>
-
 <p>如何执行一个测试</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">scala -cp scalatest.jar <span class="type">TVsetSpec</span>.scala  <span class="comment">//编译</span></span><br><span class="line">scala -cp scakatest.jar org.scalatest.run <span class="type">TVsetSpec</span>.scala  <span class="comment">//执行</span></span><br></pre></td></tr></table></figure>
-
 </li>
 </ul>
-<h2 id=""><a href="#" class="headerlink" title=""></a></h2>]]></content>
+<h2 id=""><a href="#" class="headerlink" title=" "></a> </h2>]]></content>
       <categories>
         <category>scala</category>
       </categories>
@@ -1312,11 +1255,9 @@
 <li>然后，它在所有伴生对象中查找与隐式候选类型相关的有隐式标记的成员。</li>
 </ul>
 <a id="more"></a>
-
 <p>更加详细的关于 Scala 到哪里查找隐式参数的指南请参考 <a href="https://docs.scala-lang.org/tutorials/FAQ/finding-implicits.html">常见问题</a></p>
 <p>在下面的例子中，我们定义了一个方法 <code>sum</code>，它使用 Monoid 类的 <code>add</code> 和 <code>unit</code> 方法计算一个列表中元素的总和。 请注意，隐式值不能是顶级值。</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Monoid</span>[<span class="type">A</span>] </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">add</span></span>(x: <span class="type">A</span>, y: <span class="type">A</span>): <span class="type">A</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">unit</span></span>: <span class="type">A</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">object</span> <span class="title">ImplicitTest</span> </span>&#123;</span><br><span class="line">  <span class="keyword">implicit</span> <span class="keyword">val</span> stringMonoid: <span class="type">Monoid</span>[<span class="type">String</span>] = <span class="keyword">new</span> <span class="type">Monoid</span>[<span class="type">String</span>] &#123;</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">add</span></span>(x: <span class="type">String</span>, y: <span class="type">String</span>): <span class="type">String</span> = x concat y</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">unit</span></span>: <span class="type">String</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">implicit</span> <span class="keyword">val</span> intMonoid: <span class="type">Monoid</span>[<span class="type">Int</span>] = <span class="keyword">new</span> <span class="type">Monoid</span>[<span class="type">Int</span>] &#123;</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">add</span></span>(x: <span class="type">Int</span>, y: <span class="type">Int</span>): <span class="type">Int</span> = x + y</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">unit</span></span>: <span class="type">Int</span> = <span class="number">0</span></span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">sum</span></span>[<span class="type">A</span>](xs: <span class="type">List</span>[<span class="type">A</span>])(<span class="keyword">implicit</span> m: <span class="type">Monoid</span>[<span class="type">A</span>]): <span class="type">A</span> =</span><br><span class="line">    <span class="keyword">if</span> (xs.isEmpty) m.unit</span><br><span class="line">    <span class="keyword">else</span> m.add(xs.head, sum(xs.tail))</span><br><span class="line">    </span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">main</span></span>(args: <span class="type">Array</span>[<span class="type">String</span>]): <span class="type">Unit</span> = &#123;</span><br><span class="line">    println(sum(<span class="type">List</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)))       <span class="comment">// uses IntMonoid implicitly</span></span><br><span class="line">    println(sum(<span class="type">List</span>(<span class="string">&quot;a&quot;</span>, <span class="string">&quot;b&quot;</span>, <span class="string">&quot;c&quot;</span>))) <span class="comment">// uses StringMonoid implicitly</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>类 <code>Monoid</code> 定义了一个名为 <code>add</code> 的操作，它将一对 <code>A</code> 类型的值相加并返回一个 <code>A</code>，以及一个名为 <code>unit</code> 的操作，用来创建一个（特定的）<code>A</code> 类型的值。</p>
 <p>为了说明隐式参数如何工作，我们首先分别为字符串和整数定义 Monoid 实例， <code>StringMonoid</code> 和 <code>IntMonoid</code>。 <code>implicit</code> 关键字表示可以隐式使用相应的对象。</p>
 <p>方法 <code>sum</code> 接受一个 <code>List[A]</code>，并返回一个 <code>A</code> 的值，它从 <code>unit</code> 中取初始的 <code>A</code> 值，并使用 <code>add</code> 方法依次将列表中的下一个 <code>A</code> 值相加。在这里将参数 <code>m</code> 定义为隐式意味着，如果 Scala 可以找到隐式 <code>Monoid[A]</code> 用于隐式参数 <code>m</code>，我们在调用 <code>sum</code> 方法时只需要传入 <code>xs</code> 参数。</p>
@@ -1328,7 +1269,6 @@
 <p>第二次调用 <code>sum</code> 方法的时候传入一个 <code>List[String]</code>，这意味着此处类型 <code>A</code> 是 <code>String</code>。 与查找 <code>Int</code> 型的隐式参数时类似，但这次会找到 <code>stringMonoid</code>，并自动将其作为 <code>m</code> 传入。</p>
 <p>该程序将输出</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">6</span><br><span class="line">abc</span><br></pre></td></tr></table></figure>
-
 <p><img src="/picture/2010/image-20200922001335357.png" alt="image-20200922001335357"></p>
 <p><img src="/picture/2010/image-20200922001451905.png" alt="image-20200922001451905"></p>
 ]]></content>
@@ -1347,7 +1287,6 @@
 <p>构造顺序的问题，要是变量在类中没有初始化就使用他，这个时候会产生错误，使用<code>lazy</code>关键字很好的回避了这个问题，在用到的时候在进行初始化，保证了在用到该变量之前依赖的变量已经完成初始化。</p>
 <a id="more"></a>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Person</span></span>&#123;</span><br><span class="line">  <span class="keyword">val</span> name: <span class="type">String</span></span><br><span class="line">  <span class="keyword">val</span> name_len = name.length</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Student</span> <span class="keyword">extends</span> <span class="title">Person</span></span>&#123;</span><br><span class="line">  <span class="keyword">override</span> <span class="keyword">val</span> name: <span class="type">String</span> = <span class="string">&quot;Tom&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>此时要是在<code>main</code>中新建一个<code>Student</code>的类会出现异常，因为父类会先于子类进行构造，在执行<code>name.length</code>的时候试图查找一个空指针的长度，出现异常</p>
 <p>想要解决这个问题需要将<code>name_len</code>加上<code>lazy</code>关键字，这样的就可以保证其初始化的顺序。</p>
 <p><code>lazy val name_len = name.length</code></p>
@@ -1355,7 +1294,6 @@
 <li><p><strong>初始化某个变量的时间过长</strong></p>
 <p>在类的初始化过程中，要是有某个类初始化时间过长，可以申明为<code>lazy</code>这样的话，只有在使用他的第一次才进行初始化，显著减少了初始化的执行时间</p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Person</span></span>&#123;</span><br><span class="line">  <span class="keyword">lazy</span> <span class="keyword">val</span> properties = &#123;</span><br><span class="line">    print(<span class="string">&quot;init&quot;</span>)</span><br><span class="line">    <span class="type">Thread</span>.sleep(<span class="number">2000</span>)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>将<code>properties</code>变量声明为<code>lazy</code>将会使其在使用的时候才对其进行初始化</p>
 </li>
 <li><p><strong>缺点</strong></p>

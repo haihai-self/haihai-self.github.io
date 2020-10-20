@@ -211,9 +211,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>内建控制主要是在if或者是for字句中加入控制语句，来实现过滤，条件筛选等操作</p>
-<a id="more"></a>
-
+        <p>内建控制主要是在if或者是for字句中加入控制语句，来实现过滤，条件筛选等操作<br><a id="more"></a></p>
 <ul>
 <li><p><strong>if表达式</strong></p>
 <p>首先测试条件，根据条件是否满足来执行两个不同代码分支中的一个</p>
@@ -221,12 +219,10 @@
 </li>
 <li><p><strong>for循环</strong></p>
 <figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (file &lt;- filesName)</span><br><span class="line">	println(file)</span><br></pre></td></tr></table></figure>
-
 <p>像<code>file &lt;- filesName</code>这样的语法是生成器，遍历filsname中的所有元素</p>
 </li>
 <li><p><strong>过滤</strong></p>
 <figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (file &lt;- filesName <span class="keyword">if</span> file.getName.endWith(<span class="string">&quot;.scala&quot;</span>))</span><br><span class="line">	println(file)</span><br></pre></td></tr></table></figure>
-
 <p>使用if子句进行过滤</p>
 </li>
 <li><p><strong>嵌套循环</strong></p>

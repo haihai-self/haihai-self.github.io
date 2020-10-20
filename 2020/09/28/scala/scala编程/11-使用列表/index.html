@@ -211,16 +211,13 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>列表是scala程序中最常使用的数据结构，这里记录一下列表的常用操作，以及设计原则。</p>
-<a id="more"></a>
-
+        <p>列表是scala程序中最常使用的数据结构，这里记录一下列表的常用操作，以及设计原则。<br><a id="more"></a></p>
 <h3 id="List基础操作"><a href="#List基础操作" class="headerlink" title="List基础操作"></a>List基础操作</h3><p><strong>列表字面量</strong></p>
 <p>列表跟数组非常相似，但是列表是不可变的，而数组是可变的。同时列表是链表结构，而数组则是平的。</p>
 <p>同时列表是同构的，即同一个列表的所有元素都必须相同，同时列表也是协变的，如列表中有两种类型的元素，分别为S跟T，如果S是T的字类型或者相反，则这个列表是合法的。</p>
 <p><strong>列表构建</strong></p>
 <p>所有列表的构建都来自两个基础的单元<code>Nil 跟 ::</code>，其中Nil表示空列表，而::表示元素追加，具体构建如下所示</p>
 <figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> fruit = <span class="string">&quot;apples&quot;</span> :: (<span class="string">&quot;oranges&quot;</span> :: (<span class="string">&quot;pears&quot;</span> :: <span class="type">Nil</span>))  <span class="comment">//与去掉括号含义一致</span></span><br><span class="line"><span class="keyword">val</span> empty = <span class="type">Nil</span></span><br></pre></td></tr></table></figure>
-
 <p><strong>列表的基本操作</strong></p>
 <p>对列表的所有操作都可以用下面三项来描述</p>
 <ul>
@@ -230,125 +227,129 @@
 </ul>
 <p>其中List(…)表示匹配所有的元素</p>
 <h3 id="List的初阶方法"><a href="#List的初阶方法" class="headerlink" title="List的初阶方法"></a>List的初阶方法</h3><p>如果一个方法不接收任何函数作为入参，就被称为初阶方法</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
-<th align="center">name</th>
-<th align="center">description</th>
-<th align="center">example</th>
+<th style="text-align:center">name</th>
+<th style="text-align:center">description</th>
+<th style="text-align:center">example</th>
 </tr>
 </thead>
-<tbody><tr>
-<td align="center">::</td>
-<td align="center">使用元素构建列表</td>
-<td align="center">1 :: 2</td>
+<tbody>
+<tr>
+<td style="text-align:center">::</td>
+<td style="text-align:center">使用元素构建列表</td>
+<td style="text-align:center">1 :: 2</td>
 </tr>
 <tr>
-<td align="center">:::</td>
-<td align="center">拼接两个列表</td>
-<td align="center">xs ::: ys</td>
+<td style="text-align:center">:::</td>
+<td style="text-align:center">拼接两个列表</td>
+<td style="text-align:center">xs ::: ys</td>
 </tr>
 <tr>
-<td align="center">head</td>
-<td align="center">返回第一个元素</td>
-<td align="center">xs.head</td>
+<td style="text-align:center">head</td>
+<td style="text-align:center">返回第一个元素</td>
+<td style="text-align:center">xs.head</td>
 </tr>
 <tr>
-<td align="center">tail</td>
-<td align="center">返回除第一个元素之外的剩余列表</td>
-<td align="center">xs.tail</td>
+<td style="text-align:center">tail</td>
+<td style="text-align:center">返回除第一个元素之外的剩余列表</td>
+<td style="text-align:center">xs.tail</td>
 </tr>
 <tr>
-<td align="center">init</td>
-<td align="center">返回除最后一个元素剩余部分</td>
-<td align="center">xs.init</td>
+<td style="text-align:center">init</td>
+<td style="text-align:center">返回除最后一个元素剩余部分</td>
+<td style="text-align:center">xs.init</td>
 </tr>
 <tr>
-<td align="center">last</td>
-<td align="center">返回最后一个元素</td>
-<td align="center">xs.last</td>
+<td style="text-align:center">last</td>
+<td style="text-align:center">返回最后一个元素</td>
+<td style="text-align:center">xs.last</td>
 </tr>
 <tr>
-<td align="center">isEmpty</td>
-<td align="center">判断列表是否为空，返回Bool</td>
-<td align="center">xs.isEmpty</td>
+<td style="text-align:center">isEmpty</td>
+<td style="text-align:center">判断列表是否为空，返回Bool</td>
+<td style="text-align:center">xs.isEmpty</td>
 </tr>
 <tr>
-<td align="center">reverse</td>
-<td align="center">列表反转</td>
-<td align="center">xs.reverse</td>
+<td style="text-align:center">reverse</td>
+<td style="text-align:center">列表反转</td>
+<td style="text-align:center">xs.reverse</td>
 </tr>
 <tr>
-<td align="center">drop</td>
-<td align="center">除去前n个元素，返回剩下的元素</td>
-<td align="center">xs.drop(n)</td>
+<td style="text-align:center">drop</td>
+<td style="text-align:center">除去前n个元素，返回剩下的元素</td>
+<td style="text-align:center">xs.drop(n)</td>
 </tr>
 <tr>
-<td align="center">take</td>
-<td align="center">返回前n个元素</td>
-<td align="center">xs.take(n)</td>
+<td style="text-align:center">take</td>
+<td style="text-align:center">返回前n个元素</td>
+<td style="text-align:center">xs.take(n)</td>
 </tr>
 <tr>
-<td align="center">splitAt</td>
-<td align="center">在n处分割两个列表</td>
-<td align="center">xs.splitAt(2)</td>
+<td style="text-align:center">splitAt</td>
+<td style="text-align:center">在n处分割两个列表</td>
+<td style="text-align:center">xs.splitAt(2)</td>
 </tr>
 <tr>
-<td align="center">apply</td>
-<td align="center">选取元素</td>
-<td align="center">xs.apply(2)</td>
+<td style="text-align:center">apply</td>
+<td style="text-align:center">选取元素</td>
+<td style="text-align:center">xs.apply(2)</td>
 </tr>
 <tr>
-<td align="center">indices</td>
-<td align="center">返回指定列表所有有效下标</td>
-<td align="center">xs.indices</td>
+<td style="text-align:center">indices</td>
+<td style="text-align:center">返回指定列表所有有效下标</td>
+<td style="text-align:center">xs.indices</td>
 </tr>
 <tr>
-<td align="center">flatten</td>
-<td align="center">将列表元素为列表的元素扁平化</td>
-<td align="center">xs.flatten</td>
+<td style="text-align:center">flatten</td>
+<td style="text-align:center">将列表元素为列表的元素扁平化</td>
+<td style="text-align:center">xs.flatten</td>
 </tr>
 <tr>
-<td align="center">zip</td>
-<td align="center">接收两个列表，将两个列表元素进行两两组合，若长度不匹配，将不匹配的元素丢弃</td>
-<td align="center">xs.indice zip xs</td>
+<td style="text-align:center">zip</td>
+<td style="text-align:center">接收两个列表，将两个列表元素进行两两组合，若长度不匹配，将不匹配的元素丢弃</td>
+<td style="text-align:center">xs.indice zip xs</td>
 </tr>
 <tr>
-<td align="center">zipWithIndex</td>
-<td align="center">将列表元素与下标进行zip</td>
-<td align="center">xs.zipWithIndex</td>
+<td style="text-align:center">zipWithIndex</td>
+<td style="text-align:center">将列表元素与下标进行zip</td>
+<td style="text-align:center">xs.zipWithIndex</td>
 </tr>
 <tr>
-<td align="center">unzip</td>
-<td align="center">与zip相反的操作</td>
-<td align="center">xs.unzip</td>
+<td style="text-align:center">unzip</td>
+<td style="text-align:center">与zip相反的操作</td>
+<td style="text-align:center">xs.unzip</td>
 </tr>
 <tr>
-<td align="center">toString</td>
-<td align="center">返回列表的标准字符串形式</td>
-<td align="center">xs.toString</td>
+<td style="text-align:center">toString</td>
+<td style="text-align:center">返回列表的标准字符串形式</td>
+<td style="text-align:center">xs.toString</td>
 </tr>
 <tr>
-<td align="center">mkString</td>
-<td align="center">列表的不同表现形式，pre显示在列表之前，step分隔，post最后</td>
-<td align="center">xs mkString(“[”, “,”, “]”)</td>
+<td style="text-align:center">mkString</td>
+<td style="text-align:center">列表的不同表现形式，pre显示在列表之前，step分隔，post最后</td>
+<td style="text-align:center">xs mkString(“[”, “,”, “]”)</td>
 </tr>
 <tr>
-<td align="center">iterator</td>
-<td align="center">通过迭代器访问列表元素</td>
-<td align="center">val it = xs.iterator</td>
+<td style="text-align:center">iterator</td>
+<td style="text-align:center">通过迭代器访问列表元素</td>
+<td style="text-align:center">val it = xs.iterator</td>
 </tr>
 <tr>
-<td align="center">toArray</td>
-<td align="center">将List转换为Array</td>
-<td align="center">xs.toArray</td>
+<td style="text-align:center">toArray</td>
+<td style="text-align:center">将List转换为Array</td>
+<td style="text-align:center">xs.toArray</td>
 </tr>
 <tr>
-<td align="center">copyToArray</td>
-<td align="center">将列表的元素复制到Array中，从start开始</td>
-<td align="center">xs copyToArray(arr, strat)</td>
+<td style="text-align:center">copyToArray</td>
+<td style="text-align:center">将列表的元素复制到Array中，从start开始</td>
+<td style="text-align:center">xs copyToArray(arr, strat)</td>
 </tr>
-</tbody></table>
+</tbody>
+</table>
+</div>
 <h3 id="List的高阶用法"><a href="#List的高阶用法" class="headerlink" title="List的高阶用法"></a>List的高阶用法</h3><p><strong>对列表做映射</strong></p>
 <ul>
 <li><p>map</p>
@@ -425,7 +426,7 @@
 <p><strong>列表排序</strong></p>
 <p>xs sortWith before将对xs列表进行排序，before是用来比较两个元素的函数</p>
 <blockquote>
-<p>List(1, -3, 4, 2, 6) sortWith(_ &lt; _)    应该是升序排序</p>
+<p>List(1, -3, 4, 2, 6) sortWith(<em> &lt; </em>)    应该是升序排序</p>
 </blockquote>
 <h3 id="列表对象方法"><a href="#列表对象方法" class="headerlink" title="列表对象方法"></a>列表对象方法</h3><p><strong>从元素创建列表</strong></p>
 <p>之前使用的诸如List(1, 2, 3, 4)这样的创建列表的方法，其实是调用伴生对象中的apply方法进行</p>
@@ -446,7 +447,7 @@
 <p><strong>表格化函数</strong></p>
 <p>与fill类似，但是他的第二个参数不再是单个元素，而是接收一个函数，元素值不在固定</p>
 <blockquote>
-<p>List.tabulate(5, 5)(_ * _)</p>
+<p>List.tabulate(5, 5)(<em> * </em>)</p>
 </blockquote>
 <p><strong>拼接多个列表</strong></p>
 <p>List.concat将多个列表拼接在一起</p>

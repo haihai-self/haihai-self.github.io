@@ -211,14 +211,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>在<a target="_blank" rel="noopener" href="https://pinyin.sogou.com/linux/?r=pinyin">官网</a>下载对应的<code>deb</code>安装包，直接使用<code>dpkg</code>进行安装，会发现出现错误提示安装失败，因为搜狗输入法使用的是<code>fcitx</code>框架，对应的框架没有安装完成所以无法安装成功。</p>
-<a id="more"></a>
-
+        <p>在<a target="_blank" rel="noopener" href="https://pinyin.sogou.com/linux/?r=pinyin">官网</a>下载对应的<code>deb</code>安装包，直接使用<code>dpkg</code>进行安装，会发现出现错误提示安装失败，因为搜狗输入法使用的是<code>fcitx</code>框架，对应的框架没有安装完成所以无法安装成功。<br><a id="more"></a></p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo dpkg -i sogoupinyin_2.3.2.07_amd64.deb</span><br></pre></td></tr></table></figure>
-
 <p>在出现错误之后，使用如下命令安装<code>fcitx</code></p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install --fix-broken</span><br></pre></td></tr></table></figure>
-
 <p>在重新使用<code>dpkg</code>命令进行安装</p>
 <p>安装成功之后，在右上角的配置栏中找到搜狗输入法，添加到第一项，同时按照自己的习惯配置激活按钮即可。</p>
 
