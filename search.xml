@@ -1,6 +1,228 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>DiplomacyNode</title>
+    <url>/2020/09/27/chipyard/DiplomacyNode/</url>
+    <content><![CDATA[<p>Diplomacy Node是DOC中不同设备抽象成的节点，可以非常方便的在总线上添加设备，但是会有不同的节点用于支持不同的协议，下面就是关于不同节点的详细介绍</p>
+<a id="more"></a>
+<h1 id="Diplomacy-Node"><a href="#Diplomacy-Node" class="headerlink" title="Diplomacy Node"></a>Diplomacy Node</h1><p>Diplomacy将系统中不同的组件表现成有向无环图的节点，且节点有一些不同的类型</p>
+<h2 id="Client-Node"><a href="#Client-Node" class="headerlink" title="Client Node"></a>Client Node</h2><p>TileLink Client是通过在A通道上发送请求并在D通道上接收响应来启动TileLink事务的模块。如果实现了TL-C，则将会在B通道上接收到探针并在C通道上发出release信号，同时在E通道上授权确认。</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClient</span>(<span class="params">implicit p: <span class="type">Parameters</span></span>) <span class="keyword">extends</span> <span class="title">LazyModule</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> node = <span class="type">TLHelper</span>.makeClientNode(<span class="type">TLClientParameters</span>(</span><br><span class="line">    name = <span class="string">&quot;my-client&quot;</span>,</span><br><span class="line">    sourceId = <span class="type">IdRange</span>(<span class="number">0</span>, <span class="number">4</span>),</span><br><span class="line">    requestFifo = <span class="literal">true</span>,</span><br><span class="line">    visibility = <span class="type">Seq</span>(<span class="type">AddressSet</span>(<span class="number">0x10000</span>, <span class="number">0xffff</span>))))</span><br><span class="line"></span><br><span class="line">  <span class="keyword">lazy</span> <span class="keyword">val</span> module = <span class="keyword">new</span> <span class="type">LazyModuleImp</span>(<span class="keyword">this</span>) &#123;</span><br><span class="line">    <span class="keyword">val</span> (tl, edge) = node.out(<span class="number">0</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Rest of code here</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>name</p>
+<p>用于标识在Diplomacy中唯一的节点名称，string</p>
+</li>
+<li><p>sourceId</p>
+<p>指定client将使用的源标识符的范围，上述代码为(0, 4)表示的是同时可以发送四个源。</p>
+</li>
+<li><p>requestFifo</p>
+<p>client将请求支持它的下游管理器按照FIFO的顺序发送响应，默认值是false，这里设置为true</p>
+</li>
+<li><p>visibility</p>
+<p>指定client将访问的地址范围，默认是可以访问所有的地址，但是指定可访问的地址范围可以帮助下端的仲裁器进行优化。</p>
+</li>
+</ul>
+<p>在实现过程中，可以使用node.out来获取一对bundle/edge</p>
+<ul>
+<li><p>tl</p>
+<p>上述例子中，tl获取的是chisel的IObundle，他将会有2或者5个IO通道相对应（要是实现了TL-C将会有5个通道）</p>
+</li>
+<li><p>edge</p>
+<p>这是Diplomacy中的有向边，实现了很多有用的方法</p>
+</li>
+</ul>
+<h2 id="Manager-Node"><a href="#Manager-Node" class="headerlink" title="Manager Node"></a>Manager Node</h2><p>TileLink Manager将从通道A接收来之client的消息，并且从通道D发送响应。</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyManager</span>(<span class="params">implicit p: <span class="type">Parameters</span></span>) <span class="keyword">extends</span> <span class="title">LazyModule</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> device = <span class="keyword">new</span> <span class="type">SimpleDevice</span>(<span class="string">&quot;my-device&quot;</span>, <span class="type">Seq</span>(<span class="string">&quot;tutorial,my-device0&quot;</span>))</span><br><span class="line">  <span class="keyword">val</span> beatBytes = <span class="number">8</span></span><br><span class="line">  <span class="keyword">val</span> node = <span class="type">TLHelper</span>.makeManagerNode(beatBytes, <span class="type">TLManagerParameters</span>(</span><br><span class="line">    address = <span class="type">Seq</span>(<span class="type">AddressSet</span>(<span class="number">0x20000</span>, <span class="number">0xfff</span>)),</span><br><span class="line">    resources = device.reg,</span><br><span class="line">    regionType = <span class="type">RegionType</span>.<span class="type">UNCACHED</span>,</span><br><span class="line">    executable = <span class="literal">true</span>,</span><br><span class="line">    supportsArithmetic = <span class="type">TransferSizes</span>(<span class="number">1</span>, beatBytes),</span><br><span class="line">    supportsLogical = <span class="type">TransferSizes</span>(<span class="number">1</span>, beatBytes),</span><br><span class="line">    supportsGet = <span class="type">TransferSizes</span>(<span class="number">1</span>, beatBytes),</span><br><span class="line">    supportsPutFull = <span class="type">TransferSizes</span>(<span class="number">1</span>, beatBytes),</span><br><span class="line">    supportsPutPartial = <span class="type">TransferSizes</span>(<span class="number">1</span>, beatBytes),</span><br><span class="line">    supportsHint = <span class="type">TransferSizes</span>(<span class="number">1</span>, beatBytes),</span><br><span class="line">    fifoId = <span class="type">Some</span>(<span class="number">0</span>)))</span><br><span class="line"></span><br><span class="line">  <span class="keyword">lazy</span> <span class="keyword">val</span> module = <span class="keyword">new</span> <span class="type">LazyModuleImp</span>(<span class="keyword">this</span>) &#123;</span><br><span class="line">    <span class="keyword">val</span> (tl, edge) = node.in(<span class="number">0</span>)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>使用makeManagerNode创建节点，接收两个参数</p>
+<ul>
+<li><p>beatBytes</p>
+<p>表示的接口的宽度，以字节为单位。</p>
+</li>
+<li><p>TLManagerParameters</p>
+<p>TLManagerParameters唯一需要的参数是地址，该地址是该管理器将服务的地址范围的集合。</p>
+<ul>
+<li>第二个参数resources通常是从设备对象检索的，如果要将条目添加到BootROM中的DeviceTree中，以便Linux驱动程序可以读取它，则此参数是必需的。</li>
+<li>regionType，它提供有关管理器的缓存行为的一些信息。共有以下七个区域类型</li>
+<li>executable，确定是否允许CPU从该管理器中获取指令。默认情况下为false，大多数外设都将设为false</li>
+<li>接下来6个以supports开头的参数将确定可以从client接收参数的类型，其中TransferSizes将指定一次能接受消息的bytes数。</li>
+<li>fifoId，要是设置为None，将不保证可以顺序接受，要是设置了，将与相同区域的共享FIFO协议</li>
+</ul>
+</li>
+</ul>
+<h2 id="Register-Node"><a href="#Register-Node" class="headerlink" title="Register Node"></a>Register Node</h2><p>虽然可以直接指定管理器节点并编写所有逻辑来处理TileLink请求，但使用寄存器节点通常会容易得多。 这种类型的节点提供了regmap方法，该方法允许指定控制/状态寄存器并自动生成用于处理TileLink协议的逻辑。</p>
+<h2 id="Identity-Node"><a href="#Identity-Node" class="headerlink" title="Identity Node"></a>Identity Node</h2><p>Identity Node同时拥有输入输出IO，它只是将输入不变地连接到输出。 该节点主要用于将多个节点组合为具有多个边缘的单个节点。 例如，假设我们有两个lazy client module，每个mocule都有自己的客户端节点。</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClient1</span>(<span class="params">implicit p: <span class="type">Parameters</span></span>) <span class="keyword">extends</span> <span class="title">LazyModule</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> node = <span class="type">TLHelper</span>.makeClientNode(<span class="string">&quot;my-client1&quot;</span>, <span class="type">IdRange</span>(<span class="number">0</span>, <span class="number">1</span>))</span><br><span class="line"></span><br><span class="line">  <span class="keyword">lazy</span> <span class="keyword">val</span> module = <span class="keyword">new</span> <span class="type">LazyModuleImp</span>(<span class="keyword">this</span>) &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClient2</span>(<span class="params">implicit p: <span class="type">Parameters</span></span>) <span class="keyword">extends</span> <span class="title">LazyModule</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> node = <span class="type">TLHelper</span>.makeClientNode(<span class="string">&quot;my-client2&quot;</span>, <span class="type">IdRange</span>(<span class="number">0</span>, <span class="number">1</span>))</span><br><span class="line"></span><br><span class="line">  <span class="keyword">lazy</span> <span class="keyword">val</span> module = <span class="keyword">new</span> <span class="type">LazyModuleImp</span>(<span class="keyword">this</span>) &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>现在，我们在另一个惰性模块中实例化这两个client，并将它们的节点公开为单个节点。</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClientGroup</span>(<span class="params">implicit p: <span class="type">Parameters</span></span>) <span class="keyword">extends</span> <span class="title">LazyModule</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> client1 = <span class="type">LazyModule</span>(<span class="keyword">new</span> <span class="type">MyClient1</span>)</span><br><span class="line">  <span class="keyword">val</span> client2 = <span class="type">LazyModule</span>(<span class="keyword">new</span> <span class="type">MyClient2</span>)</span><br><span class="line">  <span class="keyword">val</span> node = <span class="type">TLIdentityNode</span>()</span><br><span class="line"></span><br><span class="line">  node := client1.node</span><br><span class="line">  node := client2.node</span><br><span class="line"></span><br><span class="line">  <span class="keyword">lazy</span> <span class="keyword">val</span> module = <span class="keyword">new</span> <span class="type">LazyModuleImp</span>(<span class="keyword">this</span>) &#123;</span><br><span class="line">    <span class="comment">// Nothing to do here</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Adapter-Node"><a href="#Adapter-Node" class="headerlink" title="Adapter Node"></a>Adapter Node</h2><p>像Identity Node一样，Adapter接受一定数量的输入并产生相同数量的输出。 但是，与标识节点不同，适配器节点不会简单地通过未更改的连接，它可以更改输入和输出之间的逻辑和物理接口。</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">val</span> node = <span class="type">TLAdapterNode</span>(</span><br><span class="line">  clientFn = &#123; cp =&gt;</span><br><span class="line">    <span class="comment">// ..</span></span><br><span class="line">  &#125;,</span><br><span class="line">  managerFn = &#123; mp =&gt;</span><br><span class="line">    <span class="comment">// ..</span></span><br><span class="line">  &#125;)</span><br></pre></td></tr></table></figure>
+
+<p>clientFn函数将输入的TLClientPortParameters作为参数，并为输出返回相应的参数。 managerFn将输出的TLManagerPortParameters作为参数，并为输入返回相应的参数。</p>
+<h2 id="Nexus-Node"><a href="#Nexus-Node" class="headerlink" title="Nexus Node"></a>Nexus Node</h2><p>Nexus Node与Adapter Node类似，但是他的输入接口跟输出接口不同</p>
+<h2 id="edge"><a href="#edge" class="headerlink" title="edge"></a>edge</h2><p>Diplomacy库提供了四个运算符，可用于在节点之间形成边。</p>
+<ul>
+<li><p>:=</p>
+<p>这是基本的连接操作符。它与Chisel单向连接器的语法相同，但并不等效，这是连接Diplomacy之间的节点而不是chisel之间的bundle束</p>
+</li>
+<li><p>:=*</p>
+<p>可以连接多个边，用于连接多个client node到nexus node或者adapter node即右边的节点，边的数量由client决定</p>
+</li>
+<li><p>:*=</p>
+<p>这也同样可以连接多个边，但是与上面不同的是这个边的数量由manager决定即左边的节点，用于连接nexus node 到多个manager节点。</p>
+</li>
+<li><p>:* = *</p>
+<p>它基于操作员的任意一侧具有已知数量的边来创建多个边，可以在生成器中使用，在生成器中，直到运行时才知道两侧的节点类型。</p>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>chipyard</category>
+      </categories>
+      <tags>
+        <tag>chipyard</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ECC编码</title>
+    <url>/2020/09/27/chipyard/ECC%E7%BC%96%E7%A0%81/</url>
+    <content><![CDATA[<p>ECC编码即（Error Correcting Code/Error Checking and Correcting），是使用海明码等方式对数据进行编码，从而可以得到数据检测以及校验功能</p>
+<a id="more"></a>
+
+<h2 id="code-amp-Decoding"><a href="#code-amp-Decoding" class="headerlink" title="code &amp; Decoding"></a>code &amp; Decoding</h2><p><strong>Decoding字段解释</strong></p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Decoding</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">uncorrected</span></span>: <span class="type">UInt</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">corrected</span></span>: <span class="type">UInt</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">correctable</span></span>: <span class="type">Bool</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">uncorrectable</span></span>: <span class="type">Bool</span> <span class="comment">// If true, correctable should be ignored</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">error</span> </span>= correctable || uncorrectable</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th align="center">name</th>
+<th align="center">description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">uncorrected: UInt</td>
+<td align="center">原始数据，未纠错的码</td>
+</tr>
+<tr>
+<td align="center">corrected: UInt</td>
+<td align="center">使用编码之后的数据</td>
+</tr>
+<tr>
+<td align="center">correctable: Bool</td>
+<td align="center">是够具有纠错能力</td>
+</tr>
+<tr>
+<td align="center">uncorrectable: Bool</td>
+<td align="center">检测是够出错，是够具有检测能力</td>
+</tr>
+<tr>
+<td align="center">error: Bool</td>
+<td align="center">是够有错，true表示有错</td>
+</tr>
+</tbody></table>
+<p><strong>Code字段解释</strong></p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Code</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">canDetect</span></span>: <span class="type">Boolean</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">canCorrect</span></span>: <span class="type">Boolean</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">width</span></span>(w0: <span class="type">Int</span>): <span class="type">Int</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/** Encode x to a codeword suitable for decode.</span></span><br><span class="line"><span class="comment">   *  If poison is true, the decoded value will report uncorrectable</span></span><br><span class="line"><span class="comment">   *  error despite uncorrected == corrected == x.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">encode</span></span>(x: <span class="type">UInt</span>, poison: <span class="type">Bool</span> = <span class="type">Bool</span>(<span class="literal">false</span>)): <span class="type">UInt</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">decode</span></span>(x: <span class="type">UInt</span>): <span class="type">Decoding</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/** Copy the bits in x to the right bit positions in an encoded word,</span></span><br><span class="line"><span class="comment">   *  so that x === decode(swizzle(x)).uncorrected; but don&#x27;t generate</span></span><br><span class="line"><span class="comment">   *  the other code bits, so decode(swizzle(x)).error might be true.</span></span><br><span class="line"><span class="comment">   *  For codes for which this operation is not trivial, throw an</span></span><br><span class="line"><span class="comment">   *  UnsupportedOperationException.  */</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">swizzle</span></span>(x: <span class="type">UInt</span>): <span class="type">UInt</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th align="center">name</th>
+<th align="center">description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">canDetect: Boolean</td>
+<td align="center">是否能进行检测错误</td>
+</tr>
+<tr>
+<td align="center">canCorrect: Boolean</td>
+<td align="center">是够能进行纠正错误</td>
+</tr>
+<tr>
+<td align="center">width(w0: Int): Int</td>
+<td align="center">位宽</td>
+</tr>
+<tr>
+<td align="center">encode(x: UInt, poison: Bool = Bool(false)): UInt</td>
+<td align="center">编码</td>
+</tr>
+<tr>
+<td align="center">decode(x: UInt): Decoding</td>
+<td align="center">解码，输出为Decoding</td>
+</tr>
+<tr>
+<td align="center">swizzle(x: UInt): UInt</td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+<h2 id="IdentityCode"><a href="#IdentityCode" class="headerlink" title="IdentityCode"></a>IdentityCode</h2><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">IdentityCode</span> <span class="keyword">extends</span> <span class="title">Code</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">canDetect</span> </span>= <span class="literal">false</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">canCorrect</span> </span>= <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">width</span></span>(w0: <span class="type">Int</span>) = w0</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">encode</span></span>(x: <span class="type">UInt</span>, poison: <span class="type">Bool</span> = <span class="type">Bool</span>(<span class="literal">false</span>)) = &#123;</span><br><span class="line">    require (poison.isLit &amp;&amp; poison.litValue == <span class="number">0</span>, <span class="string">&quot;IdentityCode can not be poisoned&quot;</span>)</span><br><span class="line">    x</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">swizzle</span></span>(x: <span class="type">UInt</span>) = x</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">decode</span></span>(y: <span class="type">UInt</span>) = <span class="keyword">new</span> <span class="type">Decoding</span> &#123;</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">uncorrected</span> </span>= y</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">corrected</span> </span>= y</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">correctable</span> </span>= <span class="type">Bool</span>(<span class="literal">false</span>)</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">uncorrectable</span> </span>= <span class="type">Bool</span>(<span class="literal">false</span>)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>继承了Code，这是不使用编码方式，所以所有的选项都标记为false或者跟源码一致</p>
+<h2 id="ParityCode"><a href="#ParityCode" class="headerlink" title="ParityCode"></a>ParityCode</h2><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ParityCode</span> <span class="keyword">extends</span> <span class="title">Code</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">canDetect</span> </span>= <span class="literal">true</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">canCorrect</span> </span>= <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">width</span></span>(w0: <span class="type">Int</span>) = w0+<span class="number">1</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">encode</span></span>(x: <span class="type">UInt</span>, poison: <span class="type">Bool</span> = <span class="type">Bool</span>(<span class="literal">false</span>)) = <span class="type">Cat</span>(x.xorR ^ poison, x)</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">swizzle</span></span>(x: <span class="type">UInt</span>) = <span class="type">Cat</span>(<span class="literal">false</span>.<span class="type">B</span>, x)</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">decode</span></span>(y: <span class="type">UInt</span>) = <span class="keyword">new</span> <span class="type">Decoding</span> &#123;</span><br><span class="line">    <span class="keyword">val</span> uncorrected = y(y.getWidth<span class="number">-2</span>,<span class="number">0</span>)</span><br><span class="line">    <span class="keyword">val</span> corrected = uncorrected</span><br><span class="line">    <span class="keyword">val</span> correctable = <span class="type">Bool</span>(<span class="literal">false</span>)</span><br><span class="line">    <span class="keyword">val</span> uncorrectable = y.xorR</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>奇偶校验码，即，这里使用的是偶校验，检查源字符串中的1的个数，要是1的个数为奇数的话，补一个1使得1的个个数为偶数</p>
+<table>
+<thead>
+<tr>
+<th align="center">name</th>
+<th align="center">description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">校验方式</td>
+<td align="center">偶校验</td>
+</tr>
+<tr>
+<td align="center">canDetect</td>
+<td align="center">可以检错</td>
+</tr>
+<tr>
+<td align="center">canCorrect</td>
+<td align="center">不能纠错</td>
+</tr>
+<tr>
+<td align="center">width</td>
+<td align="center">比原码多一位</td>
+</tr>
+<tr>
+<td align="center">encode</td>
+<td align="center">最后一位编码0或者1</td>
+</tr>
+<tr>
+<td align="center">decode</td>
+<td align="center">返回Decoding</td>
+</tr>
+</tbody></table>
+<h2 id="SECCode"><a href="#SECCode" class="headerlink" title="SECCode"></a>SECCode</h2><p>汉明码是一种能够检测多达两个同时发生的位错误并纠正单个位错误的分组代码。它是由RW Hamming开发的，用于纠错。</p>
+<p>在这种编码方法中，源通过在消息中插入冗余位来对消息进行编码。这些冗余位是多余的位，它们会生成并插入到消息本身的特定位置，以实现错误检测和纠正。当目的地接收到此消息时，它将执行重新计算以检测错误并查找出现错误的位位置。</p>
+<p>具体分为三个步骤</p>
+<ul>
+<li>计算冗余位数</li>
+<li>确定冗余在的具体位置</li>
+<li>计算每个冗余位的值</li>
+</ul>
+<h3 id="计算冗余位数"><a href="#计算冗余位数" class="headerlink" title="计算冗余位数"></a>计算冗余位数</h3><p>若数据位有m位，则将r个冗余位加入数据中，则一共有（m+r+1）个状态，其中m+r表示bit位信息，多余的一位表示无错状态。而r位冗余最多可以表示2<sup>r</sup>个状态，所以2<sup>r</sup>个状态比如大于等于（m+r+1）<br>$$<br>2^r &gt;= m+r+1<br>$$<br>例如一个数据有7位，则m=7，带入公示中计算得到r=4，因此可以记做（11，4）编码</p>
+<h3 id="确定冗余的位置"><a href="#确定冗余的位置" class="headerlink" title="确定冗余的位置"></a>确定冗余的位置</h3><p>$r_n$表示第冗余所在的位置，比如$r_1$表示第一个冗余所在的位置，$r_2$表示第二个冗余所在的位置，以此类推，则冗余所在数据中具体的位置可以由一下公式计算得到<br>$$<br>r_n = 2^n -1<br>$$<br><img src="/picture/2010/positioning_redundant_bits.jpg" alt="img"></p>
+<h3 id="计算冗余位"><a href="#计算冗余位" class="headerlink" title="计算冗余位"></a>计算冗余位</h3><p>r会指示具体错误是哪一位，将$r_i$具体看作是数的编码，则$r_1$将会指示所有的最后一位为1的编码，如1、3、5、7、9等奇数，转换为二进制最后一位都是1，则都会使用奇偶校验的方法异或之后放到$r_1$中</p>
+<p>$r_2$指示第二位为1的编码，如2、3、6、7、10、11，这些位也将使用奇偶校验的方式之后填入$r_2$中，校验表可以如下图所示。</p>
+<p><img src="/picture/2010/image-20200926155848830.png" alt="image-20200926155848830"></p>
+<p>将对应的校验的数据按需奇偶校验，填入适当的位置，最终得到结果。</p>
+<h3 id="对应代码"><a href="#对应代码" class="headerlink" title="对应代码"></a>对应代码</h3><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">encode</span></span>(x: <span class="type">UInt</span>, poison: <span class="type">Bool</span> = <span class="type">Bool</span>(<span class="literal">false</span>)) = &#123;</span><br><span class="line">  <span class="keyword">val</span> k = x.getWidth</span><br><span class="line">  <span class="keyword">val</span> n = width(k)</span><br><span class="line">  <span class="keyword">val</span> (_, _, syndrome) = impl(n, k)</span><br><span class="line"></span><br><span class="line">  require ((poison.isLit &amp;&amp; poison.litValue == <span class="number">0</span>) || poisonous(n), <span class="string">s&quot;SEC code of length <span class="subst">$&#123;n&#125;</span> cannot be poisoned&quot;</span>)</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* By setting the entire syndrome on poison, the corrected bit falls off the end of the code */</span></span><br><span class="line">  <span class="keyword">val</span> syndromeUInt = <span class="type">Vec</span>.tabulate(n-k) &#123; j =&gt; (syndrome(j)(k<span class="number">-1</span>, <span class="number">0</span>) &amp; x).xorR ^ poison &#125;.asUInt</span><br><span class="line">  <span class="type">Cat</span>(syndromeUInt, x)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>编码方式，首先k是对应的数据位长度，使用<code>width</code>计算出需要的hamming码的长度，传入impl函数，impl返回的syndrome就是计算hamming码对应编码的函数，他是使用system code的编发方式，不同上面的<code>PPxPxxxPxxxxxxxP</code>，他通过数据的转换， 转换成对应的<code>xxxxxxxxxxxPPPPP</code>对应的形式。</p>
+<h2 id="SECDEDCode"><a href="#SECDEDCode" class="headerlink" title="SECDEDCode"></a>SECDEDCode</h2><p>Single Error Correction, Double Error Detection，即能纠正一位错误，并能检测出两位错误，留坑算法先不解读。</p>
+]]></content>
+      <categories>
+        <category>chipyard</category>
+      </categories>
+      <tags>
+        <tag>chipyard</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>config</title>
     <url>/2020/09/22/chipyard/config/</url>
     <content><![CDATA[<p>config是chipyard中的配置查找模块，实现了具体的查询逻辑</p>
@@ -92,6 +314,176 @@
       </categories>
       <tags>
         <tag>chipyard</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Decoupled用法</title>
+    <url>/2020/09/26/chisel/Decoupled%E7%94%A8%E6%B3%95/</url>
+    <content><![CDATA[<p>Decoupled 即为接口包装一层valid 和 ready ，<code>decoupled 默认方向为输出</code>，如果需要输入，可以加.flip, Decoupled 可以直接调用Bundle或者Bits，Bundle 内的端口也应该用bits定义</p>
+<a id="more"></a>
+
+<p>Example1:</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">testIO</span> <span class="keyword">extends</span> <span class="title">Bundle</span> </span>&#123;</span><br><span class="line"><span class="keyword">val</span> a = <span class="type">Bits</span>(<span class="number">3.</span><span class="type">W</span>)</span><br><span class="line"><span class="keyword">val</span> b = <span class="type">Bits</span>(<span class="number">2.</span><span class="type">W</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">testmodule</span> <span class="keyword">extends</span> <span class="title">Module</span></span>&#123;</span><br><span class="line"><span class="keyword">val</span> io = <span class="type">IO</span>( <span class="keyword">new</span> <span class="type">Bundle</span>&#123;</span><br><span class="line">   <span class="keyword">val</span> test = <span class="type">Decoupled</span>(<span class="keyword">new</span> testIO)</span><br><span class="line"></span><br><span class="line">&#125;)</span><br><span class="line">io.test.valid := io.test.ready</span><br><span class="line">io.test.bits.a := <span class="number">1.</span><span class="type">U</span></span><br><span class="line">io.test.bits.b := <span class="number">1.</span><span class="type">U</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line">println(getVerilog(<span class="keyword">new</span> testmodule))</span><br></pre></td></tr></table></figure>
+
+<p>生成的verilog为</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">module cmd5Helpertestmodule(</span><br><span class="line">  input        clock,</span><br><span class="line">  input        reset,</span><br><span class="line">  input        io_test_ready,</span><br><span class="line">  output       io_test_valid,</span><br><span class="line">  output [<span class="number">2</span>:<span class="number">0</span>] io_test_bits_a,</span><br><span class="line">  output [<span class="number">1</span>:<span class="number">0</span>] io_test_bits_b</span><br><span class="line">);</span><br><span class="line">  assign io_test_valid = io_test_ready;</span><br><span class="line">  assign io_test_bits_a = <span class="number">3</span><span class="symbol">&#x27;h1</span>; </span><br><span class="line">  assign io_test_bits_b = <span class="number">2</span><span class="symbol">&#x27;h1</span>; </span><br><span class="line">endmodule</span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>chisel</category>
+      </categories>
+      <tags>
+        <tag>chisel</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>不同reg的用法</title>
+    <url>/2020/09/25/chisel/%E4%B8%8D%E5%90%8Creg%E7%9A%84%E7%94%A8%E6%B3%95/</url>
+    <content><![CDATA[<p><code>reg</code>是寄存器，会使得数据传输延时一个节拍，在时序电路中常用</p>
+<a id="more"></a>
+
+<h2 id="Reg"><a href="#Reg" class="headerlink" title="Reg"></a>Reg</h2><p>函数原型</p>
+<blockquote>
+<p>def apply[T &lt;: [Data]] (t: T = null, next: T = null, init: T = null)(<em>implicit</em> sourceInfo: SourceInfo, compileOptions: [CompileOptions]): T</p>
+</blockquote>
+<ul>
+<li>t是寄存器的数据类型</li>
+<li>next是输入端的数据，即延迟一拍输出的数据</li>
+<li>init是复位幸好有效时初始的数据</li>
+</ul>
+<p><strong>使用方法</strong></p>
+<ul>
+<li>val B = Reg(UInt(width=3)) //指明类型和位宽</li>
+<li>B := C //next的值为C的值</li>
+<li>val r3 = Reg(Vec(4, UInt(8.W)))  //每个元素申明为8位宽</li>
+</ul>
+<h2 id="RegInit"><a href="#RegInit" class="headerlink" title="RegInit"></a>RegInit</h2><p>函数原型</p>
+<blockquote>
+<p>defapply[T &lt;: Data] (init: T)(implicit sourceInfo: SourceInfo, compileOptions: CompileOptions): T</p>
+</blockquote>
+<ul>
+<li>init是初始化寄存器的值</li>
+</ul>
+<p>函数原型</p>
+<blockquote>
+<p>defapply[T &lt;: Data] (t: T, init: T)(implicit sourceInfo: SourceInfo, compileOptions: CompileOptions): T</p>
+</blockquote>
+<ul>
+<li>t是初始化的数据类型</li>
+<li>init是初始化的值</li>
+</ul>
+<p><strong>使用方法</strong></p>
+<ul>
+<li><p>位宽会自动匹配或者也可以手动申明</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">val</span> r1 = <span class="type">RegInit</span>(<span class="number">1.</span><span class="type">U</span>) <span class="comment">// width will be inferred to be 1</span></span><br><span class="line"><span class="keyword">val</span> r2 = <span class="type">RegInit</span>(<span class="number">1.</span><span class="type">U</span>(<span class="number">8.</span><span class="type">W</span>)) <span class="comment">// width is set to 8</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>可以使用寄存器类型进行统一申明</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyBundle</span> <span class="keyword">extends</span> <span class="title">Bundle</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> unknown = <span class="type">UInt</span>()</span><br><span class="line">  <span class="keyword">val</span> known   = <span class="type">UInt</span>(<span class="number">8.</span><span class="type">W</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">val</span> w1 = <span class="type">Reg</span>(<span class="keyword">new</span> <span class="type">MyBundle</span>)</span><br><span class="line"><span class="keyword">val</span> w2 = <span class="type">RegInit</span>(w1)</span><br><span class="line"><span class="comment">// Width of w2.unknown is inferred</span></span><br><span class="line"><span class="comment">// Width of w2.known is set to 8</span></span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<h2 id="RegNext"><a href="#RegNext" class="headerlink" title="RegNext"></a>RegNext</h2><p>函数原型</p>
+<blockquote>
+<p>defapply[T &lt;: Data] (next: T, init: T)(implicit sourceInfo: SourceInfo, compileOptions: CompileOptions): T</p>
+</blockquote>
+<ul>
+<li>next为输入的接口</li>
+<li>init为复位信号有效时的初始值</li>
+</ul>
+<p>函数原型</p>
+<blockquote>
+<p>defapply[T &lt;: Data] (next: T)(implicit sourceInfo: SourceInfo, compileOptions: CompileOptions): T</p>
+</blockquote>
+<ul>
+<li>next为输入的接口，即下一个时钟节拍寄存器的值</li>
+</ul>
+<p><strong>使用方法</strong></p>
+<ul>
+<li><p>数据的位宽将会被自动推断</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">val</span> foo = <span class="type">Reg</span>(<span class="type">UInt</span>(<span class="number">4.</span><span class="type">W</span>))         <span class="comment">// width is 4</span></span><br><span class="line"><span class="keyword">val</span> bar = <span class="type">RegNext</span>(foo)           <span class="comment">// width is unset</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">val</span> foo = <span class="type">Reg</span>(<span class="type">UInt</span>(<span class="number">4.</span><span class="type">W</span>))         <span class="comment">// width is 4</span></span><br><span class="line"><span class="keyword">val</span> bar = <span class="type">Reg</span>(chiselTypeOf(foo)) <span class="comment">// width is 4</span></span><br><span class="line">bar := foo  <span class="comment">//先初始化寄存器位宽，之后在初始化next的值</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>可是使用Bundle进行自动的推断初始化</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyBundle</span> <span class="keyword">extends</span> <span class="title">Bundle</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> x = <span class="type">UInt</span>(<span class="number">4.</span><span class="type">W</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">val</span> foo = <span class="type">Wire</span>(<span class="keyword">new</span> <span class="type">MyBundle</span>)     <span class="comment">// the width of foo.x is 4</span></span><br><span class="line"><span class="keyword">val</span> bar = <span class="type">RegNext</span>(foo)           <span class="comment">// the width of bar.x is 4</span></span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<h2 id="RegEnable"><a href="#RegEnable" class="headerlink" title="RegEnable"></a>RegEnable</h2><p>函数原型</p>
+<blockquote>
+<p>defapply[T &lt;: Data] (next: T, init: T, enable: Bool): T</p>
+</blockquote>
+<ul>
+<li>next寄存器的输入</li>
+<li>init初始化的值</li>
+<li>enable，显示化使能信号，当为true的时候，该寄存器才能始终有效，否者将会被锁定</li>
+</ul>
+<p>函数原型</p>
+<blockquote>
+<p>defapply[T &lt;: Data] (next: T, enable: Bool): T</p>
+</blockquote>
+<ul>
+<li>next为输入信号</li>
+<li>enable为使能端</li>
+</ul>
+<p><strong>使用方法</strong></p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">val</span> regWithEnableAndReset = <span class="type">RegEnable</span>(nextVal, <span class="number">0.</span><span class="type">U</span>, ena)  <span class="comment">//使用第一个函数原型进行初始化</span></span><br><span class="line"><span class="keyword">val</span> regWithEnable = <span class="type">RegEnable</span>(nextVal, ena)  <span class="comment">//使用第二个函数原型进行初始户</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="ShiftRegister"><a href="#ShiftRegister" class="headerlink" title="ShiftRegister"></a>ShiftRegister</h2><p>这是延时寄存器</p>
+<p>函数原型</p>
+<blockquote>
+<p>defapply[T &lt;: Data] (in: T, n: Int, resetData: T, en: Bool): T</p>
+</blockquote>
+<ul>
+<li>in为输出数据</li>
+<li>n为掩饰周期</li>
+<li>resetData为初始化数据</li>
+<li>en为使能端</li>
+</ul>
+<p>函数原型</p>
+<blockquote>
+<p>defapply[T &lt;: Data] (in: T, n: Int, en: Bool = true.B): T</p>
+</blockquote>
+<ul>
+<li>in为输入数据</li>
+<li>n为延时周期，</li>
+<li>en为使能端</li>
+</ul>
+<p><strong>使用方法</strong></p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">val</span> regDelayTwoReset = <span class="type">ShiftRegister</span>(nextVal, <span class="number">2</span>, <span class="number">0.</span><span class="type">U</span>, ena) <span class="comment">//使用第一个函数原型进行初始化</span></span><br><span class="line"><span class="keyword">val</span> regDelayTwo = <span class="type">ShiftRegister</span>(nextVal, <span class="number">2</span>, ena)  <span class="comment">//使用第二个函数原型进行初始化</span></span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>chisel</category>
+      </categories>
+      <tags>
+        <tag>chisel语法</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>mrmr算法</title>
+    <url>/2020/10/20/machineLearning/mrmr%E7%AE%97%E6%B3%95/</url>
+    <content><![CDATA[<p>mrmr算法是特征选择算法，通过筛选出与结果最相关且特征之间最小冗余的特征进行特征选择， 其基础是利用互信息。</p>
+<a id="more"></a>
+<h2 id="互信息的理解"><a href="#互信息的理解" class="headerlink" title="互信息的理解"></a>互信息的理解</h2><p>若两个变量独立，则有$P(X, Y)=P(X)P(Y)$，这个公式说明已知X，将不会对Y的分布造成任何的影响，即$P(Y)=P(Y|X)$，独立性反应了给定$X$之后，会不会对$Y$带来额外的信息，但是这只能表示两个随机变量是否有关，并不能刻画他们之间的大小关系，因此引入了互信息的概念。</p>
+<p>互信息仅仅能刻画两个随机变量之间的关系，还可以反应他们之间关系的强弱，定义互信息如下所示。<br>$$<br>I(X;Y)=\sum_{x,y}p(x,y)log\frac{p(x,y)}{p(x)p(y)}<br>$$<br>其中$I(X;Y)=H(Y)-H(Y|X)$，，可以读作$Y$的不确定度，减去$X$确定之后$Y$剩余的不确定度，即表示信息不确定的减少，表示的是信息的增益，其中$H(Y)$是$Y$的熵，定义为<br>$$<br>H(Y)=-\sum_{y}\log{p(y)} p(y)​<br>$$<br>衡量的是$Y$的不确定度，即是说，$Y$分布得越离散，$H(Y)$的值越高，而$H(Y|X)$则表示在已知$X$的情况下，$Y$的不确定度。</p>
+<p><strong>而$I(X;Y)$则表示由$X$引入而使$Y$的不确定度减小的量</strong>，因而如果$X,Y$关系越密切，$I(X;Y)$越大，$I(X;Y)$最大的取值是$H(Y)$，也就是说，$X,Y$完全相关，由于$X$的引入，$Y$的熵由原来的$H(Y)$减小了$I(X;Y)=H(Y)$，变成了0，也就是说如果$X$确定，那么$Y$就完全确定了。而当$X,Y$独立时，$I(X;Y)=0$引入$X$，并未给$Y$的确定带来任何好处。</p>
+<p>详细推导过程如下所示<br>$$<br>\begin{aligned}<br>I(X ; Y) &amp;=\sum_{x, y} p(x, y) \log \frac{p(x, y)}{p(x) p(y)} \<br>&amp;=\sum_{x, y} p(x, y) \log \frac{p(x, y)}{p(x)}-\sum_{x, y} p(x, y) \log p(y) \<br>&amp;=\sum_{x, y} p(x) p(y \mid x) \log p(y \mid x)-\sum_{x, y} p(x, y) \log p(y) \<br>&amp;=\sum_{x} p(x)\left(\sum_{y} p(y \mid x) \log p(y \mid x)\right)-\sum_{y} \log p(y)\left(\sum_{x} p(x, y)\right) \<br>&amp;=-\sum_{x} p(x) H(Y \mid X=x)-\sum_{y} \log p(y) p(y) \<br>&amp;=-H(Y \mid X)+H(Y) \<br>&amp;=H(Y)-H(Y \mid X)<br>\end{aligned}<br>$$<br>总结$I(X;Y)$的性质</p>
+<ul>
+<li>$I(X;Y)⩾0$</li>
+<li>$H(X)−H(X|Y)=I(X;Y)=I(Y;X)=H(Y)−H(Y|X)$</li>
+<li>当$X,Y$独立时，$I(X;Y)=0$，信息增益为0</li>
+<li>当$X,Y$知道一个就能推断另一个时，$I(X;Y)=H(X)=H(Y)$，即信息增益为1</li>
+</ul>
+<h2 id="mRMR算法"><a href="#mRMR算法" class="headerlink" title="mRMR算法"></a>mRMR算法</h2><p>这是特征选择的一种算法，Max Relevance and Min Redundancy，是在原始的特征集合中找到与最终输出结果相关性最大(Max Relevance)，但彼此特征之间的相关性最小的一组特征(Min Redundacy)</p>
+<p>得到的结果将会满足最大相关性<br>$$<br>\max D(S, c), D=\frac{1}{|S|} \sum_{x_{i} \in S} I\left(x_{i} ; c\right)<br>$$<br>其中采用所有特征$x_i$与分类$c$之间互信息的平均来近似$D(S,c)$。</p>
+<p>通过Max-Relevance选择的特征可能具有冗余，这些特征之间的依赖性非常大。当两个特征互相冗余，当去掉其中一个的时候，分类结果并不会有非常大的变化。因此Min-Redundancy方式可以用来剔除掉冗余特征<br>$$<br>\min R(S), R=\frac{1}{|S|^{2}} \sum_{x_{i}, x_{i} \in S} I\left(x_{i}, x_{j}\right)<br>$$<br>将最大相关性D与最小冗余度R结合起来，我们称其为minimal-redundancy-maximum-relevancy(mRMR)。我们定义算子$\Phi(D, R)$来结合D与R，考虑最简单的结合方式<br>$$<br>\max \Phi(D, R), \Phi=D-R<br>$$<br>实际中将使用增量搜索的方式获取近似解，假设已经得到$S_{m-1}$特征子集，需要在剩余的$X-S_{m-1}$的特征子集中选出第m个特征子集，通过最大化$\Phi()$来进行特征选择，即最大化<br>$$<br>\max <em>{x</em>{j} \in X-S_{m-1}}\left[I\left(x_{j} ; c\right)-\frac{1}{m-1} \sum_{x_{i} \in S_{m-1}} I\left(x_{i} ; x_{j}\right)\right]<br>$$</p>
+<figure class="highlight matlab"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="params">[fea]</span> = <span class="title">mrmr_mid_d</span><span class="params">(d, f, K)</span></span></span><br><span class="line"><span class="comment">% function [fea] = mrmr_mid_d(d, f, K)</span></span><br><span class="line"><span class="comment">% d-输入N*M矩阵，N个采样值，M个特征，特征向量</span></span><br><span class="line"><span class="comment">% f-输入的N*1向量，分类结果</span></span><br><span class="line"><span class="comment">% K-选择的葛铮的个数</span></span><br><span class="line"><span class="comment">% </span></span><br><span class="line"><span class="comment">% MID scheme according to MRMR</span></span><br><span class="line"><span class="comment">%</span></span><br><span class="line"><span class="comment">% By Hanchuan Peng</span></span><br><span class="line"><span class="comment">% April 16, 2003</span></span><br><span class="line"><span class="comment">%</span></span><br><span class="line"></span><br><span class="line">bdisp=<span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">nd = <span class="built_in">size</span>(d,<span class="number">2</span>); <span class="comment">%特征个数</span></span><br><span class="line">nc = <span class="built_in">size</span>(d,<span class="number">1</span>); <span class="comment">%样本个数</span></span><br><span class="line"></span><br><span class="line">t1=cputime;</span><br><span class="line"><span class="keyword">for</span> <span class="built_in">i</span>=<span class="number">1</span>:nd, </span><br><span class="line">   t(<span class="built_in">i</span>) = mutualinfo(d(:,<span class="built_in">i</span>), f); <span class="comment">%计算每个特征跟分类之间的互信息</span></span><br><span class="line"><span class="keyword">end</span>; </span><br><span class="line">fprintf(<span class="string">&#x27;calculate the marginal dmi costs %5.1fs.\n&#x27;</span>, cputime-t1);</span><br><span class="line"></span><br><span class="line">[tmp, idxs] = <span class="built_in">sort</span>(-t); <span class="comment">%按照计算的互信息降序排列，tmp存储的是降序排列的值，idxs为原来对应的序号</span></span><br><span class="line"></span><br><span class="line">fea_base = idxs(<span class="number">1</span>:K); <span class="comment">%取前k个特征</span></span><br><span class="line"></span><br><span class="line">fea(<span class="number">1</span>) = idxs(<span class="number">1</span>); <span class="comment">%互信息最大的特征</span></span><br><span class="line"></span><br><span class="line">KMAX = <span class="built_in">min</span>(<span class="number">1000</span>,nd); <span class="comment">%最大的特征数是500</span></span><br><span class="line"></span><br><span class="line">idxleft = idxs(<span class="number">2</span>:KMAX); <span class="comment">%剩余的特征</span></span><br><span class="line"></span><br><span class="line">k=<span class="number">1</span>;</span><br><span class="line"><span class="keyword">if</span> bdisp==<span class="number">1</span>,</span><br><span class="line">fprintf(<span class="string">&#x27;k=1 cost_time=(N/A) cur_fea=%d #left_cand=%d\n&#x27;</span>, ...</span><br><span class="line">      fea(k), <span class="built_in">length</span>(idxleft));</span><br><span class="line"><span class="keyword">end</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> k=<span class="number">2</span>:K, <span class="comment">%除去互信息最大的特征之后，还需要选取K-1个特征</span></span><br><span class="line">   t1=cputime;</span><br><span class="line">   ncand = <span class="built_in">length</span>(idxleft); <span class="comment">%剩余特征长度</span></span><br><span class="line">   curlastfea = <span class="built_in">length</span>(fea); <span class="comment">%已选特征长度</span></span><br><span class="line">   <span class="keyword">for</span> <span class="built_in">i</span>=<span class="number">1</span>:ncand, <span class="comment">%对每个剩余的特征，计算其互信息</span></span><br><span class="line">      t_mi(<span class="built_in">i</span>) = mutualinfo(d(:,idxleft(<span class="built_in">i</span>)), f);  <span class="comment">%计算与分类结果的互信息</span></span><br><span class="line">      mi_array(idxleft(<span class="built_in">i</span>),curlastfea) = getmultimi(d(:,fea(curlastfea)), d(:,idxleft(<span class="built_in">i</span>))); <span class="comment">%</span></span><br><span class="line">      c_mi(<span class="built_in">i</span>) = <span class="built_in">mean</span>(mi_array(idxleft(<span class="built_in">i</span>), :)); </span><br><span class="line">   <span class="keyword">end</span>;</span><br><span class="line"></span><br><span class="line">   [tmp, fea(k)] = <span class="built_in">max</span>(t_mi(<span class="number">1</span>:ncand) - c_mi(<span class="number">1</span>:ncand));</span><br><span class="line"></span><br><span class="line">   tmpidx = fea(k); fea(k) = idxleft(tmpidx); idxleft(tmpidx) = [];</span><br><span class="line"></span><br><span class="line">   <span class="keyword">if</span> bdisp==<span class="number">1</span>,</span><br><span class="line">   fprintf(<span class="string">&#x27;k=%d cost_time=%5.4f cur_fea=%d #left_cand=%d\n&#x27;</span>, ...</span><br><span class="line">      k, cputime-t1, fea(k), <span class="built_in">length</span>(idxleft));</span><br><span class="line">   <span class="keyword">end</span>;</span><br><span class="line"><span class="keyword">end</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">%===================================== </span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">c</span> = <span class="title">getmultimi</span><span class="params">(da, dt)</span> </span></span><br><span class="line"><span class="keyword">for</span> <span class="built_in">i</span>=<span class="number">1</span>:<span class="built_in">size</span>(da,<span class="number">2</span>), </span><br><span class="line">   c(<span class="built_in">i</span>) = mutualinfo(da(:,<span class="built_in">i</span>), dt);</span><br><span class="line"><span class="keyword">end</span>; </span><br><span class="line">    </span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>机器学习</category>
+      </categories>
+      <tags>
+        <tag>featureSelect</tag>
       </tags>
   </entry>
   <entry>
@@ -317,6 +709,259 @@
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">new</span> <span class="type">PartialFunction</span>[<span class="type">List</span>[<span class="type">Int</span>], <span class="type">Int</span>]&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">apply</span></span>(xs: <span class="type">List</span>[<span class="type">Int</span>]) = xs <span class="keyword">match</span>&#123;</span><br><span class="line">    <span class="keyword">case</span> x :: y :: _ =&gt; y</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">isDefinedAt</span></span>(xs: <span class="type">List</span>[<span class="type">Int</span>]) xs <span class="keyword">match</span>&#123;</span><br><span class="line">    <span class="keyword">case</span> x :: y :: _ =&gt; <span class="literal">true</span></span><br><span class="line">    <span class="keyword">case</span> _ =&gt; <span class="literal">false</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 </li>
 </ul>
+]]></content>
+      <categories>
+        <category>scala</category>
+      </categories>
+      <tags>
+        <tag>scala编程</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>使用列表</title>
+    <url>/2020/09/28/scala/scala%E7%BC%96%E7%A8%8B/11-%E4%BD%BF%E7%94%A8%E5%88%97%E8%A1%A8/</url>
+    <content><![CDATA[<p>列表是scala程序中最常使用的数据结构，这里记录一下列表的常用操作，以及设计原则。</p>
+<a id="more"></a>
+
+<h3 id="List基础操作"><a href="#List基础操作" class="headerlink" title="List基础操作"></a>List基础操作</h3><p><strong>列表字面量</strong></p>
+<p>列表跟数组非常相似，但是列表是不可变的，而数组是可变的。同时列表是链表结构，而数组则是平的。</p>
+<p>同时列表是同构的，即同一个列表的所有元素都必须相同，同时列表也是协变的，如列表中有两种类型的元素，分别为S跟T，如果S是T的字类型或者相反，则这个列表是合法的。</p>
+<p><strong>列表构建</strong></p>
+<p>所有列表的构建都来自两个基础的单元<code>Nil 跟 ::</code>，其中Nil表示空列表，而::表示元素追加，具体构建如下所示</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">val</span> fruit = <span class="string">&quot;apples&quot;</span> :: (<span class="string">&quot;oranges&quot;</span> :: (<span class="string">&quot;pears&quot;</span> :: <span class="type">Nil</span>))  <span class="comment">//与去掉括号含义一致</span></span><br><span class="line"><span class="keyword">val</span> empty = <span class="type">Nil</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>列表的基本操作</strong></p>
+<p>对列表的所有操作都可以用下面三项来描述</p>
+<ul>
+<li>head：返回列表的第一个元素</li>
+<li>tail：返回除列表第一个元素之外的所有元素</li>
+<li>isEmpty：返回列表是否为空</li>
+</ul>
+<p>其中List(…)表示匹配所有的元素</p>
+<h3 id="List的初阶方法"><a href="#List的初阶方法" class="headerlink" title="List的初阶方法"></a>List的初阶方法</h3><p>如果一个方法不接收任何函数作为入参，就被称为初阶方法</p>
+<table>
+<thead>
+<tr>
+<th align="center">name</th>
+<th align="center">description</th>
+<th align="center">example</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">::</td>
+<td align="center">使用元素构建列表</td>
+<td align="center">1 :: 2</td>
+</tr>
+<tr>
+<td align="center">:::</td>
+<td align="center">拼接两个列表</td>
+<td align="center">xs ::: ys</td>
+</tr>
+<tr>
+<td align="center">head</td>
+<td align="center">返回第一个元素</td>
+<td align="center">xs.head</td>
+</tr>
+<tr>
+<td align="center">tail</td>
+<td align="center">返回除第一个元素之外的剩余列表</td>
+<td align="center">xs.tail</td>
+</tr>
+<tr>
+<td align="center">init</td>
+<td align="center">返回除最后一个元素剩余部分</td>
+<td align="center">xs.init</td>
+</tr>
+<tr>
+<td align="center">last</td>
+<td align="center">返回最后一个元素</td>
+<td align="center">xs.last</td>
+</tr>
+<tr>
+<td align="center">isEmpty</td>
+<td align="center">判断列表是否为空，返回Bool</td>
+<td align="center">xs.isEmpty</td>
+</tr>
+<tr>
+<td align="center">reverse</td>
+<td align="center">列表反转</td>
+<td align="center">xs.reverse</td>
+</tr>
+<tr>
+<td align="center">drop</td>
+<td align="center">除去前n个元素，返回剩下的元素</td>
+<td align="center">xs.drop(n)</td>
+</tr>
+<tr>
+<td align="center">take</td>
+<td align="center">返回前n个元素</td>
+<td align="center">xs.take(n)</td>
+</tr>
+<tr>
+<td align="center">splitAt</td>
+<td align="center">在n处分割两个列表</td>
+<td align="center">xs.splitAt(2)</td>
+</tr>
+<tr>
+<td align="center">apply</td>
+<td align="center">选取元素</td>
+<td align="center">xs.apply(2)</td>
+</tr>
+<tr>
+<td align="center">indices</td>
+<td align="center">返回指定列表所有有效下标</td>
+<td align="center">xs.indices</td>
+</tr>
+<tr>
+<td align="center">flatten</td>
+<td align="center">将列表元素为列表的元素扁平化</td>
+<td align="center">xs.flatten</td>
+</tr>
+<tr>
+<td align="center">zip</td>
+<td align="center">接收两个列表，将两个列表元素进行两两组合，若长度不匹配，将不匹配的元素丢弃</td>
+<td align="center">xs.indice zip xs</td>
+</tr>
+<tr>
+<td align="center">zipWithIndex</td>
+<td align="center">将列表元素与下标进行zip</td>
+<td align="center">xs.zipWithIndex</td>
+</tr>
+<tr>
+<td align="center">unzip</td>
+<td align="center">与zip相反的操作</td>
+<td align="center">xs.unzip</td>
+</tr>
+<tr>
+<td align="center">toString</td>
+<td align="center">返回列表的标准字符串形式</td>
+<td align="center">xs.toString</td>
+</tr>
+<tr>
+<td align="center">mkString</td>
+<td align="center">列表的不同表现形式，pre显示在列表之前，step分隔，post最后</td>
+<td align="center">xs mkString(“[”, “,”, “]”)</td>
+</tr>
+<tr>
+<td align="center">iterator</td>
+<td align="center">通过迭代器访问列表元素</td>
+<td align="center">val it = xs.iterator</td>
+</tr>
+<tr>
+<td align="center">toArray</td>
+<td align="center">将List转换为Array</td>
+<td align="center">xs.toArray</td>
+</tr>
+<tr>
+<td align="center">copyToArray</td>
+<td align="center">将列表的元素复制到Array中，从start开始</td>
+<td align="center">xs copyToArray(arr, strat)</td>
+</tr>
+</tbody></table>
+<h3 id="List的高阶用法"><a href="#List的高阶用法" class="headerlink" title="List的高阶用法"></a>List的高阶用法</h3><p><strong>对列表做映射</strong></p>
+<ul>
+<li><p>map</p>
+<p>x map f这个操作将类型为List[T]的列表xsh和类型为T =&gt; U的函数f作为操作源，返回一个通过应用f到xs的每个元素后得到的列表，例如</p>
+<blockquote>
+<p>List(1, 2, 3) map(_ +1)</p>
+</blockquote>
+</li>
+<li><p>flatMap</p>
+<p>返回元素列表，即flat跟map一起使用，将返回一个列表，内部将不含有子列表</p>
+</li>
+<li><p>foreach</p>
+<p>要求右边是一个过程，即像c语言那样面向过程的编程</p>
+<blockquote>
+<p>List(1, 2, 3, 4, 5) foreach(sum += _)</p>
+</blockquote>
+</li>
+</ul>
+<p><strong>列表过滤</strong> </p>
+<ul>
+<li><p>filter</p>
+<p>xs filter p 两个操作数分别为类型为List[T]的xs和类型为T =&gt; Boolean的前提条件函数p。这个操作将xs中的所有p(x)为True的元素x交出</p>
+<blockquote>
+<p>List(1, 2, 3, 4, 5) filter (_ %2 ==0)</p>
+</blockquote>
+</li>
+<li><p>partition</p>
+<p>与filter类似，但是他同时交出两个列表，一个是p(x)为true的列表，另外一个是为false的列表</p>
+<blockquote>
+<p>xs partition p 等于 (xs filter p, xs filter !p)</p>
+</blockquote>
+</li>
+<li><p>find</p>
+<p>xs find p 返回的是xs中第一个满足条件p(x)为True的元素。</p>
+</li>
+<li><p>takeWhile</p>
+<p>xs takeWhile p 返回满足p的最长前缀</p>
+<blockquote>
+<p>List(1, 2, 3, -4, 5) takeWhile (_&gt; 0) //返回(1, 2, 3)</p>
+</blockquote>
+</li>
+<li><p>dropWhile</p>
+<p>除去最长前缀剩下的元素</p>
+</li>
+<li><p>span</p>
+<p>span将takeWhile与dropWhile合一，与partition类似，将返回两个列表</p>
+</li>
+</ul>
+<p><strong>对列表做前置条件检查</strong></p>
+<ul>
+<li><p>forall</p>
+<p>xs forall p将检查所有的元素是否都满足p，满足返回true，否则返回false</p>
+</li>
+<li><p>exit</p>
+<p>存在就返回true否则返回false</p>
+</li>
+</ul>
+<p><strong>列表折叠</strong></p>
+<ul>
+<li><p>左折叠</p>
+<p><code>(z /: xs)(op)</code>将以z为前缀，列表元素依次连续应用op</p>
+<blockquote>
+<p>(z :/ List(a, b, c))(op)    等于    op(op(op(z, a), b), c)</p>
+</blockquote>
+<p>产生一棵靠左的树</p>
+</li>
+<li><p>右折叠</p>
+<p><code>:\</code>产生一棵靠右的树</p>
+<blockquote>
+<p>(List(a, b, c):\z)(op)    等于    op(a, op(b, op(c, z)))</p>
+</blockquote>
+</li>
+</ul>
+<p><strong>列表排序</strong></p>
+<p>xs sortWith before将对xs列表进行排序，before是用来比较两个元素的函数</p>
+<blockquote>
+<p>List(1, -3, 4, 2, 6) sortWith(_ &lt; _)    应该是升序排序</p>
+</blockquote>
+<h3 id="列表对象方法"><a href="#列表对象方法" class="headerlink" title="列表对象方法"></a>列表对象方法</h3><p><strong>从元素创建列表</strong></p>
+<p>之前使用的诸如List(1, 2, 3, 4)这样的创建列表的方法，其实是调用伴生对象中的apply方法进行</p>
+<blockquote>
+<p>List(1, 2, 3, 4)    等于    List.apply(1, 2, 3, 4)</p>
+</blockquote>
+<p><strong>创建数值区间</strong></p>
+<p>List.range(begin, end, step=1)这个方法将创建一个左闭右开的区间，step是步长，默认是1</p>
+<blockquote>
+<p>List.range(1, 5)</p>
+</blockquote>
+<p><strong>创建相同的列表元素</strong></p>
+<p>List.fill(num)(val)这个方法将创建指定维度且填充相同的列表</p>
+<blockquote>
+<p>List.fill(2, 3)(1)    将会在内部创建两个子列表，每个列表的元素为3个</p>
+<p>//List(List(1, 1, 1), List(1, 1, 1))</p>
+</blockquote>
+<p><strong>表格化函数</strong></p>
+<p>与fill类似，但是他的第二个参数不再是单个元素，而是接收一个函数，元素值不在固定</p>
+<blockquote>
+<p>List.tabulate(5, 5)(_ * _)</p>
+</blockquote>
+<p><strong>拼接多个列表</strong></p>
+<p>List.concat将多个列表拼接在一起</p>
+<blockquote>
+<p>List.concat(List(‘a’, b), List(‘c’ , ‘d’), List(‘e’))  //返回List(‘a’, ‘b’, ‘c’, ‘d’, ‘e’)</p>
+</blockquote>
 ]]></content>
       <categories>
         <category>scala</category>
@@ -723,651 +1368,6 @@
       </categories>
       <tags>
         <tag>scala语法</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Decoupled用法</title>
-    <url>/2020/09/26/chisel/Decoupled%E7%94%A8%E6%B3%95/</url>
-    <content><![CDATA[<p>Decoupled 即为接口包装一层valid 和 ready ，<code>decoupled 默认方向为输出</code>，如果需要输入，可以加.flip, Decoupled 可以直接调用Bundle或者Bits，Bundle 内的端口也应该用bits定义</p>
-<a id="more"></a>
-
-<p>Example1:</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">testIO</span> <span class="keyword">extends</span> <span class="title">Bundle</span> </span>&#123;</span><br><span class="line"><span class="keyword">val</span> a = <span class="type">Bits</span>(<span class="number">3.</span><span class="type">W</span>)</span><br><span class="line"><span class="keyword">val</span> b = <span class="type">Bits</span>(<span class="number">2.</span><span class="type">W</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">testmodule</span> <span class="keyword">extends</span> <span class="title">Module</span></span>&#123;</span><br><span class="line"><span class="keyword">val</span> io = <span class="type">IO</span>( <span class="keyword">new</span> <span class="type">Bundle</span>&#123;</span><br><span class="line">   <span class="keyword">val</span> test = <span class="type">Decoupled</span>(<span class="keyword">new</span> testIO)</span><br><span class="line"></span><br><span class="line">&#125;)</span><br><span class="line">io.test.valid := io.test.ready</span><br><span class="line">io.test.bits.a := <span class="number">1.</span><span class="type">U</span></span><br><span class="line">io.test.bits.b := <span class="number">1.</span><span class="type">U</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line">println(getVerilog(<span class="keyword">new</span> testmodule))</span><br></pre></td></tr></table></figure>
-
-<p>生成的verilog为</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">module cmd5Helpertestmodule(</span><br><span class="line">  input        clock,</span><br><span class="line">  input        reset,</span><br><span class="line">  input        io_test_ready,</span><br><span class="line">  output       io_test_valid,</span><br><span class="line">  output [<span class="number">2</span>:<span class="number">0</span>] io_test_bits_a,</span><br><span class="line">  output [<span class="number">1</span>:<span class="number">0</span>] io_test_bits_b</span><br><span class="line">);</span><br><span class="line">  assign io_test_valid = io_test_ready;</span><br><span class="line">  assign io_test_bits_a = <span class="number">3</span><span class="symbol">&#x27;h1</span>; </span><br><span class="line">  assign io_test_bits_b = <span class="number">2</span><span class="symbol">&#x27;h1</span>; </span><br><span class="line">endmodule</span><br></pre></td></tr></table></figure>
-
-]]></content>
-      <categories>
-        <category>chisel</category>
-      </categories>
-      <tags>
-        <tag>chisel</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>不同reg的用法</title>
-    <url>/2020/09/25/chisel/%E4%B8%8D%E5%90%8Creg%E7%9A%84%E7%94%A8%E6%B3%95/</url>
-    <content><![CDATA[<p><code>reg</code>是寄存器，会使得数据传输延时一个节拍，在时序电路中常用</p>
-<a id="more"></a>
-
-<h2 id="Reg"><a href="#Reg" class="headerlink" title="Reg"></a>Reg</h2><p>函数原型</p>
-<blockquote>
-<p>def apply[T &lt;: [Data]] (t: T = null, next: T = null, init: T = null)(<em>implicit</em> sourceInfo: SourceInfo, compileOptions: [CompileOptions]): T</p>
-</blockquote>
-<ul>
-<li>t是寄存器的数据类型</li>
-<li>next是输入端的数据，即延迟一拍输出的数据</li>
-<li>init是复位幸好有效时初始的数据</li>
-</ul>
-<p><strong>使用方法</strong></p>
-<ul>
-<li>val B = Reg(UInt(width=3)) //指明类型和位宽</li>
-<li>B := C //next的值为C的值</li>
-<li>val r3 = Reg(Vec(4, UInt(8.W)))  //每个元素申明为8位宽</li>
-</ul>
-<h2 id="RegInit"><a href="#RegInit" class="headerlink" title="RegInit"></a>RegInit</h2><p>函数原型</p>
-<blockquote>
-<p>defapply[T &lt;: Data] (init: T)(implicit sourceInfo: SourceInfo, compileOptions: CompileOptions): T</p>
-</blockquote>
-<ul>
-<li>init是初始化寄存器的值</li>
-</ul>
-<p>函数原型</p>
-<blockquote>
-<p>defapply[T &lt;: Data] (t: T, init: T)(implicit sourceInfo: SourceInfo, compileOptions: CompileOptions): T</p>
-</blockquote>
-<ul>
-<li>t是初始化的数据类型</li>
-<li>init是初始化的值</li>
-</ul>
-<p><strong>使用方法</strong></p>
-<ul>
-<li><p>位宽会自动匹配或者也可以手动申明</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">val</span> r1 = <span class="type">RegInit</span>(<span class="number">1.</span><span class="type">U</span>) <span class="comment">// width will be inferred to be 1</span></span><br><span class="line"><span class="keyword">val</span> r2 = <span class="type">RegInit</span>(<span class="number">1.</span><span class="type">U</span>(<span class="number">8.</span><span class="type">W</span>)) <span class="comment">// width is set to 8</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p>可以使用寄存器类型进行统一申明</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyBundle</span> <span class="keyword">extends</span> <span class="title">Bundle</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> unknown = <span class="type">UInt</span>()</span><br><span class="line">  <span class="keyword">val</span> known   = <span class="type">UInt</span>(<span class="number">8.</span><span class="type">W</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">val</span> w1 = <span class="type">Reg</span>(<span class="keyword">new</span> <span class="type">MyBundle</span>)</span><br><span class="line"><span class="keyword">val</span> w2 = <span class="type">RegInit</span>(w1)</span><br><span class="line"><span class="comment">// Width of w2.unknown is inferred</span></span><br><span class="line"><span class="comment">// Width of w2.known is set to 8</span></span><br></pre></td></tr></table></figure>
-
-</li>
-</ul>
-<h2 id="RegNext"><a href="#RegNext" class="headerlink" title="RegNext"></a>RegNext</h2><p>函数原型</p>
-<blockquote>
-<p>defapply[T &lt;: Data] (next: T, init: T)(implicit sourceInfo: SourceInfo, compileOptions: CompileOptions): T</p>
-</blockquote>
-<ul>
-<li>next为输入的接口</li>
-<li>init为复位信号有效时的初始值</li>
-</ul>
-<p>函数原型</p>
-<blockquote>
-<p>defapply[T &lt;: Data] (next: T)(implicit sourceInfo: SourceInfo, compileOptions: CompileOptions): T</p>
-</blockquote>
-<ul>
-<li>next为输入的接口，即下一个时钟节拍寄存器的值</li>
-</ul>
-<p><strong>使用方法</strong></p>
-<ul>
-<li><p>数据的位宽将会被自动推断</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">val</span> foo = <span class="type">Reg</span>(<span class="type">UInt</span>(<span class="number">4.</span><span class="type">W</span>))         <span class="comment">// width is 4</span></span><br><span class="line"><span class="keyword">val</span> bar = <span class="type">RegNext</span>(foo)           <span class="comment">// width is unset</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">val</span> foo = <span class="type">Reg</span>(<span class="type">UInt</span>(<span class="number">4.</span><span class="type">W</span>))         <span class="comment">// width is 4</span></span><br><span class="line"><span class="keyword">val</span> bar = <span class="type">Reg</span>(chiselTypeOf(foo)) <span class="comment">// width is 4</span></span><br><span class="line">bar := foo  <span class="comment">//先初始化寄存器位宽，之后在初始化next的值</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p>可是使用Bundle进行自动的推断初始化</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyBundle</span> <span class="keyword">extends</span> <span class="title">Bundle</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> x = <span class="type">UInt</span>(<span class="number">4.</span><span class="type">W</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">val</span> foo = <span class="type">Wire</span>(<span class="keyword">new</span> <span class="type">MyBundle</span>)     <span class="comment">// the width of foo.x is 4</span></span><br><span class="line"><span class="keyword">val</span> bar = <span class="type">RegNext</span>(foo)           <span class="comment">// the width of bar.x is 4</span></span><br></pre></td></tr></table></figure>
-
-</li>
-</ul>
-<h2 id="RegEnable"><a href="#RegEnable" class="headerlink" title="RegEnable"></a>RegEnable</h2><p>函数原型</p>
-<blockquote>
-<p>defapply[T &lt;: Data] (next: T, init: T, enable: Bool): T</p>
-</blockquote>
-<ul>
-<li>next寄存器的输入</li>
-<li>init初始化的值</li>
-<li>enable，显示化使能信号，当为true的时候，该寄存器才能始终有效，否者将会被锁定</li>
-</ul>
-<p>函数原型</p>
-<blockquote>
-<p>defapply[T &lt;: Data] (next: T, enable: Bool): T</p>
-</blockquote>
-<ul>
-<li>next为输入信号</li>
-<li>enable为使能端</li>
-</ul>
-<p><strong>使用方法</strong></p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">val</span> regWithEnableAndReset = <span class="type">RegEnable</span>(nextVal, <span class="number">0.</span><span class="type">U</span>, ena)  <span class="comment">//使用第一个函数原型进行初始化</span></span><br><span class="line"><span class="keyword">val</span> regWithEnable = <span class="type">RegEnable</span>(nextVal, ena)  <span class="comment">//使用第二个函数原型进行初始户</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="ShiftRegister"><a href="#ShiftRegister" class="headerlink" title="ShiftRegister"></a>ShiftRegister</h2><p>这是延时寄存器</p>
-<p>函数原型</p>
-<blockquote>
-<p>defapply[T &lt;: Data] (in: T, n: Int, resetData: T, en: Bool): T</p>
-</blockquote>
-<ul>
-<li>in为输出数据</li>
-<li>n为掩饰周期</li>
-<li>resetData为初始化数据</li>
-<li>en为使能端</li>
-</ul>
-<p>函数原型</p>
-<blockquote>
-<p>defapply[T &lt;: Data] (in: T, n: Int, en: Bool = true.B): T</p>
-</blockquote>
-<ul>
-<li>in为输入数据</li>
-<li>n为延时周期，</li>
-<li>en为使能端</li>
-</ul>
-<p><strong>使用方法</strong></p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">val</span> regDelayTwoReset = <span class="type">ShiftRegister</span>(nextVal, <span class="number">2</span>, <span class="number">0.</span><span class="type">U</span>, ena) <span class="comment">//使用第一个函数原型进行初始化</span></span><br><span class="line"><span class="keyword">val</span> regDelayTwo = <span class="type">ShiftRegister</span>(nextVal, <span class="number">2</span>, ena)  <span class="comment">//使用第二个函数原型进行初始化</span></span><br></pre></td></tr></table></figure>
-
-]]></content>
-      <categories>
-        <category>chisel</category>
-      </categories>
-      <tags>
-        <tag>chisel语法</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ECC编码</title>
-    <url>/2020/09/27/chipyard/ECC%E7%BC%96%E7%A0%81/</url>
-    <content><![CDATA[<p>ECC编码即（Error Correcting Code/Error Checking and Correcting），是使用海明码等方式对数据进行编码，从而可以得到数据检测以及校验功能</p>
-<a id="more"></a>
-
-<h2 id="code-amp-Decoding"><a href="#code-amp-Decoding" class="headerlink" title="code &amp; Decoding"></a>code &amp; Decoding</h2><p><strong>Decoding字段解释</strong></p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Decoding</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">uncorrected</span></span>: <span class="type">UInt</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">corrected</span></span>: <span class="type">UInt</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">correctable</span></span>: <span class="type">Bool</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">uncorrectable</span></span>: <span class="type">Bool</span> <span class="comment">// If true, correctable should be ignored</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">error</span> </span>= correctable || uncorrectable</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<table>
-<thead>
-<tr>
-<th align="center">name</th>
-<th align="center">description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">uncorrected: UInt</td>
-<td align="center">原始数据，未纠错的码</td>
-</tr>
-<tr>
-<td align="center">corrected: UInt</td>
-<td align="center">使用编码之后的数据</td>
-</tr>
-<tr>
-<td align="center">correctable: Bool</td>
-<td align="center">是够具有纠错能力</td>
-</tr>
-<tr>
-<td align="center">uncorrectable: Bool</td>
-<td align="center">检测是够出错，是够具有检测能力</td>
-</tr>
-<tr>
-<td align="center">error: Bool</td>
-<td align="center">是够有错，true表示有错</td>
-</tr>
-</tbody></table>
-<p><strong>Code字段解释</strong></p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Code</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">canDetect</span></span>: <span class="type">Boolean</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">canCorrect</span></span>: <span class="type">Boolean</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">width</span></span>(w0: <span class="type">Int</span>): <span class="type">Int</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/** Encode x to a codeword suitable for decode.</span></span><br><span class="line"><span class="comment">   *  If poison is true, the decoded value will report uncorrectable</span></span><br><span class="line"><span class="comment">   *  error despite uncorrected == corrected == x.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">encode</span></span>(x: <span class="type">UInt</span>, poison: <span class="type">Bool</span> = <span class="type">Bool</span>(<span class="literal">false</span>)): <span class="type">UInt</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">decode</span></span>(x: <span class="type">UInt</span>): <span class="type">Decoding</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/** Copy the bits in x to the right bit positions in an encoded word,</span></span><br><span class="line"><span class="comment">   *  so that x === decode(swizzle(x)).uncorrected; but don&#x27;t generate</span></span><br><span class="line"><span class="comment">   *  the other code bits, so decode(swizzle(x)).error might be true.</span></span><br><span class="line"><span class="comment">   *  For codes for which this operation is not trivial, throw an</span></span><br><span class="line"><span class="comment">   *  UnsupportedOperationException.  */</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">swizzle</span></span>(x: <span class="type">UInt</span>): <span class="type">UInt</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<table>
-<thead>
-<tr>
-<th align="center">name</th>
-<th align="center">description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">canDetect: Boolean</td>
-<td align="center">是否能进行检测错误</td>
-</tr>
-<tr>
-<td align="center">canCorrect: Boolean</td>
-<td align="center">是够能进行纠正错误</td>
-</tr>
-<tr>
-<td align="center">width(w0: Int): Int</td>
-<td align="center">位宽</td>
-</tr>
-<tr>
-<td align="center">encode(x: UInt, poison: Bool = Bool(false)): UInt</td>
-<td align="center">编码</td>
-</tr>
-<tr>
-<td align="center">decode(x: UInt): Decoding</td>
-<td align="center">解码，输出为Decoding</td>
-</tr>
-<tr>
-<td align="center">swizzle(x: UInt): UInt</td>
-<td align="center"></td>
-</tr>
-</tbody></table>
-<h2 id="IdentityCode"><a href="#IdentityCode" class="headerlink" title="IdentityCode"></a>IdentityCode</h2><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">IdentityCode</span> <span class="keyword">extends</span> <span class="title">Code</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">canDetect</span> </span>= <span class="literal">false</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">canCorrect</span> </span>= <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">width</span></span>(w0: <span class="type">Int</span>) = w0</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">encode</span></span>(x: <span class="type">UInt</span>, poison: <span class="type">Bool</span> = <span class="type">Bool</span>(<span class="literal">false</span>)) = &#123;</span><br><span class="line">    require (poison.isLit &amp;&amp; poison.litValue == <span class="number">0</span>, <span class="string">&quot;IdentityCode can not be poisoned&quot;</span>)</span><br><span class="line">    x</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">swizzle</span></span>(x: <span class="type">UInt</span>) = x</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">decode</span></span>(y: <span class="type">UInt</span>) = <span class="keyword">new</span> <span class="type">Decoding</span> &#123;</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">uncorrected</span> </span>= y</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">corrected</span> </span>= y</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">correctable</span> </span>= <span class="type">Bool</span>(<span class="literal">false</span>)</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">uncorrectable</span> </span>= <span class="type">Bool</span>(<span class="literal">false</span>)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>继承了Code，这是不使用编码方式，所以所有的选项都标记为false或者跟源码一致</p>
-<h2 id="ParityCode"><a href="#ParityCode" class="headerlink" title="ParityCode"></a>ParityCode</h2><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ParityCode</span> <span class="keyword">extends</span> <span class="title">Code</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">canDetect</span> </span>= <span class="literal">true</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">canCorrect</span> </span>= <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">width</span></span>(w0: <span class="type">Int</span>) = w0+<span class="number">1</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">encode</span></span>(x: <span class="type">UInt</span>, poison: <span class="type">Bool</span> = <span class="type">Bool</span>(<span class="literal">false</span>)) = <span class="type">Cat</span>(x.xorR ^ poison, x)</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">swizzle</span></span>(x: <span class="type">UInt</span>) = <span class="type">Cat</span>(<span class="literal">false</span>.<span class="type">B</span>, x)</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">decode</span></span>(y: <span class="type">UInt</span>) = <span class="keyword">new</span> <span class="type">Decoding</span> &#123;</span><br><span class="line">    <span class="keyword">val</span> uncorrected = y(y.getWidth<span class="number">-2</span>,<span class="number">0</span>)</span><br><span class="line">    <span class="keyword">val</span> corrected = uncorrected</span><br><span class="line">    <span class="keyword">val</span> correctable = <span class="type">Bool</span>(<span class="literal">false</span>)</span><br><span class="line">    <span class="keyword">val</span> uncorrectable = y.xorR</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>奇偶校验码，即，这里使用的是偶校验，检查源字符串中的1的个数，要是1的个数为奇数的话，补一个1使得1的个个数为偶数</p>
-<table>
-<thead>
-<tr>
-<th align="center">name</th>
-<th align="center">description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">校验方式</td>
-<td align="center">偶校验</td>
-</tr>
-<tr>
-<td align="center">canDetect</td>
-<td align="center">可以检错</td>
-</tr>
-<tr>
-<td align="center">canCorrect</td>
-<td align="center">不能纠错</td>
-</tr>
-<tr>
-<td align="center">width</td>
-<td align="center">比原码多一位</td>
-</tr>
-<tr>
-<td align="center">encode</td>
-<td align="center">最后一位编码0或者1</td>
-</tr>
-<tr>
-<td align="center">decode</td>
-<td align="center">返回Decoding</td>
-</tr>
-</tbody></table>
-<h2 id="SECCode"><a href="#SECCode" class="headerlink" title="SECCode"></a>SECCode</h2><p>汉明码是一种能够检测多达两个同时发生的位错误并纠正单个位错误的分组代码。它是由RW Hamming开发的，用于纠错。</p>
-<p>在这种编码方法中，源通过在消息中插入冗余位来对消息进行编码。这些冗余位是多余的位，它们会生成并插入到消息本身的特定位置，以实现错误检测和纠正。当目的地接收到此消息时，它将执行重新计算以检测错误并查找出现错误的位位置。</p>
-<p>具体分为三个步骤</p>
-<ul>
-<li>计算冗余位数</li>
-<li>确定冗余在的具体位置</li>
-<li>计算每个冗余位的值</li>
-</ul>
-<h3 id="计算冗余位数"><a href="#计算冗余位数" class="headerlink" title="计算冗余位数"></a>计算冗余位数</h3><p>若数据位有m位，则将r个冗余位加入数据中，则一共有（m+r+1）个状态，其中m+r表示bit位信息，多余的一位表示无错状态。而r位冗余最多可以表示2<sup>r</sup>个状态，所以2<sup>r</sup>个状态比如大于等于（m+r+1）<br>$$<br>2^r &gt;= m+r+1<br>$$<br>例如一个数据有7位，则m=7，带入公示中计算得到r=4，因此可以记做（11，4）编码</p>
-<h3 id="确定冗余的位置"><a href="#确定冗余的位置" class="headerlink" title="确定冗余的位置"></a>确定冗余的位置</h3><p>$r_n$表示第冗余所在的位置，比如$r_1$表示第一个冗余所在的位置，$r_2$表示第二个冗余所在的位置，以此类推，则冗余所在数据中具体的位置可以由一下公式计算得到<br>$$<br>r_n = 2^n -1<br>$$<br><img src="/picture/2010/positioning_redundant_bits.jpg" alt="img"></p>
-<h3 id="计算冗余位"><a href="#计算冗余位" class="headerlink" title="计算冗余位"></a>计算冗余位</h3><p>r会指示具体错误是哪一位，将$r_i$具体看作是数的编码，则$r_1$将会指示所有的最后一位为1的编码，如1、3、5、7、9等奇数，转换为二进制最后一位都是1，则都会使用奇偶校验的方法异或之后放到$r_1$中</p>
-<p>$r_2$指示第二位为1的编码，如2、3、6、7、10、11，这些位也将使用奇偶校验的方式之后填入$r_2$中，校验表可以如下图所示。</p>
-<p><img src="/picture/2010/image-20200926155848830.png" alt="image-20200926155848830"></p>
-<p>将对应的校验的数据按需奇偶校验，填入适当的位置，最终得到结果。</p>
-<h3 id="对应代码"><a href="#对应代码" class="headerlink" title="对应代码"></a>对应代码</h3><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">encode</span></span>(x: <span class="type">UInt</span>, poison: <span class="type">Bool</span> = <span class="type">Bool</span>(<span class="literal">false</span>)) = &#123;</span><br><span class="line">  <span class="keyword">val</span> k = x.getWidth</span><br><span class="line">  <span class="keyword">val</span> n = width(k)</span><br><span class="line">  <span class="keyword">val</span> (_, _, syndrome) = impl(n, k)</span><br><span class="line"></span><br><span class="line">  require ((poison.isLit &amp;&amp; poison.litValue == <span class="number">0</span>) || poisonous(n), <span class="string">s&quot;SEC code of length <span class="subst">$&#123;n&#125;</span> cannot be poisoned&quot;</span>)</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* By setting the entire syndrome on poison, the corrected bit falls off the end of the code */</span></span><br><span class="line">  <span class="keyword">val</span> syndromeUInt = <span class="type">Vec</span>.tabulate(n-k) &#123; j =&gt; (syndrome(j)(k<span class="number">-1</span>, <span class="number">0</span>) &amp; x).xorR ^ poison &#125;.asUInt</span><br><span class="line">  <span class="type">Cat</span>(syndromeUInt, x)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>编码方式，首先k是对应的数据位长度，使用<code>width</code>计算出需要的hamming码的长度，传入impl函数，impl返回的syndrome就是计算hamming码对应编码的函数，他是使用system code的编发方式，不同上面的<code>PPxPxxxPxxxxxxxP</code>，他通过数据的转换， 转换成对应的<code>xxxxxxxxxxxPPPPP</code>对应的形式。</p>
-<h2 id="SECDEDCode"><a href="#SECDEDCode" class="headerlink" title="SECDEDCode"></a>SECDEDCode</h2><p>Single Error Correction, Double Error Detection，即能纠正一位错误，并能检测出两位错误，留坑算法先不解读。</p>
-]]></content>
-      <categories>
-        <category>chipyard</category>
-      </categories>
-      <tags>
-        <tag>chipyard</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>DiplomacyNode</title>
-    <url>/2020/09/27/chipyard/DiplomacyNode/</url>
-    <content><![CDATA[<p>Diplomacy Node是DOC中不同设备抽象成的节点，可以非常方便的在总线上添加设备，但是会有不同的节点用于支持不同的协议，下面就是关于不同节点的详细介绍</p>
-<a id="more"></a>
-<h1 id="Diplomacy-Node"><a href="#Diplomacy-Node" class="headerlink" title="Diplomacy Node"></a>Diplomacy Node</h1><p>Diplomacy将系统中不同的组件表现成有向无环图的节点，且节点有一些不同的类型</p>
-<h2 id="Client-Node"><a href="#Client-Node" class="headerlink" title="Client Node"></a>Client Node</h2><p>TileLink Client是通过在A通道上发送请求并在D通道上接收响应来启动TileLink事务的模块。如果实现了TL-C，则将会在B通道上接收到探针并在C通道上发出release信号，同时在E通道上授权确认。</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClient</span>(<span class="params">implicit p: <span class="type">Parameters</span></span>) <span class="keyword">extends</span> <span class="title">LazyModule</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> node = <span class="type">TLHelper</span>.makeClientNode(<span class="type">TLClientParameters</span>(</span><br><span class="line">    name = <span class="string">&quot;my-client&quot;</span>,</span><br><span class="line">    sourceId = <span class="type">IdRange</span>(<span class="number">0</span>, <span class="number">4</span>),</span><br><span class="line">    requestFifo = <span class="literal">true</span>,</span><br><span class="line">    visibility = <span class="type">Seq</span>(<span class="type">AddressSet</span>(<span class="number">0x10000</span>, <span class="number">0xffff</span>))))</span><br><span class="line"></span><br><span class="line">  <span class="keyword">lazy</span> <span class="keyword">val</span> module = <span class="keyword">new</span> <span class="type">LazyModuleImp</span>(<span class="keyword">this</span>) &#123;</span><br><span class="line">    <span class="keyword">val</span> (tl, edge) = node.out(<span class="number">0</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Rest of code here</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li><p>name</p>
-<p>用于标识在Diplomacy中唯一的节点名称，string</p>
-</li>
-<li><p>sourceId</p>
-<p>指定client将使用的源标识符的范围，上述代码为(0, 4)表示的是同时可以发送四个源。</p>
-</li>
-<li><p>requestFifo</p>
-<p>client将请求支持它的下游管理器按照FIFO的顺序发送响应，默认值是false，这里设置为true</p>
-</li>
-<li><p>visibility</p>
-<p>指定client将访问的地址范围，默认是可以访问所有的地址，但是指定可访问的地址范围可以帮助下端的仲裁器进行优化。</p>
-</li>
-</ul>
-<p>在实现过程中，可以使用node.out来获取一对bundle/edge</p>
-<ul>
-<li><p>tl</p>
-<p>上述例子中，tl获取的是chisel的IObundle，他将会有2或者5个IO通道相对应（要是实现了TL-C将会有5个通道）</p>
-</li>
-<li><p>edge</p>
-<p>这是Diplomacy中的有向边，实现了很多有用的方法</p>
-</li>
-</ul>
-<h2 id="Manager-Node"><a href="#Manager-Node" class="headerlink" title="Manager Node"></a>Manager Node</h2><p>TileLink Manager将从通道A接收来之client的消息，并且从通道D发送响应。</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyManager</span>(<span class="params">implicit p: <span class="type">Parameters</span></span>) <span class="keyword">extends</span> <span class="title">LazyModule</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> device = <span class="keyword">new</span> <span class="type">SimpleDevice</span>(<span class="string">&quot;my-device&quot;</span>, <span class="type">Seq</span>(<span class="string">&quot;tutorial,my-device0&quot;</span>))</span><br><span class="line">  <span class="keyword">val</span> beatBytes = <span class="number">8</span></span><br><span class="line">  <span class="keyword">val</span> node = <span class="type">TLHelper</span>.makeManagerNode(beatBytes, <span class="type">TLManagerParameters</span>(</span><br><span class="line">    address = <span class="type">Seq</span>(<span class="type">AddressSet</span>(<span class="number">0x20000</span>, <span class="number">0xfff</span>)),</span><br><span class="line">    resources = device.reg,</span><br><span class="line">    regionType = <span class="type">RegionType</span>.<span class="type">UNCACHED</span>,</span><br><span class="line">    executable = <span class="literal">true</span>,</span><br><span class="line">    supportsArithmetic = <span class="type">TransferSizes</span>(<span class="number">1</span>, beatBytes),</span><br><span class="line">    supportsLogical = <span class="type">TransferSizes</span>(<span class="number">1</span>, beatBytes),</span><br><span class="line">    supportsGet = <span class="type">TransferSizes</span>(<span class="number">1</span>, beatBytes),</span><br><span class="line">    supportsPutFull = <span class="type">TransferSizes</span>(<span class="number">1</span>, beatBytes),</span><br><span class="line">    supportsPutPartial = <span class="type">TransferSizes</span>(<span class="number">1</span>, beatBytes),</span><br><span class="line">    supportsHint = <span class="type">TransferSizes</span>(<span class="number">1</span>, beatBytes),</span><br><span class="line">    fifoId = <span class="type">Some</span>(<span class="number">0</span>)))</span><br><span class="line"></span><br><span class="line">  <span class="keyword">lazy</span> <span class="keyword">val</span> module = <span class="keyword">new</span> <span class="type">LazyModuleImp</span>(<span class="keyword">this</span>) &#123;</span><br><span class="line">    <span class="keyword">val</span> (tl, edge) = node.in(<span class="number">0</span>)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>使用makeManagerNode创建节点，接收两个参数</p>
-<ul>
-<li><p>beatBytes</p>
-<p>表示的接口的宽度，以字节为单位。</p>
-</li>
-<li><p>TLManagerParameters</p>
-<p>TLManagerParameters唯一需要的参数是地址，该地址是该管理器将服务的地址范围的集合。</p>
-<ul>
-<li>第二个参数resources通常是从设备对象检索的，如果要将条目添加到BootROM中的DeviceTree中，以便Linux驱动程序可以读取它，则此参数是必需的。</li>
-<li>regionType，它提供有关管理器的缓存行为的一些信息。共有以下七个区域类型</li>
-<li>executable，确定是否允许CPU从该管理器中获取指令。默认情况下为false，大多数外设都将设为false</li>
-<li>接下来6个以supports开头的参数将确定可以从client接收参数的类型，其中TransferSizes将指定一次能接受消息的bytes数。</li>
-<li>fifoId，要是设置为None，将不保证可以顺序接受，要是设置了，将与相同区域的共享FIFO协议</li>
-</ul>
-</li>
-</ul>
-<h2 id="Register-Node"><a href="#Register-Node" class="headerlink" title="Register Node"></a>Register Node</h2><p>虽然可以直接指定管理器节点并编写所有逻辑来处理TileLink请求，但使用寄存器节点通常会容易得多。 这种类型的节点提供了regmap方法，该方法允许指定控制/状态寄存器并自动生成用于处理TileLink协议的逻辑。</p>
-<h2 id="Identity-Node"><a href="#Identity-Node" class="headerlink" title="Identity Node"></a>Identity Node</h2><p>Identity Node同时拥有输入输出IO，它只是将输入不变地连接到输出。 该节点主要用于将多个节点组合为具有多个边缘的单个节点。 例如，假设我们有两个lazy client module，每个mocule都有自己的客户端节点。</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClient1</span>(<span class="params">implicit p: <span class="type">Parameters</span></span>) <span class="keyword">extends</span> <span class="title">LazyModule</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> node = <span class="type">TLHelper</span>.makeClientNode(<span class="string">&quot;my-client1&quot;</span>, <span class="type">IdRange</span>(<span class="number">0</span>, <span class="number">1</span>))</span><br><span class="line"></span><br><span class="line">  <span class="keyword">lazy</span> <span class="keyword">val</span> module = <span class="keyword">new</span> <span class="type">LazyModuleImp</span>(<span class="keyword">this</span>) &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClient2</span>(<span class="params">implicit p: <span class="type">Parameters</span></span>) <span class="keyword">extends</span> <span class="title">LazyModule</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> node = <span class="type">TLHelper</span>.makeClientNode(<span class="string">&quot;my-client2&quot;</span>, <span class="type">IdRange</span>(<span class="number">0</span>, <span class="number">1</span>))</span><br><span class="line"></span><br><span class="line">  <span class="keyword">lazy</span> <span class="keyword">val</span> module = <span class="keyword">new</span> <span class="type">LazyModuleImp</span>(<span class="keyword">this</span>) &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>现在，我们在另一个惰性模块中实例化这两个client，并将它们的节点公开为单个节点。</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClientGroup</span>(<span class="params">implicit p: <span class="type">Parameters</span></span>) <span class="keyword">extends</span> <span class="title">LazyModule</span> </span>&#123;</span><br><span class="line">  <span class="keyword">val</span> client1 = <span class="type">LazyModule</span>(<span class="keyword">new</span> <span class="type">MyClient1</span>)</span><br><span class="line">  <span class="keyword">val</span> client2 = <span class="type">LazyModule</span>(<span class="keyword">new</span> <span class="type">MyClient2</span>)</span><br><span class="line">  <span class="keyword">val</span> node = <span class="type">TLIdentityNode</span>()</span><br><span class="line"></span><br><span class="line">  node := client1.node</span><br><span class="line">  node := client2.node</span><br><span class="line"></span><br><span class="line">  <span class="keyword">lazy</span> <span class="keyword">val</span> module = <span class="keyword">new</span> <span class="type">LazyModuleImp</span>(<span class="keyword">this</span>) &#123;</span><br><span class="line">    <span class="comment">// Nothing to do here</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="Adapter-Node"><a href="#Adapter-Node" class="headerlink" title="Adapter Node"></a>Adapter Node</h2><p>像Identity Node一样，Adapter接受一定数量的输入并产生相同数量的输出。 但是，与标识节点不同，适配器节点不会简单地通过未更改的连接，它可以更改输入和输出之间的逻辑和物理接口。</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">val</span> node = <span class="type">TLAdapterNode</span>(</span><br><span class="line">  clientFn = &#123; cp =&gt;</span><br><span class="line">    <span class="comment">// ..</span></span><br><span class="line">  &#125;,</span><br><span class="line">  managerFn = &#123; mp =&gt;</span><br><span class="line">    <span class="comment">// ..</span></span><br><span class="line">  &#125;)</span><br></pre></td></tr></table></figure>
-
-<p>clientFn函数将输入的TLClientPortParameters作为参数，并为输出返回相应的参数。 managerFn将输出的TLManagerPortParameters作为参数，并为输入返回相应的参数。</p>
-<h2 id="Nexus-Node"><a href="#Nexus-Node" class="headerlink" title="Nexus Node"></a>Nexus Node</h2><p>Nexus Node与Adapter Node类似，但是他的输入接口跟输出接口不同</p>
-<h2 id="edge"><a href="#edge" class="headerlink" title="edge"></a>edge</h2><p>Diplomacy库提供了四个运算符，可用于在节点之间形成边。</p>
-<ul>
-<li><p>:=</p>
-<p>这是基本的连接操作符。它与Chisel单向连接器的语法相同，但并不等效，这是连接Diplomacy之间的节点而不是chisel之间的bundle束</p>
-</li>
-<li><p>:=*</p>
-<p>可以连接多个边，用于连接多个client node到nexus node或者adapter node即右边的节点，边的数量由client决定</p>
-</li>
-<li><p>:*=</p>
-<p>这也同样可以连接多个边，但是与上面不同的是这个边的数量由manager决定即左边的节点，用于连接nexus node 到多个manager节点。</p>
-</li>
-<li><p>:* = *</p>
-<p>它基于操作员的任意一侧具有已知数量的边来创建多个边，可以在生成器中使用，在生成器中，直到运行时才知道两侧的节点类型。</p>
-</li>
-</ul>
-]]></content>
-      <categories>
-        <category>chipyard</category>
-      </categories>
-      <tags>
-        <tag>chipyard</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>使用列表</title>
-    <url>/2020/09/28/scala/scala%E7%BC%96%E7%A8%8B/11-%E4%BD%BF%E7%94%A8%E5%88%97%E8%A1%A8/</url>
-    <content><![CDATA[<p>列表是scala程序中最常使用的数据结构，这里记录一下列表的常用操作，以及设计原则。</p>
-<a id="more"></a>
-
-<h3 id="List基础操作"><a href="#List基础操作" class="headerlink" title="List基础操作"></a>List基础操作</h3><p><strong>列表字面量</strong></p>
-<p>列表跟数组非常相似，但是列表是不可变的，而数组是可变的。同时列表是链表结构，而数组则是平的。</p>
-<p>同时列表是同构的，即同一个列表的所有元素都必须相同，同时列表也是协变的，如列表中有两种类型的元素，分别为S跟T，如果S是T的字类型或者相反，则这个列表是合法的。</p>
-<p><strong>列表构建</strong></p>
-<p>所有列表的构建都来自两个基础的单元<code>Nil 跟 ::</code>，其中Nil表示空列表，而::表示元素追加，具体构建如下所示</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">val</span> fruit = <span class="string">&quot;apples&quot;</span> :: (<span class="string">&quot;oranges&quot;</span> :: (<span class="string">&quot;pears&quot;</span> :: <span class="type">Nil</span>))  <span class="comment">//与去掉括号含义一致</span></span><br><span class="line"><span class="keyword">val</span> empty = <span class="type">Nil</span></span><br></pre></td></tr></table></figure>
-
-<p><strong>列表的基本操作</strong></p>
-<p>对列表的所有操作都可以用下面三项来描述</p>
-<ul>
-<li>head：返回列表的第一个元素</li>
-<li>tail：返回除列表第一个元素之外的所有元素</li>
-<li>isEmpty：返回列表是否为空</li>
-</ul>
-<p>其中List(…)表示匹配所有的元素</p>
-<h3 id="List的初阶方法"><a href="#List的初阶方法" class="headerlink" title="List的初阶方法"></a>List的初阶方法</h3><p>如果一个方法不接收任何函数作为入参，就被称为初阶方法</p>
-<table>
-<thead>
-<tr>
-<th align="center">name</th>
-<th align="center">description</th>
-<th align="center">example</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">::</td>
-<td align="center">使用元素构建列表</td>
-<td align="center">1 :: 2</td>
-</tr>
-<tr>
-<td align="center">:::</td>
-<td align="center">拼接两个列表</td>
-<td align="center">xs ::: ys</td>
-</tr>
-<tr>
-<td align="center">head</td>
-<td align="center">返回第一个元素</td>
-<td align="center">xs.head</td>
-</tr>
-<tr>
-<td align="center">tail</td>
-<td align="center">返回除第一个元素之外的剩余列表</td>
-<td align="center">xs.tail</td>
-</tr>
-<tr>
-<td align="center">init</td>
-<td align="center">返回除最后一个元素剩余部分</td>
-<td align="center">xs.init</td>
-</tr>
-<tr>
-<td align="center">last</td>
-<td align="center">返回最后一个元素</td>
-<td align="center">xs.last</td>
-</tr>
-<tr>
-<td align="center">isEmpty</td>
-<td align="center">判断列表是否为空，返回Bool</td>
-<td align="center">xs.isEmpty</td>
-</tr>
-<tr>
-<td align="center">reverse</td>
-<td align="center">列表反转</td>
-<td align="center">xs.reverse</td>
-</tr>
-<tr>
-<td align="center">drop</td>
-<td align="center">除去前n个元素，返回剩下的元素</td>
-<td align="center">xs.drop(n)</td>
-</tr>
-<tr>
-<td align="center">take</td>
-<td align="center">返回前n个元素</td>
-<td align="center">xs.take(n)</td>
-</tr>
-<tr>
-<td align="center">splitAt</td>
-<td align="center">在n处分割两个列表</td>
-<td align="center">xs.splitAt(2)</td>
-</tr>
-<tr>
-<td align="center">apply</td>
-<td align="center">选取元素</td>
-<td align="center">xs.apply(2)</td>
-</tr>
-<tr>
-<td align="center">indices</td>
-<td align="center">返回指定列表所有有效下标</td>
-<td align="center">xs.indices</td>
-</tr>
-<tr>
-<td align="center">flatten</td>
-<td align="center">将列表元素为列表的元素扁平化</td>
-<td align="center">xs.flatten</td>
-</tr>
-<tr>
-<td align="center">zip</td>
-<td align="center">接收两个列表，将两个列表元素进行两两组合，若长度不匹配，将不匹配的元素丢弃</td>
-<td align="center">xs.indice zip xs</td>
-</tr>
-<tr>
-<td align="center">zipWithIndex</td>
-<td align="center">将列表元素与下标进行zip</td>
-<td align="center">xs.zipWithIndex</td>
-</tr>
-<tr>
-<td align="center">unzip</td>
-<td align="center">与zip相反的操作</td>
-<td align="center">xs.unzip</td>
-</tr>
-<tr>
-<td align="center">toString</td>
-<td align="center">返回列表的标准字符串形式</td>
-<td align="center">xs.toString</td>
-</tr>
-<tr>
-<td align="center">mkString</td>
-<td align="center">列表的不同表现形式，pre显示在列表之前，step分隔，post最后</td>
-<td align="center">xs mkString(“[”, “,”, “]”)</td>
-</tr>
-<tr>
-<td align="center">iterator</td>
-<td align="center">通过迭代器访问列表元素</td>
-<td align="center">val it = xs.iterator</td>
-</tr>
-<tr>
-<td align="center">toArray</td>
-<td align="center">将List转换为Array</td>
-<td align="center">xs.toArray</td>
-</tr>
-<tr>
-<td align="center">copyToArray</td>
-<td align="center">将列表的元素复制到Array中，从start开始</td>
-<td align="center">xs copyToArray(arr, strat)</td>
-</tr>
-</tbody></table>
-<h3 id="List的高阶用法"><a href="#List的高阶用法" class="headerlink" title="List的高阶用法"></a>List的高阶用法</h3><p><strong>对列表做映射</strong></p>
-<ul>
-<li><p>map</p>
-<p>x map f这个操作将类型为List[T]的列表xsh和类型为T =&gt; U的函数f作为操作源，返回一个通过应用f到xs的每个元素后得到的列表，例如</p>
-<blockquote>
-<p>List(1, 2, 3) map(_ +1)</p>
-</blockquote>
-</li>
-<li><p>flatMap</p>
-<p>返回元素列表，即flat跟map一起使用，将返回一个列表，内部将不含有子列表</p>
-</li>
-<li><p>foreach</p>
-<p>要求右边是一个过程，即像c语言那样面向过程的编程</p>
-<blockquote>
-<p>List(1, 2, 3, 4, 5) foreach(sum += _)</p>
-</blockquote>
-</li>
-</ul>
-<p><strong>列表过滤</strong> </p>
-<ul>
-<li><p>filter</p>
-<p>xs filter p 两个操作数分别为类型为List[T]的xs和类型为T =&gt; Boolean的前提条件函数p。这个操作将xs中的所有p(x)为True的元素x交出</p>
-<blockquote>
-<p>List(1, 2, 3, 4, 5) filter (_ %2 ==0)</p>
-</blockquote>
-</li>
-<li><p>partition</p>
-<p>与filter类似，但是他同时交出两个列表，一个是p(x)为true的列表，另外一个是为false的列表</p>
-<blockquote>
-<p>xs partition p 等于 (xs filter p, xs filter !p)</p>
-</blockquote>
-</li>
-<li><p>find</p>
-<p>xs find p 返回的是xs中第一个满足条件p(x)为True的元素。</p>
-</li>
-<li><p>takeWhile</p>
-<p>xs takeWhile p 返回满足p的最长前缀</p>
-<blockquote>
-<p>List(1, 2, 3, -4, 5) takeWhile (_&gt; 0) //返回(1, 2, 3)</p>
-</blockquote>
-</li>
-<li><p>dropWhile</p>
-<p>除去最长前缀剩下的元素</p>
-</li>
-<li><p>span</p>
-<p>span将takeWhile与dropWhile合一，与partition类似，将返回两个列表</p>
-</li>
-</ul>
-<p><strong>对列表做前置条件检查</strong></p>
-<ul>
-<li><p>forall</p>
-<p>xs forall p将检查所有的元素是否都满足p，满足返回true，否则返回false</p>
-</li>
-<li><p>exit</p>
-<p>存在就返回true否则返回false</p>
-</li>
-</ul>
-<p><strong>列表折叠</strong></p>
-<ul>
-<li><p>左折叠</p>
-<p><code>(z /: xs)(op)</code>将以z为前缀，列表元素依次连续应用op</p>
-<blockquote>
-<p>(z :/ List(a, b, c))(op)    等于    op(op(op(z, a), b), c)</p>
-</blockquote>
-<p>产生一棵靠左的树</p>
-</li>
-<li><p>右折叠</p>
-<p><code>:\</code>产生一棵靠右的树</p>
-<blockquote>
-<p>(List(a, b, c):\z)(op)    等于    op(a, op(b, op(c, z)))</p>
-</blockquote>
-</li>
-</ul>
-<p><strong>列表排序</strong></p>
-<p>xs sortWith before将对xs列表进行排序，before是用来比较两个元素的函数</p>
-<blockquote>
-<p>List(1, -3, 4, 2, 6) sortWith(_ &lt; _)    应该是升序排序</p>
-</blockquote>
-<h3 id="列表对象方法"><a href="#列表对象方法" class="headerlink" title="列表对象方法"></a>列表对象方法</h3><p><strong>从元素创建列表</strong></p>
-<p>之前使用的诸如List(1, 2, 3, 4)这样的创建列表的方法，其实是调用伴生对象中的apply方法进行</p>
-<blockquote>
-<p>List(1, 2, 3, 4)    等于    List.apply(1, 2, 3, 4)</p>
-</blockquote>
-<p><strong>创建数值区间</strong></p>
-<p>List.range(begin, end, step=1)这个方法将创建一个左闭右开的区间，step是步长，默认是1</p>
-<blockquote>
-<p>List.range(1, 5)</p>
-</blockquote>
-<p><strong>创建相同的列表元素</strong></p>
-<p>List.fill(num)(val)这个方法将创建指定维度且填充相同的列表</p>
-<blockquote>
-<p>List.fill(2, 3)(1)    将会在内部创建两个子列表，每个列表的元素为3个</p>
-<p>//List(List(1, 1, 1), List(1, 1, 1))</p>
-</blockquote>
-<p><strong>表格化函数</strong></p>
-<p>与fill类似，但是他的第二个参数不再是单个元素，而是接收一个函数，元素值不在固定</p>
-<blockquote>
-<p>List.tabulate(5, 5)(_ * _)</p>
-</blockquote>
-<p><strong>拼接多个列表</strong></p>
-<p>List.concat将多个列表拼接在一起</p>
-<blockquote>
-<p>List.concat(List(‘a’, b), List(‘c’ , ‘d’), List(‘e’))  //返回List(‘a’, ‘b’, ‘c’, ‘d’, ‘e’)</p>
-</blockquote>
-]]></content>
-      <categories>
-        <category>scala</category>
-      </categories>
-      <tags>
-        <tag>scala编程</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>mrmr算法</title>
-    <url>/2020/10/20/machineLearning/mrmr%E7%AE%97%E6%B3%95/</url>
-    <content><![CDATA[<p>mrmr算法是特征选择算法，通过筛选出与结果最相关且特征之间最小冗余的特征进行特征选择， 其基础是利用互信息。</p>
-<a id="more"></a>
-<h2 id="互信息的理解"><a href="#互信息的理解" class="headerlink" title="互信息的理解"></a>互信息的理解</h2><p>若两个变量独立，则有$P(X, Y)=P(X)P(Y)$，这个公式说明已知X，将不会对Y的分布造成任何的影响，即$P(Y)=P(Y|X)$，独立性反应了给定$X$之后，会不会对$Y$带来额外的信息，但是这只能表示两个随机变量是否有关，并不能刻画他们之间的大小关系，因此引入了互信息的概念。</p>
-<p>互信息仅仅能刻画两个随机变量之间的关系，还可以反应他们之间关系的强弱，定义互信息如下所示。<br>$$<br>I(X;Y)=\sum_{x,y}p(x,y)log\frac{p(x,y)}{p(x)p(y)}<br>$$<br>其中$I(X;Y)=H(Y)-H(Y|X)$，，可以读作$Y$的不确定度，减去$X$确定之后$Y$剩余的不确定度，即表示信息不确定的减少，表示的是信息的增益，其中$H(Y)$是$Y$的熵，定义为<br>$$<br>H(Y)=-\sum_{y}\log{p(y)} p(y)​<br>$$<br>衡量的是$Y$的不确定度，即是说，$Y$分布得越离散，$H(Y)$的值越高，而$H(Y|X)$则表示在已知$X$的情况下，$Y$的不确定度。</p>
-<p><strong>而$I(X;Y)$则表示由$X$引入而使$Y$的不确定度减小的量</strong>，因而如果$X,Y$关系越密切，$I(X;Y)$越大，$I(X;Y)$最大的取值是$H(Y)$，也就是说，$X,Y$完全相关，由于$X$的引入，$Y$的熵由原来的$H(Y)$减小了$I(X;Y)=H(Y)$，变成了0，也就是说如果$X$确定，那么$Y$就完全确定了。而当$X,Y$独立时，$I(X;Y)=0$引入$X$，并未给$Y$的确定带来任何好处。</p>
-<p>详细推导过程如下所示<br>$$<br>\begin{aligned}<br>I(X ; Y) &amp;=\sum_{x, y} p(x, y) \log \frac{p(x, y)}{p(x) p(y)} \<br>&amp;=\sum_{x, y} p(x, y) \log \frac{p(x, y)}{p(x)}-\sum_{x, y} p(x, y) \log p(y) \<br>&amp;=\sum_{x, y} p(x) p(y \mid x) \log p(y \mid x)-\sum_{x, y} p(x, y) \log p(y) \<br>&amp;=\sum_{x} p(x)\left(\sum_{y} p(y \mid x) \log p(y \mid x)\right)-\sum_{y} \log p(y)\left(\sum_{x} p(x, y)\right) \<br>&amp;=-\sum_{x} p(x) H(Y \mid X=x)-\sum_{y} \log p(y) p(y) \<br>&amp;=-H(Y \mid X)+H(Y) \<br>&amp;=H(Y)-H(Y \mid X)<br>\end{aligned}<br>$$<br>总结$I(X;Y)$的性质</p>
-<ul>
-<li>$I(X;Y)⩾0$</li>
-<li>$H(X)−H(X|Y)=I(X;Y)=I(Y;X)=H(Y)−H(Y|X)$</li>
-<li>当$X,Y$独立时，$I(X;Y)=0$，信息增益为0</li>
-<li>当$X,Y$知道一个就能推断另一个时，$I(X;Y)=H(X)=H(Y)$，即信息增益为1</li>
-</ul>
-<h2 id="mRMR算法"><a href="#mRMR算法" class="headerlink" title="mRMR算法"></a>mRMR算法</h2><p>这是特征选择的一种算法，Max Relevance and Min Redundancy，是在原始的特征集合中找到与最终输出结果相关性最大(Max Relevance)，但彼此特征之间的相关性最小的一组特征(Min Redundacy)</p>
-<p>得到的结果将会满足最大相关性<br>$$<br>\max D(S, c), D=\frac{1}{|S|} \sum_{x_{i} \in S} I\left(x_{i} ; c\right)<br>$$<br>其中采用所有特征$x_i$与分类$c$之间互信息的平均来近似$D(S,c)$。</p>
-<p>通过Max-Relevance选择的特征可能具有冗余，这些特征之间的依赖性非常大。当两个特征互相冗余，当去掉其中一个的时候，分类结果并不会有非常大的变化。因此Min-Redundancy方式可以用来剔除掉冗余特征<br>$$<br>\min R(S), R=\frac{1}{|S|^{2}} \sum_{x_{i}, x_{i} \in S} I\left(x_{i}, x_{j}\right)<br>$$<br>将最大相关性D与最小冗余度R结合起来，我们称其为minimal-redundancy-maximum-relevancy(mRMR)。我们定义算子$\Phi(D, R)$来结合D与R，考虑最简单的结合方式<br>$$<br>\max \Phi(D, R), \Phi=D-R<br>$$<br>实际中将使用增量搜索的方式获取近似解，假设已经得到$S_{m-1}$特征子集，需要在剩余的$X-S_{m-1}$的特征子集中选出第m个特征子集，通过最大化$\Phi()$来进行特征选择，即最大化<br>$$<br>\max <em>{x</em>{j} \in X-S_{m-1}}\left[I\left(x_{j} ; c\right)-\frac{1}{m-1} \sum_{x_{i} \in S_{m-1}} I\left(x_{i} ; x_{j}\right)\right]<br>$$</p>
-<figure class="highlight matlab"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="params">[fea]</span> = <span class="title">mrmr_mid_d</span><span class="params">(d, f, K)</span></span></span><br><span class="line"><span class="comment">% function [fea] = mrmr_mid_d(d, f, K)</span></span><br><span class="line"><span class="comment">% d-输入N*M矩阵，N个采样值，M个特征，特征向量</span></span><br><span class="line"><span class="comment">% f-输入的N*1向量，分类结果</span></span><br><span class="line"><span class="comment">% K-选择的葛铮的个数</span></span><br><span class="line"><span class="comment">% </span></span><br><span class="line"><span class="comment">% MID scheme according to MRMR</span></span><br><span class="line"><span class="comment">%</span></span><br><span class="line"><span class="comment">% By Hanchuan Peng</span></span><br><span class="line"><span class="comment">% April 16, 2003</span></span><br><span class="line"><span class="comment">%</span></span><br><span class="line"></span><br><span class="line">bdisp=<span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">nd = <span class="built_in">size</span>(d,<span class="number">2</span>); <span class="comment">%特征个数</span></span><br><span class="line">nc = <span class="built_in">size</span>(d,<span class="number">1</span>); <span class="comment">%样本个数</span></span><br><span class="line"></span><br><span class="line">t1=cputime;</span><br><span class="line"><span class="keyword">for</span> <span class="built_in">i</span>=<span class="number">1</span>:nd, </span><br><span class="line">   t(<span class="built_in">i</span>) = mutualinfo(d(:,<span class="built_in">i</span>), f); <span class="comment">%计算每个特征跟分类之间的互信息</span></span><br><span class="line"><span class="keyword">end</span>; </span><br><span class="line">fprintf(<span class="string">&#x27;calculate the marginal dmi costs %5.1fs.\n&#x27;</span>, cputime-t1);</span><br><span class="line"></span><br><span class="line">[tmp, idxs] = <span class="built_in">sort</span>(-t); <span class="comment">%按照计算的互信息降序排列，tmp存储的是降序排列的值，idxs为原来对应的序号</span></span><br><span class="line"></span><br><span class="line">fea_base = idxs(<span class="number">1</span>:K); <span class="comment">%取前k个特征</span></span><br><span class="line"></span><br><span class="line">fea(<span class="number">1</span>) = idxs(<span class="number">1</span>); <span class="comment">%互信息最大的特征</span></span><br><span class="line"></span><br><span class="line">KMAX = <span class="built_in">min</span>(<span class="number">1000</span>,nd); <span class="comment">%最大的特征数是500</span></span><br><span class="line"></span><br><span class="line">idxleft = idxs(<span class="number">2</span>:KMAX); <span class="comment">%剩余的特征</span></span><br><span class="line"></span><br><span class="line">k=<span class="number">1</span>;</span><br><span class="line"><span class="keyword">if</span> bdisp==<span class="number">1</span>,</span><br><span class="line">fprintf(<span class="string">&#x27;k=1 cost_time=(N/A) cur_fea=%d #left_cand=%d\n&#x27;</span>, ...</span><br><span class="line">      fea(k), <span class="built_in">length</span>(idxleft));</span><br><span class="line"><span class="keyword">end</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> k=<span class="number">2</span>:K, <span class="comment">%除去互信息最大的特征之后，还需要选取K-1个特征</span></span><br><span class="line">   t1=cputime;</span><br><span class="line">   ncand = <span class="built_in">length</span>(idxleft); <span class="comment">%剩余特征长度</span></span><br><span class="line">   curlastfea = <span class="built_in">length</span>(fea); <span class="comment">%已选特征长度</span></span><br><span class="line">   <span class="keyword">for</span> <span class="built_in">i</span>=<span class="number">1</span>:ncand, <span class="comment">%对每个剩余的特征，计算其互信息</span></span><br><span class="line">      t_mi(<span class="built_in">i</span>) = mutualinfo(d(:,idxleft(<span class="built_in">i</span>)), f);  <span class="comment">%计算与分类结果的互信息</span></span><br><span class="line">      mi_array(idxleft(<span class="built_in">i</span>),curlastfea) = getmultimi(d(:,fea(curlastfea)), d(:,idxleft(<span class="built_in">i</span>))); <span class="comment">%</span></span><br><span class="line">      c_mi(<span class="built_in">i</span>) = <span class="built_in">mean</span>(mi_array(idxleft(<span class="built_in">i</span>), :)); </span><br><span class="line">   <span class="keyword">end</span>;</span><br><span class="line"></span><br><span class="line">   [tmp, fea(k)] = <span class="built_in">max</span>(t_mi(<span class="number">1</span>:ncand) - c_mi(<span class="number">1</span>:ncand));</span><br><span class="line"></span><br><span class="line">   tmpidx = fea(k); fea(k) = idxleft(tmpidx); idxleft(tmpidx) = [];</span><br><span class="line"></span><br><span class="line">   <span class="keyword">if</span> bdisp==<span class="number">1</span>,</span><br><span class="line">   fprintf(<span class="string">&#x27;k=%d cost_time=%5.4f cur_fea=%d #left_cand=%d\n&#x27;</span>, ...</span><br><span class="line">      k, cputime-t1, fea(k), <span class="built_in">length</span>(idxleft));</span><br><span class="line">   <span class="keyword">end</span>;</span><br><span class="line"><span class="keyword">end</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">%===================================== </span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">c</span> = <span class="title">getmultimi</span><span class="params">(da, dt)</span> </span></span><br><span class="line"><span class="keyword">for</span> <span class="built_in">i</span>=<span class="number">1</span>:<span class="built_in">size</span>(da,<span class="number">2</span>), </span><br><span class="line">   c(<span class="built_in">i</span>) = mutualinfo(da(:,<span class="built_in">i</span>), dt);</span><br><span class="line"><span class="keyword">end</span>; </span><br><span class="line">    </span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-]]></content>
-      <categories>
-        <category>机器学习</category>
-      </categories>
-      <tags>
-        <tag>featureSelect</tag>
       </tags>
   </entry>
 </search>
