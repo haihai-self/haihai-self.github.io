@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/hai-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/hai-16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="给定$D&#x3D;(x 1, y 1),(x 2, y 2), \ldots,(x m, y m), y_{i} \in-1,+1$，SVM考虑机遇数据集$D$在样本空间找到一个超平面，将不同的样本分割开来。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SVM算法">
+<meta property="og:url" content="http://example.com/2020/10/27/machineLearning/SVM%E7%AE%97%E6%B3%95/index.html">
+<meta property="og:site_name" content="haihai">
+<meta property="og:description" content="给定$D&#x3D;(x 1, y 1),(x 2, y 2), \ldots,(x m, y m), y_{i} \in-1,+1$，SVM考虑机遇数据集$D$在样本空间找到一个超平面，将不同的样本分割开来。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2020/10/27/machineLearning/picture/2010/v2-9020bf776e006fae4a1663eb6717d307_1440w.jpg">
+<meta property="og:image" content="http://example.com/2020/10/27/machineLearning/picture/2010/image-20201022152848839.png">
+<meta property="og:image" content="http://example.com/2020/10/27/machineLearning/picture/2010/v2-449670775bab3c385b5e5930fc6d2caa_1440w.png">
+<meta property="article:published_time" content="2020-10-27T07:00:43.000Z">
+<meta property="article:modified_time" content="2020-10-27T07:01:26.115Z">
+<meta property="article:author" content="海海不想起床">
+<meta property="article:tag" content="svm">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2020/10/27/machineLearning/picture/2010/v2-9020bf776e006fae4a1663eb6717d307_1440w.jpg">
+
+<link rel="canonical" href="http://example.com/2020/10/27/machineLearning/SVM%E7%AE%97%E6%B3%95/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>SVM算法 | haihai</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">haihai</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/10/27/machineLearning/SVM%E7%AE%97%E6%B3%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="海海不想起床">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="haihai">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          SVM算法
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2020-10-27 15:00:43 / 修改时间：15:01:26" itemprop="dateCreated datePublished" datetime="2020-10-27T15:00:43+08:00">2020-10-27</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">机器学习</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>给定$D=(x 1, y 1),(x 2, y 2), \ldots,(x m, y m), y_{i} \in-1,+1$，SVM考虑机遇数据集$D$在样本空间找到一个超平面，将不同的样本分割开来。</p>
+<a id="more"></a>
+<h2 id="SVM基本模型"><a href="#SVM基本模型" class="headerlink" title="SVM基本模型"></a>SVM基本模型</h2><p><img src="../picture/2010/v2-9020bf776e006fae4a1663eb6717d307_1440w.jpg" alt="img"></p>
+<p>划分超平面的公式为</p>
+<script type="math/tex; mode=display">
+\omega^{T} x+b=0</script><p>其中$\omega$为法向量，决定了超平面的方向，$b$为位移项，决定了超平面距离远点的距离。空间中任意一点到超平面的距离为</p>
+<script type="math/tex; mode=display">
+r=\frac{\left|\omega^{T} x+b\right|}{\|\omega\|}</script><p>假设超平面能将训练样本正确分类，对于样本点$(x_i,y_y)$有一下公式</p>
+<script type="math/tex; mode=display">
+\left\{\begin{array}{ll}
+\omega^{T} x_{i}+b>0, & y_{i}=+1 \\
+\omega^{T} x_{i}+b<0, & y_{i}=-1
+\end{array}\right.</script><p>但是这样的分类方法太过于不可靠，对于一些稍微有扰动的点，将分类不正确，对于上图可以看出，黑线对应上述公式可能对应的超平面。若令</p>
+<script type="math/tex; mode=display">
+\left\{\begin{aligned}
+\boldsymbol{w}^{\mathrm{T}} \boldsymbol{x}_{i}+b \geqslant+1, & y_{i}=+1 \\
+\boldsymbol{w}^{\mathrm{T}} \boldsymbol{x}_{i}+b \leqslant-1, & y_{i}=-1
+\end{aligned}\right.</script><p>其中距离超平面最近的几个训练样本点使上式的等号成立，这几个训练样本就被称作<strong>支持向量</strong>，两个异类支持向量到超平面的距离之和，也称为间隔（margin），为</p>
+<script type="math/tex; mode=display">
+\gamma=\frac{2}{\|\omega\|}</script><p>具体可如下图所示</p>
+<p><img src="../picture/2010/image-20201022152848839.png" alt="image-20201022152848839"></p>
+<p>想要找到鲁棒性最好的超平面，显然是中间的加粗超平面对应的最好，对未知样本的泛化能力最好，而SVM则是为了找到这样一个最大的margin而设计，这样就得到了我们的约束条件。</p>
+<script type="math/tex; mode=display">
+\left\{\begin{array}{ll}
+\omega^{T} x_{i}+b \geq+1, & y_{i}=+1 \\
+\omega^{T} x_{i}+b \leq-1, & y_{i}=-1
+\end{array}\right.</script><p>在这样的条件下求margin最大，因此方程可以重写成</p>
+<script type="math/tex; mode=display">
+\min _{\omega, b} \frac{1}{2}\|\omega\|^{2}, s . t . y_{i}\left(\omega^{T} x_{i}+b\right) \geq 1, i=1,2, \ldots, m</script><p>这就是SVM的基本模型</p>
+<h2 id="对偶问题"><a href="#对偶问题" class="headerlink" title="对偶问题"></a>对偶问题</h2><p>我们现在想要求解式(6)中的问题，可以使用上一节所说的拉格朗日乘子法以及对应的KKT约束进行求解，将问题转换为</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+f(\omega, b) &=\frac{1}{2}\|\omega\|^{2} \\
+g(\omega, b) &=1-y_{i}\left(\omega^{T} x_{i}+b\right) \leq 0, i=1,2, \ldots, m \\
+h(\omega, b) &=0
+\end{aligned}</script><p>得到对应的拉格朗日函数为</p>
+<script type="math/tex; mode=display">
+L(\omega, b, \alpha)=\frac{1}{2}\|\omega\|^{2}+\sum_{i=1}^{m} \alpha_{i}\left(1-y_{i}\left(\omega^{T} x_{i}+b\right)\right)</script><p>其中$\alpha_i &gt; 0$</p>
+<p>对$\omega$和b进行求偏导并令他们为0可的</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+\omega &=\sum_{i=1}^{m} \alpha_{i} y_{i} x_{i} \\
+0 &=\sum_{i=1}^{m} \alpha_{i} y_{i}
+\end{aligned}</script><p>在带入式(7)可以得到</p>
+<script type="math/tex; mode=display">
+\max _{\alpha} \sum_{i=1}^{m} \alpha_{i}-\frac{1}{2} \sum_{i=1}^{m} \sum_{j=1}^{m} \alpha_{i} \alpha_{j} y_{i} y_{j} x_{i}^{T} x_{j}</script><p>其中$\text {s.t. } \sum_{i=1}^{m} \alpha_{i} y_{i}=0, \alpha_{i} \geq 0, i=1,2, \ldots, m$</p>
+<h2 id="求解模型"><a href="#求解模型" class="headerlink" title="求解模型"></a>求解模型</h2><p>解出$\alpha$后，求解出对应的$\omega$与$b$即可求解出模型</p>
+<script type="math/tex; mode=display">
+f(x)=\omega^{T} x+b=\sum_{i=1}^{m} \alpha_{i} y_{i} x_{i}^{T} x+b</script><p>从对偶问题(8)中解出的$\alpha_i$对应的是训练样本点$(x_i,y_i)$，同时还要满足KKT条件，带入$(x)=\omega^{T} x+b$，$g(x)=y_{i}\left(\omega^{T} x_{i}+b\right) \geq 1$可得对应的KKT条件为</p>
+<script type="math/tex; mode=display">
+\left\{\begin{array}{l}
+\alpha_{i} \geq 0 \\
+y_{i} f\left(x_{i}\right)-1 \geq 0 \\
+\alpha_{i}\left(y_{i} f\left(x_{i}\right)-1\right)=0
+\end{array}\right.</script><ul>
+<li>若$\alpha_i=0$，则对应在可行域的内部，通过求极值带入法可以得到</li>
+<li>若$\alpha_i &gt; 0$，则对应在可行域边界，则必有$y_i f(x_i)=1$，是一个支持向量。</li>
+</ul>
+<p>SMO算法是用来求解对偶问题的核心优化方法，在SMO算法中，每次选择两个变量进行优化，同时将其他变量看做是固定的常数，这样“分而治之”的话，问题就容易多了。SMO算法的基本思想正是这样一种“分治法”。</p>
+<p>假设我们选取的两个需要优化的参数为$\alpha_1,\alpha_2$，剩下的$\alpha_3,\alpha_4, …, \alpha_N$则固定，做为常数处理，将对偶问题</p>
+<script type="math/tex; mode=display">
+\max _{\alpha} \sum_{i=1}^{m} \alpha_{i}-\frac{1}{2} \sum_{i=1}^{m} \sum_{j=1}^{m} \alpha_{i} \alpha_{j} y_{i} y_{j} x_{i}^{T} x_{j}</script><p>在约束$\text {s.t. } \sum_{i=1}^{m} \alpha_{i} y_{i}=0, \alpha_{i} \geq 0, i=1,2, \ldots, m$下进行展开，可得</p>
+<script type="math/tex; mode=display">
+W\left(\alpha_{1}, \alpha_{2}\right)=\alpha_{1}+\alpha_{2}-\frac{1}{2} K_{1,1} y_{1}^{2} \alpha_{1}^{2}-\frac{1}{2} K_{2,2} y_{2}^{2} \alpha_{2}^{2}-K_{1,2} y_{1} y_{2} \alpha_{1} \alpha_{2}-y_{1} \alpha_{1} \sum_{i=3}^{N} \alpha_{i} y_{i} K_{i, 1}-y_{2} \alpha_{2} \sum_{i=3}^{N} \alpha_{i} y_{i} K_{i, 2}+C</script><p>$K_{1,1}$表示$x_1x_1$，以此类推，C为参数项。</p>
+<p>根据优化条件$\sum_{i=1}^{m} \alpha_{i} y_{i}=0$可得$\alpha_1,\alpha_2$之间的关系</p>
+<script type="math/tex; mode=display">
+\alpha_{1} y_{1}+\alpha_{2} y_{2}=-\sum_{i=3}^{N} \alpha_{i} y_{i}=\zeta</script><p>由条件可知$y_i y_i=1$，两边同时乘上$y_1$可得</p>
+<script type="math/tex; mode=display">
+\alpha_{1}=\zeta y_{1}-\alpha_{2} y_{1} y_{2}</script><p>令$v_{1}=\sum_{i=3}^{N} \alpha_{i} y_{i} K_{i, 1}, v_{2}=\sum_{i=3}^{N} \alpha_{i} y_{i} K_{i, 2}, \quad \alpha_{1}$，带入表达式可得：</p>
+<script type="math/tex; mode=display">
+W\left(\alpha_{2}\right)=-\frac{1}{2} K_{1,1}\left(\zeta-\alpha_{2} y_{2}\right)^{2}-\frac{1}{2} K_{2,2} \alpha_{2}^{2}-y_{2}\left(\zeta-\alpha_{2} y_{2}\right) \alpha_{2} K_{1,2}-v_{1}\left(\zeta-\alpha_{2} y_{2}\right)-v_{2} y_{2} \alpha_{2}+\alpha_{1}+\alpha_{2}+C</script><p>之后我们对该一元函数进行求值，$W$对$\alpha$的一阶导数为0得到：</p>
+<script type="math/tex; mode=display">
+\frac{\partial W\left(\alpha_{2}\right)}{\partial \alpha_{2}}=-\left(K_{1,1}+K_{2,2}-2 K_{1,2}\right) \alpha_{2}+K_{1,1} \zeta y_{2}-K_{1,2} \zeta y_{2}+v_{1} y_{2}-v_{2} y_{2}-y_{1} y_{2}+y_{2}^{2}=0</script><p>对上式进行处理，去掉不方便计算的$\zeta$</p>
+<p>因为SVM对数据点的预测值为</p>
+<script type="math/tex; mode=display">
+f(x)=\sum_{i=1}^{N} \alpha_{i} y_{i} K\left(x_{i}, x\right)+b</script><p>其中$\alpha_i$是上一轮迭代中已经确定了的值，可以用$\alpha_i^{old}$来表示，则\v_1,v_2可以表示为</p>
+<script type="math/tex; mode=display">
+\begin{array}{l}
+v_{1}=\sum_{i=3}^{N} \alpha_{i}^{old} y_{i} K_{1, i}=f\left(x_{1}\right)-\alpha_{1}^{old} y_{1} K_{1,1}-\alpha_{2}^{old} y_{2} K_{1,2}-b \\
+v_{2}=\sum_{i=3}^{N} \alpha_{i}^{old} y_{i} K_{2, i}=f\left(x_{2}\right)-\alpha_{1}^{old} y_{1} K_{1,2}-\alpha_{2}^{old} y_{2} K_{2,2}-b
+\end{array}</script><p>已知$\alpha_{1}^{old}=\zeta y_{1}-\alpha_{2}^{old} y_{1} y_{2}$可得</p>
+<script type="math/tex; mode=display">
+v_{1}-v_{2}=f\left(x_{1}\right)-f\left(x_{2}\right)-K_{1,1} \zeta+K_{1,2} \zeta+\left(K_{1,1}+K_{2,2}-2 K_{1,2}\right) \alpha_{2} y_{2}^{old}</script><p>将$v_1-v_2$带入式(16)可得</p>
+<script type="math/tex; mode=display">
+\frac{\partial W\left(\alpha_{2}\right)}{\partial \alpha_{2}}=-\left(K_{1,1}+K_{2,2}-2 K_{1,2}\right) \alpha_{2}^{n e w}+\left(K_{1,1}+K_{2,2}-2 K_{1,2}\right) \alpha_{2}^{o l d}+y_{2}\left[y_{2}-y_{1}+f\left(x_{1}\right)-f\left(x_{2}\right)\right]</script><p>记$E_i$为真实值与预测值之间的误差：$E_i=f(x_i)-y_i$，可得</p>
+<p>令$\eta=K_{1,1}+K_{2,2}-2 K_{1,2}$，可得到一阶导数的最终表达式为</p>
+<script type="math/tex; mode=display">
+\frac{\partial W\left(\alpha_{2}\right)}{\partial \alpha_{2}}=-\eta \alpha_{2}^{n e w}+\eta \alpha_{2}^{o l d}+y_{2}\left(E_{1}-E_{2}\right)=0</script><p>这样我们可以得到</p>
+<script type="math/tex; mode=display">
+\alpha_{2}^{n e w}=\alpha_{2}^{o l d}+\frac{y_{2}\left(E_{1}-E_{2}\right)}{\eta}</script><p>同时$\alpha_1^{new}$可以通过$\alpha_2^{new}$得到。</p>
+<p><strong>阈值修剪</strong></p>
+<p>但此时得到的$\alpha$的值并没有考虑约束提条件$0 \leq \alpha \leq C$，考虑到约束$\sum_{i=1}^{m} \alpha_{i} y_{i}=0$，即$\alpha_{1} y_{1}+\alpha_{2} y_{2}=-\sum_{i=3}^{N} \alpha_{i} y_{i}=\zeta$</p>
+<ul>
+<li>当$y_1 \neq y_2$时，条件可以写成$\alpha_1-\alpha_2 = k$</li>
+<li>当y_1 = y_2时，条件可以写成$\alpha_1 + \alpha_2 = k$</li>
+</ul>
+<p><img src="../picture/2010/v2-449670775bab3c385b5e5930fc6d2caa_1440w.png" alt="img"></p>
+<p>在左图中\y_1 \neq y_2，根据k的正负以及大小可以得到不同的上界与下界。</p>
+<ul>
+<li>下界：$L = max(0, \alpha_2^{old})$</li>
+<li>上界：$L=min(C, C + \alpha_2^{old} - \alpha_1^{old})$</li>
+</ul>
+<p>在右图中，$y_1 = y_2$，同理可得到上界下界分别为</p>
+<ul>
+<li>下界，$L=max(0, \alpha_2^{old} + \alpha_1^{old} - C)$</li>
+<li>上界，$L=min(C,  \alpha_2^{old} + \alpha_1^{old})$</li>
+</ul>
+<p>最终可得到修剪之后的$\alpha_2^{new}$如下所示</p>
+<script type="math/tex; mode=display">
+\alpha_{2}^{n e w}=\left\{\begin{array}{ll}
+H & \alpha_{2}^{n e w, u n c l i p p e d}>H \\
+\alpha_{2}^{n e w, u n c l i p p e d} & L \leq \alpha_{2}^{n e w, u n c l i p p e d} \leq H \\
+L & \alpha_{2}^{n e w, u n c l i p p e d}<L
+\end{array}\right.</script><p><strong>更新阈值b</strong></p>
+<p>当数据点为支持向量时，满足$y_1(\omega^T+b)=1$两边同时乘上$y_1$可得$\sum_{i=1}^{N} \alpha_{i} y_{i} K_{i, 1}+b=y_{1}$，进而得到b的值为</p>
+<script type="math/tex; mode=display">
+b_{1}^{n e w}=y_{1}-\sum_{i=3}^{N} \alpha_{i} y_{i} K_{i, 1}-\alpha_{1}^{n e w} y_{1} K_{1,1}-\alpha_{2}^{n e w} y_{2} K_{2,1}</script><p>其中上式的前两项可以写成:</p>
+<script type="math/tex; mode=display">
+y_{1}-\sum_{i=3}^{N} \alpha_{i} y_{i} K_{i, 1}=-E_{1}+\alpha_{1}^{o l d} y_{1} K_{1,1}+\alpha_{2}^{o l d} y_{2} K_{2,1}+b^{o l d}</script><p>同理也可以得到</p>
+<script type="math/tex; mode=display">
+b_{2}^{n e w}=-E_{2}-y_{1} K_{1,2}\left(\alpha_{1}^{n e w}-\alpha_{1}^{o l d}\right)-y_{2} K_{2,2}\left(\alpha_{2}^{n e w}-\alpha_{2}^{o l d}\right)+b^{o l d}</script><p>最终将选择两个数的中点进行更新。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/svm/" rel="tag"><i class="fa fa-tag"></i> svm</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/10/27/machineLearning/%E6%8B%89%E6%A0%BC%E6%9C%97%E6%97%A5%E4%B9%98%E5%AD%90%E6%B3%95/" rel="prev" title="拉格朗日乘子法">
+      <i class="fa fa-chevron-left"></i> 拉格朗日乘子法
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#SVM%E5%9F%BA%E6%9C%AC%E6%A8%A1%E5%9E%8B"><span class="nav-number">1.</span> <span class="nav-text">SVM基本模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%B9%E5%81%B6%E9%97%AE%E9%A2%98"><span class="nav-number">2.</span> <span class="nav-text">对偶问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B1%82%E8%A7%A3%E6%A8%A1%E5%9E%8B"><span class="nav-number">3.</span> <span class="nav-text">求解模型</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">海海不想起床</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">25</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/haihai-self" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;haihai-self" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">海海不想起床</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+          load: ['[tex]/mhchem'],
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+          packages: {'[+]': ['mhchem']},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>

@@ -474,7 +474,9 @@ I(X ; Y) &=\sum_{x, y} p(x, y) \log \frac{p(x, y)}{p(x) p(y)} \\
 <script type="math/tex; mode=display">
 \max \Phi(D, R), \Phi=D-R</script><p>实际中将使用增量搜索的方式获取近似解，假设已经得到$S_{m-1}$特征子集，需要在剩余的$X-S_{m-1}$的特征子集中选出第m个特征子集，通过最大化$\Phi()$来进行特征选择，即最大化</p>
 <script type="math/tex; mode=display">
-\max _{x_{j} \in X-S_{m-1}}\left[I\left(x_{j} ; c\right)-\frac{1}{m-1} \sum_{x_{i} \in S_{m-1}} I\left(x_{i} ; x_{j}\right)\right]</script><figure class="highlight matlab"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="params">[fea]</span> = <span class="title">mrmr_mid_d</span><span class="params">(d, f, K)</span></span></span><br><span class="line"><span class="comment">% function [fea] = mrmr_mid_d(d, f, K)</span></span><br><span class="line"><span class="comment">% d-输入N*M矩阵，N个采样值，M个特征，特征向量</span></span><br><span class="line"><span class="comment">% f-输入的N*1向量，分类结果</span></span><br><span class="line"><span class="comment">% K-选择的葛铮的个数</span></span><br><span class="line"><span class="comment">% </span></span><br><span class="line"><span class="comment">% MID scheme according to MRMR</span></span><br><span class="line"><span class="comment">%</span></span><br><span class="line"><span class="comment">% By Hanchuan Peng</span></span><br><span class="line"><span class="comment">% April 16, 2003</span></span><br><span class="line"><span class="comment">%</span></span><br><span class="line"></span><br><span class="line">bdisp=<span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">nd = <span class="built_in">size</span>(d,<span class="number">2</span>); <span class="comment">%特征个数</span></span><br><span class="line">nc = <span class="built_in">size</span>(d,<span class="number">1</span>); <span class="comment">%样本个数</span></span><br><span class="line"></span><br><span class="line">t1=cputime;</span><br><span class="line"><span class="keyword">for</span> <span class="built_in">i</span>=<span class="number">1</span>:nd, </span><br><span class="line">   t(<span class="built_in">i</span>) = mutualinfo(d(:,<span class="built_in">i</span>), f); <span class="comment">%计算每个特征跟分类之间的互信息</span></span><br><span class="line"><span class="keyword">end</span>; </span><br><span class="line">fprintf(<span class="string">&#x27;calculate the marginal dmi costs %5.1fs.\n&#x27;</span>, cputime-t1);</span><br><span class="line"></span><br><span class="line">[tmp, idxs] = <span class="built_in">sort</span>(-t); <span class="comment">%按照计算的互信息降序排列，tmp存储的是降序排列的值，idxs为原来对应的序号</span></span><br><span class="line"></span><br><span class="line">fea_base = idxs(<span class="number">1</span>:K); <span class="comment">%取前k个特征</span></span><br><span class="line"></span><br><span class="line">fea(<span class="number">1</span>) = idxs(<span class="number">1</span>); <span class="comment">%互信息最大的特征</span></span><br><span class="line"></span><br><span class="line">KMAX = <span class="built_in">min</span>(<span class="number">1000</span>,nd); <span class="comment">%最大的特征数是500</span></span><br><span class="line"></span><br><span class="line">idxleft = idxs(<span class="number">2</span>:KMAX); <span class="comment">%剩余的特征</span></span><br><span class="line"></span><br><span class="line">k=<span class="number">1</span>;</span><br><span class="line"><span class="keyword">if</span> bdisp==<span class="number">1</span>,</span><br><span class="line">fprintf(<span class="string">&#x27;k=1 cost_time=(N/A) cur_fea=%d #left_cand=%d\n&#x27;</span>, ...</span><br><span class="line">      fea(k), <span class="built_in">length</span>(idxleft));</span><br><span class="line"><span class="keyword">end</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> k=<span class="number">2</span>:K, <span class="comment">%除去互信息最大的特征之后，还需要选取K-1个特征</span></span><br><span class="line">   t1=cputime;</span><br><span class="line">   ncand = <span class="built_in">length</span>(idxleft); <span class="comment">%剩余特征长度</span></span><br><span class="line">   curlastfea = <span class="built_in">length</span>(fea); <span class="comment">%已选特征长度</span></span><br><span class="line">   <span class="keyword">for</span> <span class="built_in">i</span>=<span class="number">1</span>:ncand, <span class="comment">%对每个剩余的特征，计算其互信息</span></span><br><span class="line">      t_mi(<span class="built_in">i</span>) = mutualinfo(d(:,idxleft(<span class="built_in">i</span>)), f);  <span class="comment">%计算与分类结果的互信息</span></span><br><span class="line">      mi_array(idxleft(<span class="built_in">i</span>),curlastfea) = getmultimi(d(:,fea(curlastfea)), d(:,idxleft(<span class="built_in">i</span>))); <span class="comment">%</span></span><br><span class="line">      c_mi(<span class="built_in">i</span>) = <span class="built_in">mean</span>(mi_array(idxleft(<span class="built_in">i</span>), :)); </span><br><span class="line">   <span class="keyword">end</span>;</span><br><span class="line"></span><br><span class="line">   [tmp, fea(k)] = <span class="built_in">max</span>(t_mi(<span class="number">1</span>:ncand) - c_mi(<span class="number">1</span>:ncand));</span><br><span class="line"></span><br><span class="line">   tmpidx = fea(k); fea(k) = idxleft(tmpidx); idxleft(tmpidx) = [];</span><br><span class="line"></span><br><span class="line">   <span class="keyword">if</span> bdisp==<span class="number">1</span>,</span><br><span class="line">   fprintf(<span class="string">&#x27;k=%d cost_time=%5.4f cur_fea=%d #left_cand=%d\n&#x27;</span>, ...</span><br><span class="line">      k, cputime-t1, fea(k), <span class="built_in">length</span>(idxleft));</span><br><span class="line">   <span class="keyword">end</span>;</span><br><span class="line"><span class="keyword">end</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">%===================================== </span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">c</span> = <span class="title">getmultimi</span><span class="params">(da, dt)</span> </span></span><br><span class="line"><span class="keyword">for</span> <span class="built_in">i</span>=<span class="number">1</span>:<span class="built_in">size</span>(da,<span class="number">2</span>), </span><br><span class="line">   c(<span class="built_in">i</span>) = mutualinfo(da(:,<span class="built_in">i</span>), dt);</span><br><span class="line"><span class="keyword">end</span>; </span><br><span class="line">    </span><br><span class="line"></span><br></pre></td></tr></table></figure>
+\max _{x_{j} \in X-S_{m-1}}\left[I\left(x_{j} ; c\right)-\frac{1}{m-1} \sum_{x_{i} \in S_{m-1}} I\left(x_{i} ; x_{j}\right)\right]</script><figure class="highlight matlab"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="params">[fea]</span> = <span class="title">mrmr_mid_d</span><span class="params">(d, f, K)</span></span></span><br><span class="line"><span class="comment">% function [fea] = mrmr_mid_d(d, f, K)</span></span><br><span class="line"><span class="comment">% d-输入N*M矩阵，N个采样值，M个特征，特征向量</span></span><br><span class="line"><span class="comment">% f-输入的N*1向量，分类结果</span></span><br><span class="line"><span class="comment">% K-选择的葛铮的个数</span></span><br><span class="line"><span class="comment">% </span></span><br><span class="line"><span class="comment">% MID scheme according to MRMR</span></span><br><span class="line"><span class="comment">%</span></span><br><span class="line"><span class="comment">% By Hanchuan Peng</span></span><br><span class="line"><span class="comment">% April 16, 2003</span></span><br><span class="line"><span class="comment">%</span></span><br><span class="line"></span><br><span class="line">bdisp=<span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">nd = <span class="built_in">size</span>(d,<span class="number">2</span>); <span class="comment">%特征个数</span></span><br><span class="line">nc = <span class="built_in">size</span>(d,<span class="number">1</span>); <span class="comment">%样本个数</span></span><br><span class="line"></span><br><span class="line">t1=cputime;</span><br><span class="line"><span class="keyword">for</span> <span class="built_in">i</span>=<span class="number">1</span>:nd, </span><br><span class="line">   t(<span class="built_in">i</span>) = mutualinfo(d(:,<span class="built_in">i</span>), f); <span class="comment">%计算每个特征跟分类之间的互信息</span></span><br><span class="line"><span class="keyword">end</span>; </span><br><span class="line">fprintf(<span class="string">&#x27;calculate the marginal dmi costs %5.1fs.\n&#x27;</span>, cputime-t1);</span><br><span class="line"></span><br><span class="line">[tmp, idxs] = <span class="built_in">sort</span>(-t); <span class="comment">%按照计算的互信息降序排列，tmp存储的是降序排列的值，idxs为原来对应的序号</span></span><br><span class="line"></span><br><span class="line">fea_base = idxs(<span class="number">1</span>:K); <span class="comment">%取前k个特征</span></span><br><span class="line"></span><br><span class="line">fea(<span class="number">1</span>) = idxs(<span class="number">1</span>); <span class="comment">%互信息最大的特征</span></span><br><span class="line"></span><br><span class="line">KMAX = <span class="built_in">min</span>(<span class="number">1000</span>,nd); <span class="comment">%最大的特征数是500</span></span><br><span class="line"></span><br><span class="line">idxleft = idxs(<span class="number">2</span>:KMAX); <span class="comment">%剩余的特征</span></span><br><span class="line"></span><br><span class="line">k=<span class="number">1</span>;</span><br><span class="line"><span class="keyword">if</span> bdisp==<span class="number">1</span>,</span><br><span class="line">fprintf(<span class="string">&#x27;k=1 cost_time=(N/A) cur_fea=%d #left_cand=%d\n&#x27;</span>, ...</span><br><span class="line">      fea(k), <span class="built_in">length</span>(idxleft));</span><br><span class="line"><span class="keyword">end</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> k=<span class="number">2</span>:K, <span class="comment">%除去互信息最大的特征之后，还需要选取K-1个特征</span></span><br><span class="line">   t1=cputime;</span><br><span class="line">   ncand = <span class="built_in">length</span>(idxleft); <span class="comment">%剩余特征长度</span></span><br><span class="line">   curlastfea = <span class="built_in">length</span>(fea); <span class="comment">%已选特征长度</span></span><br><span class="line">   <span class="keyword">for</span> <span class="built_in">i</span>=<span class="number">1</span>:ncand, <span class="comment">%对每个剩余的特征，计算其互信息</span></span><br><span class="line">      t_mi(<span class="built_in">i</span>) = mutualinfo(d(:,idxleft(<span class="built_in">i</span>)), f);  <span class="comment">%计算与分类结果的互信息</span></span><br><span class="line">      mi_array(idxleft(<span class="built_in">i</span>),curlastfea) = getmultimi(d(:,fea(curlastfea)), d(:,idxleft(<span class="built_in">i</span>))); <span class="comment">%计算已选出结果与未选择结果之间的互信息</span></span><br><span class="line">      c_mi(<span class="built_in">i</span>) = <span class="built_in">mean</span>(mi_array(idxleft(<span class="built_in">i</span>), :));  <span class="comment">%相当于上述的R</span></span><br><span class="line">   <span class="keyword">end</span>;</span><br><span class="line"></span><br><span class="line">   [tmp, fea(k)] = <span class="built_in">max</span>(t_mi(<span class="number">1</span>:ncand) - c_mi(<span class="number">1</span>:ncand));</span><br><span class="line"></span><br><span class="line">   tmpidx = fea(k); fea(k) = idxleft(tmpidx); idxleft(tmpidx) = [];</span><br><span class="line"></span><br><span class="line">   <span class="keyword">if</span> bdisp==<span class="number">1</span>,</span><br><span class="line">   fprintf(<span class="string">&#x27;k=%d cost_time=%5.4f cur_fea=%d #left_cand=%d\n&#x27;</span>, ...</span><br><span class="line">      k, cputime-t1, fea(k), <span class="built_in">length</span>(idxleft));</span><br><span class="line">   <span class="keyword">end</span>;</span><br><span class="line"><span class="keyword">end</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">%===================================== </span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">c</span> = <span class="title">getmultimi</span><span class="params">(da, dt)</span> </span></span><br><span class="line"><span class="keyword">for</span> <span class="built_in">i</span>=<span class="number">1</span>:<span class="built_in">size</span>(da,<span class="number">2</span>), </span><br><span class="line">   c(<span class="built_in">i</span>) = mutualinfo(da(:,<span class="built_in">i</span>), dt);</span><br><span class="line"><span class="keyword">end</span>; </span><br><span class="line">    </span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>翻译成对应的python代码</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">getmultimi</span>(<span class="params">da, dt</span>):</span></span><br><span class="line">    c = []</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> range(len(da[<span class="number">1</span>])):</span><br><span class="line">        c.append(metrics.normalized_mutual_info_score(da[:, i], dt))</span><br><span class="line">    <span class="keyword">return</span> c</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">mrmr</span>(<span class="params">d, f, k=<span class="number">15</span></span>):</span></span><br><span class="line">    nd = len(d[<span class="number">1</span>])  <span class="comment">#特征个数</span></span><br><span class="line">    nc = len(d)  <span class="comment">#样本个数</span></span><br><span class="line">    t = []  <span class="comment">#每个特征与分类结果之间的互信息</span></span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> range(nd):</span><br><span class="line">        score = metrics.normalized_mutual_info_score(d[:, i], f)  <span class="comment">#互信息计算</span></span><br><span class="line">        t.append(score)</span><br><span class="line">    scores = t.copy()</span><br><span class="line">    idxs = sorted(range(len(t)), key=<span class="keyword">lambda</span> k: t[k], reverse=<span class="literal">True</span>)  <span class="comment">#得到与之对应的idx</span></span><br><span class="line">    t.sort(reverse=<span class="literal">True</span>)  <span class="comment">#互信息排序</span></span><br><span class="line">    fea_base = idxs[:k]</span><br><span class="line">    kmax = min(<span class="number">1000</span>, k)  <span class="comment">#最大的特征数将设置为1000</span></span><br><span class="line">    idxleft = idxs[<span class="number">1</span>:kmax]  <span class="comment">#剩余需要选择的特征数</span></span><br><span class="line">    fea = []  <span class="comment">#fifo选择的特征数</span></span><br><span class="line">    fea.append(idxs[<span class="number">0</span>])  <span class="comment">#首先加入的是与分类结果最相关的特征</span></span><br><span class="line">    mrmr_value = []  <span class="comment">#保存mrmr的value，这里使用除法比较合理，减法的话会有很多0值</span></span><br><span class="line">    mrmr_value.append(t[<span class="number">0</span>])  <span class="comment">#加入第一个</span></span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> range(<span class="number">1</span>, k):  <span class="comment">#依次加入剩下的需要选择的特征</span></span><br><span class="line">        ncand = len(idxleft) <span class="comment">#剩余特征的长度</span></span><br><span class="line">        t_mi = []  <span class="comment">#相当于D</span></span><br><span class="line">        c_mi = []  <span class="comment">#相当于R</span></span><br><span class="line">        <span class="keyword">for</span> j <span class="keyword">in</span> range(ncand):</span><br><span class="line">            t_mi.append(metrics.normalized_mutual_info_score(d[:, idxleft[j]], f))  <span class="comment">#当前特征与结果的互信息</span></span><br><span class="line">            mi_array = getmultimi(d[:, fea], d[:, idxleft[j]])  <span class="comment">#计算以选择的特征与当前特征的互信息</span></span><br><span class="line">            c_mi.append(np.mean(mi_array))  <span class="comment">#互信息的值R为以选择特征与当前特征的均值</span></span><br><span class="line">        t_mi = np.array(t_mi)</span><br><span class="line">        c_mi = np.array(c_mi)</span><br><span class="line">        t_max = <span class="number">0</span></span><br><span class="line">        t_max_id = <span class="number">-1</span></span><br><span class="line">        <span class="keyword">for</span> j <span class="keyword">in</span> range(len(t_mi)):  <span class="comment">#max D / R，计算出最大值</span></span><br><span class="line">            tmp = t_mi[j] / (c_mi[j] + <span class="number">0.001</span>)</span><br><span class="line">            <span class="keyword">if</span> tmp &gt; t_max:</span><br><span class="line">                t_max = tmp</span><br><span class="line">                t_max_id = j</span><br><span class="line"></span><br><span class="line">        fea.append(t_max_id)  <span class="comment">#将最大的特征人加入fea</span></span><br><span class="line">        tmpidx = fea[i]</span><br><span class="line">        fea[i] = idxleft[tmpidx]</span><br><span class="line">        idxleft.remove(fea[i])  <span class="comment">#同时在left中移除该特征</span></span><br><span class="line">        mrmr_value.append(t_max)</span><br><span class="line"></span><br><span class="line">    print(fea)</span><br><span class="line">    print(mrmr_value)</span><br></pre></td></tr></table></figure>
 ]]></content>
       <categories>
         <category>机器学习</category>
@@ -1306,6 +1308,190 @@ I(X ; Y) &=\sum_{x, y} p(x, y) \log \frac{p(x, y)}{p(x) p(y)} \\
       </categories>
       <tags>
         <tag>scala语法</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>拉格朗日乘子法</title>
+    <url>/2020/10/27/machineLearning/%E6%8B%89%E6%A0%BC%E6%9C%97%E6%97%A5%E4%B9%98%E5%AD%90%E6%B3%95/</url>
+    <content><![CDATA[<p>拉格朗日乘子法（Largrange multipliers）是一种寻找多元函数在一组约束下的极值的方法。通过引入拉格朗日乘子，可将有$d$个变量与$k$个约束条件的最优化问题转化为具有$d+k$个变量的无约束优化问题求解。<br><a id="more"></a></p>
+<h2 id="等式约束优化问题"><a href="#等式约束优化问题" class="headerlink" title="等式约束优化问题"></a>等式约束优化问题</h2><p>先考虑一个等式约束的优化问题，假定$x$为$d$纬向量，我们想要寻找$x$的某个取值$x^*$使得目标函数$f(x)$最小且满足约束$g(x)=0$从几何角度看，这个问题的目标是在方程$g(x)=0$确定的曲线上寻找能使目标函数最小的优化点</p>
+<p><img src="/picture/2010/v2-4c26c9dbf7dc1863261744eb954d1e36_1440w.jpg" alt="img"></p>
+<ul>
+<li><p>对于约束曲面上的任意点$x$，该点的梯度$\nabla g(x)$正交于曲面</p>
+<p>这很好理解，曲面的梯度就是曲面的法向量，必定正交于约束曲面</p>
+</li>
+<li><p>在最优点$x^*$，目标函数在该点的梯度$\nabla f(x)$正交与约束曲面</p>
+<p>要理解这一点，可以假设最优点为A，且目标函数在点A的梯度与约束曲面不正交，这样我们可以找到另外一个点B，沿着梯度下降的方向，可得$f(B)$的值比$f(A)$的值要小，与我们的假设矛盾。</p>
+</li>
+</ul>
+<p>由此可知，在最优点集$x^*$，其上的梯度$\nabla f(x)$与$\nabla g(x)$的方向必然相同或者相反，即存在$\lambda \neq 0$，使得</p>
+<script type="math/tex; mode=display">
+\nabla f\left(x^{*}\right)+\lambda \nabla g\left(x^{*}\right)=0</script><p>基于此我们可以定义拉格朗日函数</p>
+<script type="math/tex; mode=display">
+L(x, \lambda)=f(x)+\lambda g(x)</script><ul>
+<li>当$L(x, \lambda)$对$x$进行求导时，$\nabla f\left(x\right)+\lambda \nabla g\left(x\right)=0$</li>
+<li>当$L(x, \lambda)$对$\lambda$进行求导时，$\lambda g(x) = 0$</li>
+</ul>
+<p>可以发现对两个变量分别进行求导之后，使得原来的约束问题变成了对拉格朗日函数的无约束问题。</p>
+<h2 id="不等式约束优化问题"><a href="#不等式约束优化问题" class="headerlink" title="不等式约束优化问题"></a>不等式约束优化问题</h2><p>现在考虑不等式约束$g(x) \leq 0$可以有两种情况</p>
+<ul>
+<li>第一种是在边界条件上，这样问题转换成了等式约束$g(x)=0$，在这种情况下，也就是我们之前所说的拉格朗日乘子法，即$\nabla f=-\lambda \nabla g$，值得注意的是这里的$\lambda$的符号是极其有意义的，$\nabla f(x)$的方向应该指向可行域的内部（因为最小值点是在边界上取得，要是不指向内部，将会存在内部某一点，使得$f(x)$的值比当前值更小），但是$\nabla g(x)$又是指向可行域外部的（因为内部是$g(x)<0$的点，外部是$g(x)>0$的点），即$\nabla g(x)$与$\nabla f(x)$的方向相反。</li>
+<li>另外一种是落在可行域内部，即$g(x)&lt;0$这样的情况可以直接先对$f(x)$进行求导，求得最小值点在带入$g(x)$中看看是否符合条件。在这种情况下$g(x)&lt;0$的约束不起作用，因此应有$L(x, \lambda)=f(x)+\lambda g(x)$中的$\lambda=0$应该成立，然后求解$\nabla f(x)=0$</li>
+</ul>
+<p>因此不论在可行解内部还是在边界上$\lambda g(x) = 0$恒成立（在内部时$\lambda = 0$ 在外部时$g(x)=0$），因此可以得到KKT条件</p>
+<script type="math/tex; mode=display">
+\left\{\begin{array}{l}
+g(x) \leq 0 \\
+\lambda \geq 0 \\
+\lambda_{j} g_{j}(x)=0
+\end{array}\right.</script><p>当扩展到同时存在多个等式或者不等式约束时，朗格朗日函数变为形为</p>
+<script type="math/tex; mode=display">
+L\left(\mathbf{x},\left\{\lambda_{j}\right\},\left\{\mu_{k}\right\}\right)=f(\mathbf{x})+\sum_{j=1}^{m} \lambda_{j} g_{j}(\mathbf{x})+\sum_{k=1}^{p} \mu_{k} h_{k}(\mathbf{x})</script><p>其中$g_j(x)$为等式约束，$h_k(x)$为不等式约束，其中KKT条件包括</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+\nabla_{\mathbf{x}} L &=\mathbf{0} \\
+g_{j}(\mathbf{x}) &=0, j=1, \ldots, m \\
+h_{k}(\mathbf{x}) & \leq 0 \\
+\mu_{k} & \geq 0 \\
+\mu_{k} h_{k}(\mathbf{x}) &=0, k=1, \ldots, p
+\end{aligned}</script>]]></content>
+      <categories>
+        <category>机器学习</category>
+      </categories>
+      <tags>
+        <tag>svm</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>SVM算法</title>
+    <url>/2020/10/27/machineLearning/SVM%E7%AE%97%E6%B3%95/</url>
+    <content><![CDATA[<p>给定$D=(x 1, y 1),(x 2, y 2), \ldots,(x m, y m), y_{i} \in-1,+1$，SVM考虑机遇数据集$D$在样本空间找到一个超平面，将不同的样本分割开来。</p>
+<a id="more"></a>
+<h2 id="SVM基本模型"><a href="#SVM基本模型" class="headerlink" title="SVM基本模型"></a>SVM基本模型</h2><p><img src="../picture/2010/v2-9020bf776e006fae4a1663eb6717d307_1440w.jpg" alt="img"></p>
+<p>划分超平面的公式为</p>
+<script type="math/tex; mode=display">
+\omega^{T} x+b=0</script><p>其中$\omega$为法向量，决定了超平面的方向，$b$为位移项，决定了超平面距离远点的距离。空间中任意一点到超平面的距离为</p>
+<script type="math/tex; mode=display">
+r=\frac{\left|\omega^{T} x+b\right|}{\|\omega\|}</script><p>假设超平面能将训练样本正确分类，对于样本点$(x_i,y_y)$有一下公式</p>
+<script type="math/tex; mode=display">
+\left\{\begin{array}{ll}
+\omega^{T} x_{i}+b>0, & y_{i}=+1 \\
+\omega^{T} x_{i}+b<0, & y_{i}=-1
+\end{array}\right.</script><p>但是这样的分类方法太过于不可靠，对于一些稍微有扰动的点，将分类不正确，对于上图可以看出，黑线对应上述公式可能对应的超平面。若令</p>
+<script type="math/tex; mode=display">
+\left\{\begin{aligned}
+\boldsymbol{w}^{\mathrm{T}} \boldsymbol{x}_{i}+b \geqslant+1, & y_{i}=+1 \\
+\boldsymbol{w}^{\mathrm{T}} \boldsymbol{x}_{i}+b \leqslant-1, & y_{i}=-1
+\end{aligned}\right.</script><p>其中距离超平面最近的几个训练样本点使上式的等号成立，这几个训练样本就被称作<strong>支持向量</strong>，两个异类支持向量到超平面的距离之和，也称为间隔（margin），为</p>
+<script type="math/tex; mode=display">
+\gamma=\frac{2}{\|\omega\|}</script><p>具体可如下图所示</p>
+<p><img src="../picture/2010/image-20201022152848839.png" alt="image-20201022152848839"></p>
+<p>想要找到鲁棒性最好的超平面，显然是中间的加粗超平面对应的最好，对未知样本的泛化能力最好，而SVM则是为了找到这样一个最大的margin而设计，这样就得到了我们的约束条件。</p>
+<script type="math/tex; mode=display">
+\left\{\begin{array}{ll}
+\omega^{T} x_{i}+b \geq+1, & y_{i}=+1 \\
+\omega^{T} x_{i}+b \leq-1, & y_{i}=-1
+\end{array}\right.</script><p>在这样的条件下求margin最大，因此方程可以重写成</p>
+<script type="math/tex; mode=display">
+\min _{\omega, b} \frac{1}{2}\|\omega\|^{2}, s . t . y_{i}\left(\omega^{T} x_{i}+b\right) \geq 1, i=1,2, \ldots, m</script><p>这就是SVM的基本模型</p>
+<h2 id="对偶问题"><a href="#对偶问题" class="headerlink" title="对偶问题"></a>对偶问题</h2><p>我们现在想要求解式(6)中的问题，可以使用上一节所说的拉格朗日乘子法以及对应的KKT约束进行求解，将问题转换为</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+f(\omega, b) &=\frac{1}{2}\|\omega\|^{2} \\
+g(\omega, b) &=1-y_{i}\left(\omega^{T} x_{i}+b\right) \leq 0, i=1,2, \ldots, m \\
+h(\omega, b) &=0
+\end{aligned}</script><p>得到对应的拉格朗日函数为</p>
+<script type="math/tex; mode=display">
+L(\omega, b, \alpha)=\frac{1}{2}\|\omega\|^{2}+\sum_{i=1}^{m} \alpha_{i}\left(1-y_{i}\left(\omega^{T} x_{i}+b\right)\right)</script><p>其中$\alpha_i &gt; 0$</p>
+<p>对$\omega$和b进行求偏导并令他们为0可的</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+\omega &=\sum_{i=1}^{m} \alpha_{i} y_{i} x_{i} \\
+0 &=\sum_{i=1}^{m} \alpha_{i} y_{i}
+\end{aligned}</script><p>在带入式(7)可以得到</p>
+<script type="math/tex; mode=display">
+\max _{\alpha} \sum_{i=1}^{m} \alpha_{i}-\frac{1}{2} \sum_{i=1}^{m} \sum_{j=1}^{m} \alpha_{i} \alpha_{j} y_{i} y_{j} x_{i}^{T} x_{j}</script><p>其中$\text {s.t. } \sum_{i=1}^{m} \alpha_{i} y_{i}=0, \alpha_{i} \geq 0, i=1,2, \ldots, m$</p>
+<h2 id="求解模型"><a href="#求解模型" class="headerlink" title="求解模型"></a>求解模型</h2><p>解出$\alpha$后，求解出对应的$\omega$与$b$即可求解出模型</p>
+<script type="math/tex; mode=display">
+f(x)=\omega^{T} x+b=\sum_{i=1}^{m} \alpha_{i} y_{i} x_{i}^{T} x+b</script><p>从对偶问题(8)中解出的$\alpha_i$对应的是训练样本点$(x_i,y_i)$，同时还要满足KKT条件，带入$(x)=\omega^{T} x+b$，$g(x)=y_{i}\left(\omega^{T} x_{i}+b\right) \geq 1$可得对应的KKT条件为</p>
+<script type="math/tex; mode=display">
+\left\{\begin{array}{l}
+\alpha_{i} \geq 0 \\
+y_{i} f\left(x_{i}\right)-1 \geq 0 \\
+\alpha_{i}\left(y_{i} f\left(x_{i}\right)-1\right)=0
+\end{array}\right.</script><ul>
+<li>若$\alpha_i=0$，则对应在可行域的内部，通过求极值带入法可以得到</li>
+<li>若$\alpha_i &gt; 0$，则对应在可行域边界，则必有$y_i f(x_i)=1$，是一个支持向量。</li>
+</ul>
+<p>SMO算法是用来求解对偶问题的核心优化方法，在SMO算法中，每次选择两个变量进行优化，同时将其他变量看做是固定的常数，这样“分而治之”的话，问题就容易多了。SMO算法的基本思想正是这样一种“分治法”。</p>
+<p>假设我们选取的两个需要优化的参数为$\alpha_1,\alpha_2$，剩下的$\alpha_3,\alpha_4, …, \alpha_N$则固定，做为常数处理，将对偶问题</p>
+<script type="math/tex; mode=display">
+\max _{\alpha} \sum_{i=1}^{m} \alpha_{i}-\frac{1}{2} \sum_{i=1}^{m} \sum_{j=1}^{m} \alpha_{i} \alpha_{j} y_{i} y_{j} x_{i}^{T} x_{j}</script><p>在约束$\text {s.t. } \sum_{i=1}^{m} \alpha_{i} y_{i}=0, \alpha_{i} \geq 0, i=1,2, \ldots, m$下进行展开，可得</p>
+<script type="math/tex; mode=display">
+W\left(\alpha_{1}, \alpha_{2}\right)=\alpha_{1}+\alpha_{2}-\frac{1}{2} K_{1,1} y_{1}^{2} \alpha_{1}^{2}-\frac{1}{2} K_{2,2} y_{2}^{2} \alpha_{2}^{2}-K_{1,2} y_{1} y_{2} \alpha_{1} \alpha_{2}-y_{1} \alpha_{1} \sum_{i=3}^{N} \alpha_{i} y_{i} K_{i, 1}-y_{2} \alpha_{2} \sum_{i=3}^{N} \alpha_{i} y_{i} K_{i, 2}+C</script><p>$K_{1,1}$表示$x_1x_1$，以此类推，C为参数项。</p>
+<p>根据优化条件$\sum_{i=1}^{m} \alpha_{i} y_{i}=0$可得$\alpha_1,\alpha_2$之间的关系</p>
+<script type="math/tex; mode=display">
+\alpha_{1} y_{1}+\alpha_{2} y_{2}=-\sum_{i=3}^{N} \alpha_{i} y_{i}=\zeta</script><p>由条件可知$y_i y_i=1$，两边同时乘上$y_1$可得</p>
+<script type="math/tex; mode=display">
+\alpha_{1}=\zeta y_{1}-\alpha_{2} y_{1} y_{2}</script><p>令$v_{1}=\sum_{i=3}^{N} \alpha_{i} y_{i} K_{i, 1}, v_{2}=\sum_{i=3}^{N} \alpha_{i} y_{i} K_{i, 2}, \quad \alpha_{1}$，带入表达式可得：</p>
+<script type="math/tex; mode=display">
+W\left(\alpha_{2}\right)=-\frac{1}{2} K_{1,1}\left(\zeta-\alpha_{2} y_{2}\right)^{2}-\frac{1}{2} K_{2,2} \alpha_{2}^{2}-y_{2}\left(\zeta-\alpha_{2} y_{2}\right) \alpha_{2} K_{1,2}-v_{1}\left(\zeta-\alpha_{2} y_{2}\right)-v_{2} y_{2} \alpha_{2}+\alpha_{1}+\alpha_{2}+C</script><p>之后我们对该一元函数进行求值，$W$对$\alpha$的一阶导数为0得到：</p>
+<script type="math/tex; mode=display">
+\frac{\partial W\left(\alpha_{2}\right)}{\partial \alpha_{2}}=-\left(K_{1,1}+K_{2,2}-2 K_{1,2}\right) \alpha_{2}+K_{1,1} \zeta y_{2}-K_{1,2} \zeta y_{2}+v_{1} y_{2}-v_{2} y_{2}-y_{1} y_{2}+y_{2}^{2}=0</script><p>对上式进行处理，去掉不方便计算的$\zeta$</p>
+<p>因为SVM对数据点的预测值为</p>
+<script type="math/tex; mode=display">
+f(x)=\sum_{i=1}^{N} \alpha_{i} y_{i} K\left(x_{i}, x\right)+b</script><p>其中$\alpha_i$是上一轮迭代中已经确定了的值，可以用$\alpha_i^{old}$来表示，则\v_1,v_2可以表示为</p>
+<script type="math/tex; mode=display">
+\begin{array}{l}
+v_{1}=\sum_{i=3}^{N} \alpha_{i}^{old} y_{i} K_{1, i}=f\left(x_{1}\right)-\alpha_{1}^{old} y_{1} K_{1,1}-\alpha_{2}^{old} y_{2} K_{1,2}-b \\
+v_{2}=\sum_{i=3}^{N} \alpha_{i}^{old} y_{i} K_{2, i}=f\left(x_{2}\right)-\alpha_{1}^{old} y_{1} K_{1,2}-\alpha_{2}^{old} y_{2} K_{2,2}-b
+\end{array}</script><p>已知$\alpha_{1}^{old}=\zeta y_{1}-\alpha_{2}^{old} y_{1} y_{2}$可得</p>
+<script type="math/tex; mode=display">
+v_{1}-v_{2}=f\left(x_{1}\right)-f\left(x_{2}\right)-K_{1,1} \zeta+K_{1,2} \zeta+\left(K_{1,1}+K_{2,2}-2 K_{1,2}\right) \alpha_{2} y_{2}^{old}</script><p>将$v_1-v_2$带入式(16)可得</p>
+<script type="math/tex; mode=display">
+\frac{\partial W\left(\alpha_{2}\right)}{\partial \alpha_{2}}=-\left(K_{1,1}+K_{2,2}-2 K_{1,2}\right) \alpha_{2}^{n e w}+\left(K_{1,1}+K_{2,2}-2 K_{1,2}\right) \alpha_{2}^{o l d}+y_{2}\left[y_{2}-y_{1}+f\left(x_{1}\right)-f\left(x_{2}\right)\right]</script><p>记$E_i$为真实值与预测值之间的误差：$E_i=f(x_i)-y_i$，可得</p>
+<p>令$\eta=K_{1,1}+K_{2,2}-2 K_{1,2}$，可得到一阶导数的最终表达式为</p>
+<script type="math/tex; mode=display">
+\frac{\partial W\left(\alpha_{2}\right)}{\partial \alpha_{2}}=-\eta \alpha_{2}^{n e w}+\eta \alpha_{2}^{o l d}+y_{2}\left(E_{1}-E_{2}\right)=0</script><p>这样我们可以得到</p>
+<script type="math/tex; mode=display">
+\alpha_{2}^{n e w}=\alpha_{2}^{o l d}+\frac{y_{2}\left(E_{1}-E_{2}\right)}{\eta}</script><p>同时$\alpha_1^{new}$可以通过$\alpha_2^{new}$得到。</p>
+<p><strong>阈值修剪</strong></p>
+<p>但此时得到的$\alpha$的值并没有考虑约束提条件$0 \leq \alpha \leq C$，考虑到约束$\sum_{i=1}^{m} \alpha_{i} y_{i}=0$，即$\alpha_{1} y_{1}+\alpha_{2} y_{2}=-\sum_{i=3}^{N} \alpha_{i} y_{i}=\zeta$</p>
+<ul>
+<li>当$y_1 \neq y_2$时，条件可以写成$\alpha_1-\alpha_2 = k$</li>
+<li>当y_1 = y_2时，条件可以写成$\alpha_1 + \alpha_2 = k$</li>
+</ul>
+<p><img src="../picture/2010/v2-449670775bab3c385b5e5930fc6d2caa_1440w.png" alt="img"></p>
+<p>在左图中\y_1 \neq y_2，根据k的正负以及大小可以得到不同的上界与下界。</p>
+<ul>
+<li>下界：$L = max(0, \alpha_2^{old})$</li>
+<li>上界：$L=min(C, C + \alpha_2^{old} - \alpha_1^{old})$</li>
+</ul>
+<p>在右图中，$y_1 = y_2$，同理可得到上界下界分别为</p>
+<ul>
+<li>下界，$L=max(0, \alpha_2^{old} + \alpha_1^{old} - C)$</li>
+<li>上界，$L=min(C,  \alpha_2^{old} + \alpha_1^{old})$</li>
+</ul>
+<p>最终可得到修剪之后的$\alpha_2^{new}$如下所示</p>
+<script type="math/tex; mode=display">
+\alpha_{2}^{n e w}=\left\{\begin{array}{ll}
+H & \alpha_{2}^{n e w, u n c l i p p e d}>H \\
+\alpha_{2}^{n e w, u n c l i p p e d} & L \leq \alpha_{2}^{n e w, u n c l i p p e d} \leq H \\
+L & \alpha_{2}^{n e w, u n c l i p p e d}<L
+\end{array}\right.</script><p><strong>更新阈值b</strong></p>
+<p>当数据点为支持向量时，满足$y_1(\omega^T+b)=1$两边同时乘上$y_1$可得$\sum_{i=1}^{N} \alpha_{i} y_{i} K_{i, 1}+b=y_{1}$，进而得到b的值为</p>
+<script type="math/tex; mode=display">
+b_{1}^{n e w}=y_{1}-\sum_{i=3}^{N} \alpha_{i} y_{i} K_{i, 1}-\alpha_{1}^{n e w} y_{1} K_{1,1}-\alpha_{2}^{n e w} y_{2} K_{2,1}</script><p>其中上式的前两项可以写成:</p>
+<script type="math/tex; mode=display">
+y_{1}-\sum_{i=3}^{N} \alpha_{i} y_{i} K_{i, 1}=-E_{1}+\alpha_{1}^{o l d} y_{1} K_{1,1}+\alpha_{2}^{o l d} y_{2} K_{2,1}+b^{o l d}</script><p>同理也可以得到</p>
+<script type="math/tex; mode=display">
+b_{2}^{n e w}=-E_{2}-y_{1} K_{1,2}\left(\alpha_{1}^{n e w}-\alpha_{1}^{o l d}\right)-y_{2} K_{2,2}\left(\alpha_{2}^{n e w}-\alpha_{2}^{o l d}\right)+b^{o l d}</script><p>最终将选择两个数的中点进行更新。</p>
+]]></content>
+      <categories>
+        <category>机器学习</category>
+      </categories>
+      <tags>
+        <tag>svm</tag>
       </tags>
   </entry>
 </search>
