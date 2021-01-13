@@ -27,14 +27,14 @@
 <meta property="og:site_name" content="haihai">
 <meta property="og:description" content="主要是在intellij中构建sbt项目使用chisel">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/2021/01/13/picture/2021/image-20210112101103858.png">
-<meta property="og:image" content="http://example.com/2021/01/13/picture/2021/image-20210112101349253.png">
+<meta property="og:image" content="http://example.com/picture/2021/image-20210112101103858.png">
+<meta property="og:image" content="http://example.com/picture/2021/image-20210112101349253.png">
 <meta property="article:published_time" content="2021-01-13T14:29:46.000Z">
-<meta property="article:modified_time" content="2021-01-13T14:30:58.048Z">
+<meta property="article:modified_time" content="2021-01-13T14:32:24.826Z">
 <meta property="article:author" content="海海不想起床">
 <meta property="article:tag" content="tools">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/2021/01/13/picture/2021/image-20210112101103858.png">
+<meta name="twitter:image" content="http://example.com/picture/2021/image-20210112101103858.png">
 
 <link rel="canonical" href="http://example.com/2021/01/13/sbt%E9%A1%B9%E7%9B%AE%E6%9E%84%E5%BB%BA/">
 
@@ -184,7 +184,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2021-01-13 22:29:46 / 修改时间：22:30:58" itemprop="dateCreated datePublished" datetime="2021-01-13T22:29:46+08:00">2021-01-13</time>
+              <time title="创建时间：2021-01-13 22:29:46 / 修改时间：22:32:24" itemprop="dateCreated datePublished" datetime="2021-01-13T22:29:46+08:00">2021-01-13</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -216,11 +216,11 @@
       
         <p>主要是在intellij中构建sbt项目使用chisel<br><a id="more"></a></p>
 <h2 id="scala插件"><a href="#scala插件" class="headerlink" title="scala插件"></a>scala插件</h2><p>在偏好设置中安装scala插件</p>
-<p><img src="../picture/2021/image-20210112101103858.png" alt="image-20210112101103858"></p>
+<p><img src="/picture/2021/image-20210112101103858.png" alt="image-20210112101103858"></p>
 <h2 id="添加镜像"><a href="#添加镜像" class="headerlink" title="添加镜像"></a>添加镜像</h2><p>在home目录下新建<code>.sbt/repositories</code>项目，复制一下内容</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[repositories]</span><br><span class="line">  <span class="built_in">local</span></span><br><span class="line">  huaweicloud-ivy: https://mirrors.huaweicloud.com/repository/ivy/, [organization]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[revision]/[<span class="built_in">type</span>]s/[artifact](-[classifier]).[ext]</span><br><span class="line">  huaweicloud-maven: https://mirrors.huaweicloud.com/repository/maven/</span><br></pre></td></tr></table></figure>
 <h2 id="构建项目"><a href="#构建项目" class="headerlink" title="构建项目"></a>构建项目</h2><p>新建项目中找到scala项目，之后选择sbt项目构建，需要注意的是选择scala版本的时候不要选择到最新的版本，选上12.12就可以了，之后就直接选择构建</p>
-<p><img src="../picture/2021/image-20210112101349253.png" alt="image-20210112101349253"></p>
+<p><img src="/picture/2021/image-20210112101349253.png" alt="image-20210112101349253"></p>
 <p>在新项目中<code>build/sbt</code>中修改VM parameters如下所示</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">-Dsbt.override.build.repos=<span class="literal">true</span></span><br><span class="line">-Dsbt.repository.config=~/.sbt/repositories</span><br></pre></td></tr></table></figure>
 <p>在build中添加chisel相关的包，如下所示，重新构建项目即可用chisel相关文件</p>

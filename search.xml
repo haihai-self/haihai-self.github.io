@@ -1522,11 +1522,11 @@ b_{2}^{n e w}=-E_{2}-y_{1} K_{1,2}\left(\alpha_{1}^{n e w}-\alpha_{1}^{o l d}\ri
     <url>/2021/01/13/sbt%E9%A1%B9%E7%9B%AE%E6%9E%84%E5%BB%BA/</url>
     <content><![CDATA[<p>主要是在intellij中构建sbt项目使用chisel<br><a id="more"></a></p>
 <h2 id="scala插件"><a href="#scala插件" class="headerlink" title="scala插件"></a>scala插件</h2><p>在偏好设置中安装scala插件</p>
-<p><img src="../picture/2021/image-20210112101103858.png" alt="image-20210112101103858"></p>
+<p><img src="/picture/2021/image-20210112101103858.png" alt="image-20210112101103858"></p>
 <h2 id="添加镜像"><a href="#添加镜像" class="headerlink" title="添加镜像"></a>添加镜像</h2><p>在home目录下新建<code>.sbt/repositories</code>项目，复制一下内容</p>
 <figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">[repositories]</span><br><span class="line">  <span class="built_in">local</span></span><br><span class="line">  huaweicloud-ivy: https://mirrors.huaweicloud.com/repository/ivy/, [organization]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[revision]/[<span class="built_in">type</span>]s/[artifact](-[classifier]).[ext]</span><br><span class="line">  huaweicloud-maven: https://mirrors.huaweicloud.com/repository/maven/</span><br></pre></td></tr></table></figure>
 <h2 id="构建项目"><a href="#构建项目" class="headerlink" title="构建项目"></a>构建项目</h2><p>新建项目中找到scala项目，之后选择sbt项目构建，需要注意的是选择scala版本的时候不要选择到最新的版本，选上12.12就可以了，之后就直接选择构建</p>
-<p><img src="../picture/2021/image-20210112101349253.png" alt="image-20210112101349253"></p>
+<p><img src="/picture/2021/image-20210112101349253.png" alt="image-20210112101349253"></p>
 <p>在新项目中<code>build/sbt</code>中修改VM parameters如下所示</p>
 <figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">-Dsbt.override.build.repos=<span class="literal">true</span></span><br><span class="line">-Dsbt.repository.config=~/.sbt/repositories</span><br></pre></td></tr></table></figure>
 <p>在build中添加chisel相关的包，如下所示，重新构建项目即可用chisel相关文件</p>
